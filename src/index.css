@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+/* Base styles (global resets and defaults to revert some changes in tailwind v4) */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/* Design tokens and component classes (centralized styles) */
+@theme {
+  --color-primary: rgb(89, 42, 46);
+  --color-primary-hover: rgb(109, 52, 56);
+  --color-primary-medium: rgba(89, 42, 46, 0.3);
+  --color-primary-light: rgba(89, 42, 46, 0.2);
+  --color-primary-lighter: rgba(89, 42, 46, 0.1);
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-8;
+  }
+
+  .card-border {
+    @apply border-2 rounded-lg p-6;
+  }
+
+  .panel {
+    @apply border-2 rounded-lg p-4;
+  }
+
+  .button-base {
+    @apply px-6 py-2 rounded-lg font-semibold transition-all text-lg text-white bg-primary hover:bg-primary-hover;
+
+    &:disabled {
+      @apply cursor-not-allowed text-gray-500 bg-gray-300;
+    }
+  }
+
+  .button-secondary {
+    @apply px-6 py-2 border-2 rounded-lg font-semibold;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg;
+  }
+
+  .select {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg;
+  }
+
+  .table-head {
+    @apply px-3 py-2 text-left font-semibold;
+  }
+
+  .table-cell {
+    @apply px-3 py-2;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-gray-50;
+  }
+
+  .subtext {
+    @apply text-sm text-gray-600;
+  }
+}
+
+@layer utilities {
+  .bg-primary-gradient {
+    background: linear-gradient(
+      to bottom right,
+      var(--color-primary-medium),
+      var(--color-primary-light)
+    );
+  }
+
+  .bg-stat-gradient {
+    background: linear-gradient(to bottom right, var(--color-primary), var(--color-primary-hover));
+  }
+
+  .focus-ring-primary:focus {
+    box-shadow: 0 0 0 2px var(--color-primary);
+    outline: none;
+  }
+}
