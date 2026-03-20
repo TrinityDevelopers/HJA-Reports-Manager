@@ -1,0 +1,31 @@
+{
+  "templateId": "absorption-pressure-swell-balancing",
+  "name": "absorption_pressure_swell_balancing",
+  "displayName": "Absorption-Pressure Swell (Balancing) (ASTM D 4546 Method B)",
+  "filePath": "absorption-pressure_swell_balancing.xlsx",
+  "format": "xlsx",
+  "maxEntryRows": 23,
+  "fieldMapping": {
+    "header_projectName": "B6",
+    "header_hjaNumber": "I6",
+    "header_dateOfTest": "L6",
+    "header_boringNumber": "B7",
+    "header_depth": "E7",
+    "header_sampleNumber": "J7",
+    "header_materialDescription": "D8",
+    "header_consolidometerNumber": "D9",
+    "header_loadFactor": "F9",
+    "header_setupBy": "D39",
+    "header_setupByDate": "K39",
+    "header_takenDownBy": "D40",
+    "header_takenDownByDate": "K40",
+    "header_dryWeightsBy": "D41",
+    "header_dryWeightsByDate": "K41",
+    "entry_changeInLoadGms_row": "A15-37",
+    "entry_accumulatedLoadGms_row": "B15-37",
+    "entry_dialReading_row": "E15-37",
+    "entry_time_row": "H15-37",
+    "entry_date_row": "J15-37",
+    "entry_readBy_row": "L15-37"
+  }
+}

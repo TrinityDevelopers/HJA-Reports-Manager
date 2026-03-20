@@ -10,7 +10,6 @@ import { ReportDetailPage } from './components/pages/ReportDetailPage';
 import { NavButton } from './components/ui';
 import { useCRUD, useFormState, useLocalStorage, useFontLoader } from './hooks';
 import type { ID, Project, Report, SettingsState } from './types';
-import { REPORT_TYPES } from './constants/reportTypes';
 import { PAGES, type PageType } from './constants/pages';
 import { FileDown, Database, Settings, FileText, MapPin } from 'lucide-react';
 
@@ -92,9 +91,8 @@ export default function TechnicianReportsManager() {
   const addReport = (report: Partial<Report>): Report => {
     const newReport: Report = {
       ...(report as Report),
-      id: Date.now(),
+      id: crypto.randomUUID(),
       projectId: report.projectId as ID,
-      reportType: report.reportType || REPORT_TYPES.DIGITAL_DENSITY,
       entries: report.entries || [],
     } as Report;
     setReports([...reports, newReport]);

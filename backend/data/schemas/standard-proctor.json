@@ -1,0 +1,239 @@
+{
+  "name": "standard-proctor",
+  "displayName": "Standard Proctor (ASTM D698)",
+  "description": "Standard Proctor soil compaction test data sheet",
+  "version": "1.0.0",
+  "headerFields": [
+    {
+      "id": "projectName",
+      "label": "Project",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "jobNumber",
+      "label": "Job No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dateOfTest",
+      "label": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "dateDroppedOff",
+      "label": "Date Dropped Off",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "droppedOffBy",
+      "label": "Dropped Off By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "labCode",
+      "label": "Lab Code",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "sampleLocation",
+      "label": "Sample Location",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "materialDescription",
+      "label": "Material Description",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "methodUsed",
+      "label": "Method Used (A, B, or C)",
+      "type": "select",
+      "options": ["A", "B", "C"],
+      "required": true
+    },
+    {
+      "id": "specificGravity",
+      "label": "Specific Gravity",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleNumber",
+      "label": "Sample No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "testNumber",
+      "label": "Test No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "scaleNumber",
+      "label": "Scale No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "moldSize",
+      "label": "Mold Size (in.)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "weightOfMold",
+      "label": "Weight of Mold (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "ovenNumber",
+      "label": "Oven No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "volOfMold",
+      "label": "Vol. of Mold (cu. ft.)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sieveUsedToSeparateSample",
+      "label": "Sieve Used to Separate Sample",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "percentRetainedOnSieve",
+      "label": "Percent Retained on Sieve (%)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "percentPassingSieve",
+      "label": "Percent Passing Sieve (%)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "moistureTareNo",
+      "label": "Moisture Content - Tare No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "moistureTW",
+      "label": "Moisture Content - TW (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "moistureWW",
+      "label": "Moisture Content - WW (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "moistureDW",
+      "label": "Moisture Content - DW (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "testedBy",
+      "label": "Tested By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "testedByDate",
+      "label": "Tested By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "computedBy",
+      "label": "Computed By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "computedByDate",
+      "label": "Computed By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "checkedBy",
+      "label": "Checked By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "checkedByDate",
+      "label": "Checked By Date",
+      "type": "date",
+      "required": false
+    }
+  ],
+  "entryFields": [
+    {
+      "id": "estimatedMoisture",
+      "label": "Estimated Moisture",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "weightOfMoldSpecimen",
+      "label": "Weight of Mold & Specimen (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "wetWeightOfSpecimen",
+      "label": "Wet Weight of Specimen (lbs. ft.)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dryWeightOfSpecimen",
+      "label": "Dry Weight of Specimen (lbs. ft.)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dryDensityWhenMolded",
+      "label": "Dry Density When Molded (lbs. ft.)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "panNumber",
+      "label": "Pan No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "panWeight",
+      "label": "Pan Weight (g)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "moisturePercentage",
+      "label": "% Moisture",
+      "type": "number",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "templateId": "percent-passing-200",
+  "name": "percent_passing_200",
+  "displayName": "Percent Passing #200 Sieve (ASTM D1140)",
+  "filePath": "percent_passing_200.xlsx",
+  "format": "xlsx",
+  "maxEntryRows": 20,
+  "fieldMapping": {
+    "header_projectName": "B7",
+    "header_hjaNumber": "G7",
+    "header_dateOfTest": "J7",
+    "header_scaleNumber": "B9",
+    "header_sieveNumber": "F9",
+    "header_ovenNumber": "J9",
+    "header_dispersant": "B22",
+    "header_soakTimeStart": "G22",
+    "header_soakTimeFinish": "J22",
+    "header_beforeDate": "F24",
+    "header_afterDate": "H24",
+    "header_tareDate": "J24",
+    "entry_boringNumber_row": "A30-49",
+    "entry_depth_row": "B30-49",
+    "entry_materialDescription_row": "C30-49",
+    "entry_dryWeightTareBefore_row": "F30-49",
+    "entry_dryWeightTareAfter_row": "H30-49",
+    "entry_tarePanNumber_row": "J30-49",
+    "entry_tareWeight_row": "K30-49",
+    "header_testedBy": "C51",
+    "header_testedByDate": "H51",
+    "header_checkedBy": "C52",
+    "header_checkedByDate": "H52"
+  }
+}

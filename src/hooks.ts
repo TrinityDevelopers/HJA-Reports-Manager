@@ -4,18 +4,18 @@ import { useState, useCallback, useEffect } from 'react';
  * Generic CRUD hook for managing arrays of items with id-based operations
  * Eliminates repetitive add/update/remove patterns
  */
-export function useCRUD<T extends { id: number }>(initialArray: T[] = []) {
+export function useCRUD<T extends { id: string }>(initialArray: T[] = []) {
   const [items, setItems] = useState<T[]>(initialArray);
 
   const add = useCallback((item: Omit<T, 'id'>) => {
-    setItems((prev) => [...prev, { ...item, id: Date.now() } as T]);
+    setItems((prev) => [...prev, { ...item, id: crypto.randomUUID() } as T]);
   }, []);
 
-  const update = useCallback((id: number, updatedItem: T) => {
+  const update = useCallback((id: string, updatedItem: T) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...updatedItem, id } : item)));
   }, []);
 
-  const remove = useCallback((id: number) => {
+  const remove = useCallback((id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 

@@ -1,0 +1,43 @@
+{
+  "name": "hja-reports-manager-backend",
+  "version": "1.0.0",
+  "description": "Backend for HJA Reports Manager with database and XLS export",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typeorm": "typeorm",
+    "migration:generate": "typeorm migration:generate",
+    "migration:run": "typeorm migration:run",
+    "migration:revert": "typeorm migration:revert",
+    "seed": "tsx src/database/seed.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "exceljs": "^4.3.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.5",
+    "pg": "^8.11.3",
+    "typeorm": "^0.3.17",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.10.6",
+    "@types/supertest": "^7.2.0",
+    "@types/uuid": "^9.0.7",
+    "@vitest/ui": "^4.0.18",
+    "supertest": "^7.2.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
+  }
+}

@@ -56,8 +56,7 @@ export function ReportsPage({
                 <p className="subtext mb-1">Project #: {project.projectNumber}</p>
                 <div className="flex flex-col subtext gap-1 mt-2">
                   <p>{project.locations?.length || 0} Location(s)</p>
-                  <p>{project.proctors?.length || 0} Proctor(s)</p>
-                  <p>{project.mdSpecs?.length || 0} M/D Spec(s)</p>
+                  <p>{project.locations?.length || 0} Location(s)</p>
                 </div>
               </button>
             ))}
@@ -74,9 +73,7 @@ export function ReportsPage({
     );
   }
 
-  const digitalDensityReports = reports.filter(
-    (r: Report) => r.reportType === REPORT_TYPES.DIGITAL_DENSITY,
-  );
+  const digitalDensityReports = reports; // All reports - reportType filtering removed for now
 
   return (
     <div className="card">
@@ -118,7 +115,8 @@ export function ReportsPage({
                       </h4>
                       <div className="subtext mt-1">
                         <p>
-                          Technician: {report.technicianName} | Date: {report.dateOfService}
+                          Technician: {report.technicianName} | Date:{' '}
+                          {new Date(report.dateOfService).toLocaleDateString()}
                         </p>
                         <p>
                           Reported to: {report.reportedTo} | Tests: {report.entries?.length || 0}

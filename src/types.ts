@@ -1,64 +1,67 @@
-import type { ReportType } from './constants/reportTypes';
-
-export type ID = number;
+export type ID = string;
 
 export interface Location {
   id: ID;
   name: string;
-}
-
-export interface Proctor {
-  id: ID;
-  reportNo?: string;
-  date?: string;
-  location?: string;
-  materialDescription?: string;
-  optimumMoisture?: string | number;
-  maximumDensity?: string | number;
-  liquidLimit?: string | number;
-  plasticLimit?: string | number;
-  plasticIndex?: string | number;
-  passingNo40?: string | number;
-  passingNo200?: string | number;
-  testSpecifications?: string;
-}
-
-export interface MDSpec {
-  id: ID;
-  location?: string;
-  lowerMoisture?: string | number;
-  upperMoisture?: string | number;
-  density?: string | number;
+  description?: string;
+  projectId: ID;
 }
 
 export interface Project {
   id: ID;
   projectName: string;
   projectNumber: string;
+  description?: string;
   locations?: Location[];
-  proctors?: Proctor[];
-  mdSpecs?: MDSpec[];
+  reports?: Report[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface Entry {
-  testNumber: number;
-  materialDescription?: string;
-  testLocation?: string;
-  probeDepth?: string | number;
-  liftBFG?: string;
-  dryDensity?: string | number;
-  moistureContent?: string | number;
-  proctorId?: ID;
+export interface ReportTemplate {
+  id: ID;
+  name: string;
+  displayName: string;
+  description?: string;
+  schema: Record<string, unknown>;
+  version: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReportEntry {
+  id: ID;
+  reportId: ID;
+  data: Record<string, unknown>;
+  entryOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Report {
   id: ID;
   projectId: ID;
-  reportType: ReportType;
-  technicianName?: string;
-  dateOfService?: string;
+  templateId: ID;
+  template?: ReportTemplate;
+  technicianName: string;
+  dateOfService: Date;
   reportedTo?: string;
-  entries?: Entry[];
+  headerData?: Record<string, unknown>;
+  entries?: ReportEntry[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ExportTemplate {
+  id: ID;
+  templateId: ID;
+  name: string;
+  displayName: string;
+  filePath: string;
+  format: 'xls' | 'xlsx';
+  fieldMapping?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SettingsState {

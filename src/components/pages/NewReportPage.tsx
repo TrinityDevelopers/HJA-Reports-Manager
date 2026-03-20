@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { InputField } from '../ui';
 import type { Project, Report } from '../../types';
-import { REPORT_TYPES } from '../../constants/reportTypes';
 
 export function NewReportPage({
   project,
@@ -15,9 +14,9 @@ export function NewReportPage({
 }) {
   const [formData, setFormData] = useState<Partial<Report>>({
     projectId: project.id,
-    reportType: REPORT_TYPES.DIGITAL_DENSITY,
+    templateId: '',
     technicianName: '',
-    dateOfService: new Date().toISOString().split('T')[0],
+    dateOfService: new Date(),
     reportedTo: '',
   });
   const handleCreate = () => {
@@ -47,8 +46,14 @@ export function NewReportPage({
         <InputField
           label="Date of Service"
           type="date"
-          value={formData.dateOfService}
-          onChange={(v) => setFormData({ ...formData, dateOfService: v })}
+          value={
+            formData.dateOfService instanceof Date
+              ? formData.dateOfService.toISOString().split('T')[0]
+              : ''
+          }
+          onChange={(v) =>
+            setFormData({ ...formData, dateOfService: v ? new Date(v + 'T00:00:00') : new Date() })
+          }
           required
         />
         <InputField

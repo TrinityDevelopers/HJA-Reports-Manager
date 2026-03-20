@@ -1,0 +1,310 @@
+{
+  "name": "absorption-pressure-swell",
+  "displayName": "Absorption-Pressure Swell Test (ASTM D 4546 Method B)",
+  "description": "Absorption-pressure swell test data sheet",
+  "version": "1.0.0",
+  "headerFields": [
+    {
+      "id": "projectName",
+      "label": "Project",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "hjaNumber",
+      "label": "HJA No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dateOfTest",
+      "label": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "boringNumber",
+      "label": "Boring No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "depth",
+      "label": "Depth",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleNumber",
+      "label": "Sample No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "panNumber",
+      "label": "Pan No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "materialDescription",
+      "label": "Material Description",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "wetWeightRingPanBefore",
+      "label": "Wet Weight + Ring + Pan (Before) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "wetWeightRingPanAfter",
+      "label": "Wet Weight + Ring + Pan (After) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dryWeightRingPanAfter",
+      "label": "Dry Weight + Ring + Pan (After) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "tareWeightRing",
+      "label": "Tare Weight Ring (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "tareWeightPan",
+      "label": "Tare Weight Pan (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "scaleNumberSample",
+      "label": "Scale No. (Sample)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "ovenNumberSample",
+      "label": "Oven No. (Sample)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "wetWeightPanTrimming",
+      "label": "Wet Weight + Pan (Trimming) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dryWeightPanTrimming",
+      "label": "Dry Weight + Pan (Trimming) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "tarePanNumberTrimming",
+      "label": "Tare Pan No. (Trimming)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "tareWeightPanTrimming",
+      "label": "Tare Weight Pan (Trimming) (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "pocketPenetrometerReading",
+      "label": "Pocket Penetrometer",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "scaleNumberTrimming",
+      "label": "Scale No. (Trimming)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "ovenNumberTrimming",
+      "label": "Oven No. (Trimming)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "sampleHeightH1",
+      "label": "Sample Height (in.) - h1",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleHeightH2",
+      "label": "Sample Height (in.) - h2",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleHeightH3",
+      "label": "Sample Height (in.) - h3",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleHeightH4",
+      "label": "Sample Height (in.) - h4",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleHeightAvg",
+      "label": "Sample Height (in.) - avg",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleDiameterD1",
+      "label": "Sample Diameter (in.) - d1",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleDiameterD2",
+      "label": "Sample Diameter (in.) - d2",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleDiameterD3",
+      "label": "Sample Diameter (in.) - d3",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleDiameterAvg",
+      "label": "Sample Diameter (in.) - avg",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "consolidometerNumber",
+      "label": "Consolidometer No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "loadFactor",
+      "label": "Load Factor",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "ringNumber",
+      "label": "Ring No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "setUpDialReading",
+      "label": "Set-Up Dial Reading",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "balancingLoadGms",
+      "label": "Balancing Load (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dialReadingAfterBalancing",
+      "label": "Dial Reading After Balancing",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "setupTime",
+      "label": "Set-Up Time",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "setupDate",
+      "label": "Set-Up Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "setupBy",
+      "label": "Set Up By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "setupByDate",
+      "label": "Set Up By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "takenDownBy",
+      "label": "Taken Down By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "takenDownByDate",
+      "label": "Taken Down By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "dryWeightsBy",
+      "label": "Dry Weights By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dryWeightsByDate",
+      "label": "Dry Weights By Date",
+      "type": "date",
+      "required": false
+    }
+  ],
+  "entryFields": [
+    {
+      "id": "swellLoadGms",
+      "label": "Load (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "swellDialReading",
+      "label": "Dial Reading",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "swellTime",
+      "label": "Time",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "swellDate",
+      "label": "Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "swellReadBy",
+      "label": "Read By",
+      "type": "text",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "name": "resistivity",
+  "displayName": "Resistivity (ASTM G 187)",
+  "description": "Soil resistivity test data sheet",
+  "version": "1.0.0",
+  "headerFields": [
+    {
+      "id": "projectName",
+      "label": "Project",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "jobNumber",
+      "label": "Job No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dateOfTest",
+      "label": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "boringNumber",
+      "label": "Boring No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "depth",
+      "label": "Depth",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "sampleNumber",
+      "label": "Sample No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "testNumber",
+      "label": "Test No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "materialDescription",
+      "label": "Material Description",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "containerNumber",
+      "label": "Container Number",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "wtWetSoilTare",
+      "label": "Wt. Wet Soil + Tare (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "wtDrySoilTare",
+      "label": "Wt. Dry Soil + Tare (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "tareWt",
+      "label": "Tare Wt. (gms)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "measuredResistivity",
+      "label": "Measured Resistivity (R) (ohm-cm)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "temperatureOfSample",
+      "label": "Temperature of Sample in Deg. C (T)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "remarks",
+      "label": "Remarks",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "preparedBy",
+      "label": "Prepared By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "preparedByDate",
+      "label": "Prepared By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "testedBy",
+      "label": "Tested By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "testedByDate",
+      "label": "Tested By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "checkedBy",
+      "label": "Checked By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "checkedByDate",
+      "label": "Checked By Date",
+      "type": "date",
+      "required": false
+    }
+  ],
+  "entryFields": []
+}

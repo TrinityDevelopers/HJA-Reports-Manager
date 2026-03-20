@@ -1,0 +1,62 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import path from 'path';
+import fs from 'fs/promises';
+import { ExportService } from '../../src/services/ExportService';
+import { createTestReport, TEMPLATE_CONFIGS, TemplateTestConfig, SchemaField } from '../helpers';
+
+describe.each(Object.values(TEMPLATE_CONFIGS))(
+  '$displayName Form Export',
+  (config: TemplateTestConfig) => {
+    const outputDir = path.join(process.cwd(), 'tests', 'output');
+    const outputFile = path.join(outputDir, config.outputFilename);
+    let exportService: ExportService;
+
+    beforeAll(async () => {
+      exportService = new ExportService();
+      // Create output directory if it doesn't exist
+      await fs.mkdir(outputDir, { recursive: true });
+    });
+
+    afterAll(async () => {
+      // Keep the output file for manual inspection
+    });
+
+    it(`should export ${config.templateId} report to XLSX`, async () => {
+      // Dynamically import schema and template definition
+      const schema = await import(path.join(__dirname, config.schemaPath));
+      const templateDef = await import(path.join(__dirname, config.templatePath));
+
+      // Create test data
+      const testReport = createTestReport(
+        config.templateId,
+        schema.default.headerFields as SchemaField[],
+        schema.default.entryFields as SchemaField[],
+        templateDef.default.maxEntryRows || 1, // Create all available entry rows
+      );
+
+      // Create export template (plain object, not entity)
+      const exportTemplate = {
+        filePath: templateDef.default.filePath,
+        fieldMapping: templateDef.default.fieldMapping,
+        maxEntryRows: templateDef.default.maxEntryRows,
+        rowsPerEntry: templateDef.default.rowsPerEntry,
+      };
+
+      // Export to XLSX
+      await exportService.exportReport(testReport, exportTemplate, outputFile);
+
+      // Verify file was created
+      const fileExists = await fs
+        .access(outputFile)
+        .then(() => true)
+        .catch(() => false);
+      expect(fileExists).toBe(true);
+
+      // Verify file size
+      const stats = await fs.stat(outputFile);
+      expect(stats.size).toBeGreaterThan(0);
+
+      console.log(`✓ ${config.displayName} test XLSX exported to: ${outputFile}`);
+    });
+  },
+);

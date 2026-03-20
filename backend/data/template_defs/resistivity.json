@@ -1,0 +1,31 @@
+{
+  "templateId": "resistivity",
+  "name": "resistivity",
+  "displayName": "Resistivity (ASTM G 187)",
+  "filePath": "resistivity.xlsx",
+  "format": "xlsx",
+  "maxEntryRows": 0,
+  "fieldMapping": {
+    "header_projectName": "B6",
+    "header_jobNumber": "H6",
+    "header_dateOfTest": "K6",
+    "header_boringNumber": "B7",
+    "header_depth": "E7",
+    "header_sampleNumber": "G7",
+    "header_testNumber": "K7",
+    "header_materialDescription": "C8",
+    "header_containerNumber": "F14",
+    "header_wtWetSoilTare": "F15",
+    "header_wtDrySoilTare": "F16",
+    "header_tareWt": "F18",
+    "header_measuredResistivity": "J28",
+    "header_temperatureOfSample": "J29",
+    "header_remarks": "B33",
+    "header_preparedBy": "F39",
+    "header_preparedByDate": "K39",
+    "header_testedBy": "F40",
+    "header_testedByDate": "K40",
+    "header_checkedBy": "F41",
+    "header_checkedByDate": "K41"
+  }
+}

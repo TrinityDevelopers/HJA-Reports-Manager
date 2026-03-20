@@ -49,8 +49,7 @@ export default function ProjectsList({
               </div>
               <div className="flex flex-col subtext gap-1 mt-3 pt-3 border-t">
                 <p>{project.locations?.length || 0} Location(s)</p>
-                <p>{project.proctors?.length || 0} Proctor(s)</p>
-                <p>{project.mdSpecs?.length || 0} M/D Spec(s)</p>
+                <p>{project.locations?.length || 0} Location(s)</p>
               </div>
             </div>
           ))}

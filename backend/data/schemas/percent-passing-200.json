@@ -1,0 +1,170 @@
+{
+  "name": "percent-passing-200",
+  "displayName": "Percent Passing #200 Sieve (ASTM D1140)",
+  "description": "Percent passing #200 sieve data sheet",
+  "version": "1.0.0",
+  "headerFields": [
+    {
+      "id": "projectName",
+      "label": "Project",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "hjaNumber",
+      "label": "HJA No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dateOfTest",
+      "label": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "scaleNumber",
+      "label": "Scale No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "sieveNumber",
+      "label": "Sieve No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "ovenNumber",
+      "label": "Oven No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dispersant",
+      "label": "Dispersant",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "soakTimeStart",
+      "label": "Soak Time Start",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "soakTimeFinish",
+      "label": "Soak Time Finish",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "beforeDate",
+      "label": "Before Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "afterDate",
+      "label": "After Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "tareDate",
+      "label": "Tare Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "testedBy",
+      "label": "Tested By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "testedByDate",
+      "label": "Tested By Date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "id": "checkedBy",
+      "label": "Checked By",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "checkedByDate",
+      "label": "Checked By Date",
+      "type": "date",
+      "required": false
+    }
+  ],
+  "particleSizeRow": [
+    { "size": "#40", "label": "#40" },
+    { "size": "#10", "label": "#10" },
+    { "size": "#4", "label": "#4" },
+    { "size": "3/8 in", "label": "3/8 in" },
+    { "size": "3/4 in", "label": "3/4 in" },
+    { "size": "1 in", "label": "1 in" },
+    { "size": "1-1/2 in", "label": "1-1/2 in" },
+    { "size": "2 in", "label": "2 in" },
+    { "size": "3 in", "label": "3 in" }
+  ],
+  "minimumDryMassRow": [
+    { "size": "#40", "mass": 75 },
+    { "size": "#10", "mass": 100 },
+    { "size": "#4", "mass": 200 },
+    { "size": "3/8 in", "mass": 200 },
+    { "size": "3/4 in", "mass": 1300 },
+    { "size": "1 in", "mass": 3000 },
+    { "size": "1-1/2 in", "mass": 10000 },
+    { "size": "2 in", "mass": 25000 },
+    { "size": "3 in", "mass": 70000 }
+  ],
+  "entryFields": [
+    {
+      "id": "boringNumber",
+      "label": "Boring Number",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "depth",
+      "label": "Depth (ft)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "materialDescription",
+      "label": "Material Description",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "dryWeightTareBefore",
+      "label": "Dry Weight + Tare (Before) (gm)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "dryWeightTareAfter",
+      "label": "Dry Weight + Tare (After) (gm)",
+      "type": "number",
+      "required": false
+    },
+    {
+      "id": "tarePanNumber",
+      "label": "Tare Pan No.",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "tareWeight",
+      "label": "Tare Weight (gm)",
+      "type": "number",
+      "required": false
+    }
+  ]
+}
