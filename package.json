@@ -1,34 +1,34 @@
 {
-  "name": "reports-manager",
+  "name": "hja-reports-manager",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "HJA Reports Manager - Full Stack Application with Frontend and Backend",
   "scripts": {
-    "dev": "vite --port 3000 --host",
-    "build": "tsc -b && vite build",
+    "postinstall": "npm run backend:install && npm run frontend:install",
+    "dev": "npm run frontend:dev",
+    "dev:backend": "npm run backend:dev",
+    "dev:both": "npm run backend:dev & npm run frontend:dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "preview": "cd frontend && npm run preview",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\"",
-    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\"",
-    "preview": "vite preview",
+    "format": "prettier --write \"frontend/src/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\" \"frontend/public/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\" \"backend/src/**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\" \"frontend/public/**/*.{js,jsx,ts,tsx,json,css,md,mdx}\" \"backend/src/**/*.{js,jsx,ts,tsx,json,md}\"",
+    "test": "npm run test:backend",
+    "test:backend": "cd backend && npm run test",
+    "test:ui": "cd backend && npm run test:ui",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:install": "cd frontend && npm install",
     "backend:dev": "cd backend && npm run dev",
     "backend:install": "cd backend && npm install"
   },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "lucide-react": "^0.555.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.17"
-  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
-    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
@@ -38,7 +38,6 @@
     "globals": "^16.5.0",
     "prettier": "^3.7.2",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "typescript-eslint": "^8.46.4"
   }
 }

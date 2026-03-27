@@ -22,7 +22,10 @@ export class ReportService {
     if (projectId) {
       query.where('report.projectId = :projectId', { projectId });
     }
-    return await query.leftJoinAndSelect('report.entries', 'entries').getMany();
+    return await query
+      .leftJoinAndSelect('report.entries', 'entries')
+      .leftJoinAndSelect('report.template', 'template')
+      .getMany();
   }
 
   async findById(id: string): Promise<Report | null> {

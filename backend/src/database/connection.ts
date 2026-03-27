@@ -6,6 +6,7 @@ import { ReportTemplate } from '../entities/ReportTemplate';
 import { ReportEntry } from '../entities/ReportEntry';
 import { Location } from '../entities/Location';
 import { ExportTemplate } from '../entities/ExportTemplate';
+import { Settings } from '../entities/Settings';
 
 export const AppDataSource = new DataSource({
   type: (process.env.DB_TYPE as 'mysql' | 'postgres') || 'mysql',
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE || 'hja_reports',
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
-  entities: [Project, Report, ReportTemplate, ReportEntry, Location, ExportTemplate],
+  entities: [Project, Report, ReportTemplate, ReportEntry, Location, ExportTemplate, Settings],
   migrations: ['src/database/migrations/**/*.ts'],
   subscribers: ['src/database/subscribers/**/*.ts'],
 });

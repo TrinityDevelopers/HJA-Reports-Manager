@@ -69,4 +69,10 @@ export const apiClient = {
     downloadXLS: (reportId: string, templateId: string) =>
       `${API_BASE_URL}/export/report/${reportId}/xls?templateId=${templateId}`,
   },
+
+  // Settings
+  settings: {
+    get: () => request('/settings'),
+    update: (data: unknown) => request('/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  },
 };

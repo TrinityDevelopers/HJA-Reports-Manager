@@ -67,14 +67,21 @@ CREATE DATABASE hja_reports;
 \q
 ```
 
-### 2. Backend Setup
+### 2. Environment Setup
+
+From the root directory, install dependencies for both frontend and backend:
 
 ```bash
-cd backend
 npm install
-cp .env.example .env
-# Edit .env with your database credentials
-npm run dev
+```
+
+This will automatically install dependencies in both the `frontend` and `backend` directories.
+
+### 3. Backend Setup
+
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your database credentials
 ```
 
 Backend runs on `http://localhost:5000`
@@ -85,17 +92,47 @@ The backend will automatically:
 - Register export templates
 - Start the REST API server
 
-### 3. Frontend Setup
+### 4. Start Development
 
+**Run frontend only:**
 ```bash
-npm install
-echo "REACT_APP_API_URL=http://localhost:5000/api" > .env
-npm run dev
+npm run frontend:dev
 ```
 
-Frontend runs on `http://localhost:3000`
+**Run backend only:**
+```bash
+npm run backend:dev
+```
+
+**Run both (in separate terminals):**
+```bash
+# Terminal 1
+npm run backend:dev
+
+# Terminal 2
+npm run frontend:dev
+```
+
+Frontend runs on `http://localhost:3000`  
+Backend API runs on `http://localhost:5000`
 
 ✅ **Done!** Your application is ready to use.
+
+### Additional Commands
+
+```bash
+# Build both frontend and backend
+npm run build
+
+# Lint all code
+npm run lint
+
+# Format all code
+npm run format
+
+# Run tests
+npm run test
+```
 
 ---
 

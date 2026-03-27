@@ -27,7 +27,7 @@ export class Report {
   @Column({ type: 'varchar' })
   templateId!: string;
 
-  @ManyToOne(() => ReportTemplate, { eager: true })
+  @ManyToOne(() => ReportTemplate)
   @JoinColumn({ name: 'templateId' })
   template!: ReportTemplate;
 
@@ -43,7 +43,7 @@ export class Report {
   @Column({ type: 'json', nullable: true })
   headerData?: Record<string, unknown>;
 
-  @OneToMany(() => ReportEntry, (entry) => entry.report, { eager: true, cascade: true })
+  @OneToMany(() => ReportEntry, (entry) => entry.report, { cascade: true })
   entries?: ReportEntry[];
 
   @CreateDateColumn()

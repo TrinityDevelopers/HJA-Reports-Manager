@@ -2,34 +2,79 @@ import { useState } from 'react';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { InputField } from '../ui';
 import EditableTable from '../EditableTable';
-import type { Project, Report } from '../../types';
+import type { Project, Report, ReportTemplate } from '../../types';
+
+type FieldConfig = {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'date' | 'select';
+  required?: boolean;
+  step?: string | number;
+  options?: string[];
+};
 
 export function ReportDetailPage({
   report,
   project,
+  template,
   onBack,
   onUpdateReport,
 }: {
   report: Report;
   project?: Project;
+  template?: ReportTemplate;
   onBack: () => void;
-  onUpdateReport: (updated: Report) => void;
+  onUpdateReport: (updated: Report) => void | Promise<void>;
 }) {
+  // Generate entry fields from template schema or use defaults
+  const getEntryFields = (): FieldConfig[] => {
+    if (!template?.schema) {
+      // Fallback to default Digital Density fields
+      return [
+        { id: 'testNumber', label: 'Test #', type: 'text', required: false },
+        { id: 'materialDescription', label: 'Material', type: 'text', required: false },
+        { id: 'testLocation', label: 'Location', type: 'text', required: false },
+        { id: 'probeDepth', label: 'Depth (in)', type: 'number', required: false, step: '0.1' },
+        { id: 'liftBFG', label: 'Lift/BFG', type: 'text', required: false },
+        { id: 'dryDensity', label: 'Dry Density', type: 'number', required: false, step: '0.1' },
+        {
+          id: 'moistureContent',
+          label: 'Moisture %',
+          type: 'number',
+          required: false,
+          step: '0.1',
+        },
+      ];
+    }
+
+    const schema = template.schema as {
+      entryFields?: FieldConfig[];
+    };
+
+    if (schema.entryFields) {
+      return schema.entryFields.map((field: FieldConfig) => ({
+        id: field.id,
+        label: field.label,
+        type: (field.type || 'text') as FieldConfig['type'],
+        required: field.required ?? false,
+        step: field.type === 'number' ? field.step || '0.1' : undefined,
+        options: field.type === 'select' ? field.options : undefined,
+      }));
+    }
+
+    return [];
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [entries, setEntries] = useState<any>(report.entries || []);
   const [showAddEntry, setShowAddEntry] = useState(false);
   const [editingTestNumber, setEditingTestNumber] = useState<number | null>(null);
 
   // Field configuration for editable entry rows
-  const entryFields = [
-    { key: 'testNumber', label: 'Test #', type: 'text' as const, readOnly: true },
-    { key: 'materialDescription', label: 'Material', type: 'text' as const },
-    { key: 'testLocation', label: 'Location', type: 'text' as const },
-    { key: 'probeDepth', label: 'Depth (in)', type: 'number' as const, step: '0.1' },
-    { key: 'liftBFG', label: 'Lift/BFG', type: 'text' as const },
-    { key: 'dryDensity', label: 'Dry Density', type: 'number' as const, step: '0.1' },
-    { key: 'moistureContent', label: 'Moisture %', type: 'number' as const, step: '0.1' },
-  ];
+  const entryFields = getEntryFields().map((f) => ({
+    ...f,
+    readOnly: f.id === 'testNumber',
+  }));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const addEntry = (entry: any) => {
@@ -98,7 +143,7 @@ export function ReportDetailPage({
       {showAddEntry && (
         <div className="card-border mb-6 border-primary-light">
           <AddEntryForm
-            proctors={project?.locations?.map((l) => l.name) || []}
+            fields={entryFields}
             onSave={addEntry}
             onCancel={() => setShowAddEntry(false)}
           />
@@ -110,15 +155,7 @@ export function ReportDetailPage({
           <p className="text-gray-500 text-center py-8">No test entries yet</p>
         ) : (
           <EditableTable
-            columns={[
-              { key: 'testNumber', label: 'Test #' },
-              { key: 'materialDescription', label: 'Material' },
-              { key: 'testLocation', label: 'Location' },
-              { key: 'probeDepth', label: 'Depth (in)' },
-              { key: 'liftBFG', label: 'Lift/BFG' },
-              { key: 'dryDensity', label: 'Dry Density' },
-              { key: 'moistureContent', label: 'Moisture %' },
-            ]}
+            columns={entryFields.map((f) => ({ key: f.id, label: f.label }))}
             rows={entries}
             rowKey={'testNumber'}
             editingRowId={editingTestNumber}
@@ -126,7 +163,6 @@ export function ReportDetailPage({
             onDelete={(id) => deleteEntry(id as number)}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onSave={(id, updated) => updateEntry(id as number, updated as any)}
-            fields={entryFields}
           />
         )}
       </div>
@@ -135,102 +171,77 @@ export function ReportDetailPage({
 }
 
 function AddEntryForm({
-  proctors,
+  fields,
   onSave,
   onCancel,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  proctors: any[];
+  fields: FieldConfig[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSave: (e: any) => void;
   onCancel: () => void;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [formData, setFormData] = useState<any>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    proctorId: '' as any,
-    materialDescription: '',
-    testLocation: '',
-    probeDepth: '',
-    liftBFG: '',
-    dryDensity: '',
-    moistureContent: '',
-  });
-  const handleProctorSelect = (proctorId: string) => {
-    const proctor = proctors.find((p) => p.id === parseInt(proctorId, 10));
-    setFormData({
-      ...formData,
-      proctorId: parseInt(proctorId, 10),
-      materialDescription: proctor?.materialDescription || '',
-    });
-  };
+  const [formData, setFormData] = useState<any>(
+    fields.reduce(
+      (acc, field) => {
+        acc[field.id] = '';
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
+  );
+
   const handleSubmit = () => {
-    if (
-      !formData.proctorId ||
-      !formData.testLocation ||
-      !formData.probeDepth ||
-      !formData.dryDensity ||
-      !formData.moistureContent
-    ) {
+    const requiredFields = fields.filter((f) => f.required);
+    const missingFields = requiredFields.some((f) => !formData[f.id]);
+
+    if (missingFields) {
       alert('Please fill in all required fields');
       return;
     }
     onSave(formData);
   };
+
   return (
     <>
       <h3 className="text-xl font-semibold text-gray-800 mb-4">New Test Entry</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Proctor</label>
-          <select
-            value={formData.proctorId}
-            onChange={(e) => handleProctorSelect(e.target.value)}
-            className="select focus-ring-primary"
+        {fields.map((field) => (
+          <div
+            key={field.id}
+            className={field.type === 'text' || field.type === 'number' ? '' : 'md:col-span-2'}
           >
-            <option value="">-- Select Proctor --</option>
-            {proctors.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.materialDescription}
-              </option>
-            ))}
-          </select>
-        </div>
-        <InputField
-          label="Test Location"
-          value={formData.testLocation}
-          onChange={(v) => setFormData({ ...formData, testLocation: v })}
-          required
-        />
-        <InputField
-          label="Probe Depth (inches)"
-          type="number"
-          value={formData.probeDepth}
-          onChange={(v) => setFormData({ ...formData, probeDepth: v })}
-          required
-        />
-        <InputField
-          label="Lift/BFG"
-          value={formData.liftBFG}
-          onChange={(v) => setFormData({ ...formData, liftBFG: v })}
-          required
-        />
-        <InputField
-          label="Dry Density (pcf)"
-          type="number"
-          step="0.1"
-          value={formData.dryDensity}
-          onChange={(v) => setFormData({ ...formData, dryDensity: v })}
-          required
-        />
-        <InputField
-          label="Moisture Content (%)"
-          type="number"
-          step="0.1"
-          value={formData.moistureContent}
-          onChange={(v) => setFormData({ ...formData, moistureContent: v })}
-          required
-        />
+            {field.type === 'select' ? (
+              <>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                <select
+                  value={formData[field.id] || ''}
+                  onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                  className="select focus-ring-primary"
+                >
+                  <option value="">-- Select {field.label} --</option>
+                  {field.options?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <InputField
+                label={field.label}
+                type={field.type}
+                value={formData[field.id] || ''}
+                onChange={(v) => setFormData({ ...formData, [field.id]: v })}
+                required={field.required}
+                step={field.step}
+              />
+            )}
+          </div>
+        ))}
       </div>
       <div className="flex gap-4 mt-4">
         <button onClick={handleSubmit} className="button-base">

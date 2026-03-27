@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { InputField } from '../ui';
-import type { Project, Report } from '../../types';
+import type { Project, Report, ReportTemplate } from '../../types';
 
 export function NewReportPage({
   project,
+  template,
   onBack,
   onCreateReport,
 }: {
   project: Project;
+  template: ReportTemplate;
   onBack: () => void;
-  onCreateReport: (r: Partial<Report>) => void;
+  onCreateReport: (r: Partial<Report>) => void | Promise<void>;
 }) {
   const [formData, setFormData] = useState<Partial<Report>>({
     projectId: project.id,
-    templateId: '',
+    templateId: template.id,
     technicianName: '',
     dateOfService: new Date(),
     reportedTo: '',
@@ -32,7 +34,7 @@ export function NewReportPage({
         <ArrowLeft size={20} className="mr-2" />
         Back to Projects
       </button>
-      <h2 className="text-3xl font-bold text-gray-800 mb-2">New Digital Density Report</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-2">New {template.displayName}</h2>
       <p className="text-gray-600 mb-6">
         Project: {project?.projectName} (#{project?.projectNumber})
       </p>
