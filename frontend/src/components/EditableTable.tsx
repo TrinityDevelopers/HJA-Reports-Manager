@@ -1,15 +1,7 @@
 import React from 'react';
 import { EditableTableRow } from './EditableTableRow';
 import { Edit2, Trash2 } from 'lucide-react';
-
-type FieldConfig = {
-  key: string;
-  label: string;
-  type?: 'text' | 'number' | 'date' | 'select';
-  step?: string | number;
-  options?: Array<{ id: string | number; name: string }>;
-  readOnly?: boolean;
-};
+import type { FieldConfig } from '../types';
 
 export default function EditableTable<T extends object>({
   columns,

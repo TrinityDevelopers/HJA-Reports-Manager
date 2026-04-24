@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { Save } from 'lucide-react';
-
-interface FieldConfig {
-  key: string;
-  label: string;
-  type?: 'text' | 'number' | 'date' | 'select';
-  step?: string | number;
-  options?: Array<{ id: string | number; name: string }>;
-  readOnly?: boolean;
-}
+import type { FieldConfig } from '../types';
 
 interface EditableTableRowProps {
   data: Record<string, unknown>;
@@ -16,7 +8,7 @@ interface EditableTableRowProps {
   onSave: (updatedData: Record<string, unknown>) => void;
   onCancel: () => void;
   cellClassName?: string;
-  selectOnChange?: (fieldKey: string, value: string) => void;
+  selectOnChange?: (fieldId: string, value: string) => void;
 }
 
 export function EditableTableRow({
@@ -30,22 +22,22 @@ export function EditableTableRow({
   // Local state for edit data
   const [editData, setEditData] = useState<Record<string, unknown>>(data);
 
-  const handleFieldChange = (fieldKey: string, value: string) => {
-    setEditData({ ...editData, [fieldKey]: value });
+  const handleFieldChange = (fieldId: string, value: string) => {
+    setEditData({ ...editData, [fieldId]: value });
   };
 
   return (
     <tr className="border-t bg-blue-50">
       {fields.map((field) => (
-        <td key={field.key} className={cellClassName}>
+        <td key={field.id} className={cellClassName}>
           {field.readOnly ? (
-            <div className="text-sm">{String(editData[field.key] ?? '')}</div>
+            <div className="text-sm">{String(editData[field.id] ?? '')}</div>
           ) : field.type === 'select' && field.options ? (
             <select
-              value={String(editData[field.key] ?? '')}
+              value={String(editData[field.id] ?? '')}
               onChange={(e) => {
-                handleFieldChange(field.key, e.target.value);
-                selectOnChange?.(field.key, e.target.value);
+                handleFieldChange(field.id, e.target.value);
+                selectOnChange?.(field.id, e.target.value);
               }}
               className="w-full px-2 py-1 border rounded text-sm"
             >
@@ -60,15 +52,15 @@ export function EditableTableRow({
             <input
               type={field.type || 'text'}
               step={field.step}
-              value={String(editData[field.key] ?? '')}
-              onChange={(e) => handleFieldChange(field.key, e.target.value)}
+              value={String(editData[field.id] ?? '')}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
             />
           ) : (
             <input
               type="text"
-              value={String(editData[field.key] ?? '')}
-              onChange={(e) => handleFieldChange(field.key, e.target.value)}
+              value={String(editData[field.id] ?? '')}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
             />
           )}

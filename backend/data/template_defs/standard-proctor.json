@@ -6,10 +6,12 @@
   "format": "xlsx",
   "maxEntryRows": 10,
   "rowsPerEntry": 3,
+  "standardFields": {
+    "projectName": "B7",
+    "projectNumber": "P7",
+    "dateOfTest": "S7"
+  },
   "fieldMapping": {
-    "header_projectName": "B7",
-    "header_jobNumber": "P7",
-    "header_dateOfTest": "S7",
     "header_dateDroppedOff": "E8",
     "header_droppedOffBy": "K8",
     "header_labCode": "S8",

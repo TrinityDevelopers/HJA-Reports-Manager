@@ -30,15 +30,15 @@ export function DatabasePage({ reports, projects }: { reports: Report[]; project
         ) : (
           <EditableTable
             columns={[
-              { key: 'dateOfService', label: 'Date' },
-              { key: 'technicianName', label: 'Technician' },
               { key: 'projectName', label: 'Project' },
-              { key: 'reportedTo', label: 'Reported To' },
               { key: 'tests', label: 'Tests' },
             ]}
             rows={reports.map((r) => ({
               ...r,
-              projectName: projects.find((p) => p.id === r.projectId)?.projectName || 'Unknown',
+              projectName:
+                r.project?.projectName ||
+                projects.find((p) => p.id === r.projectId)?.projectName ||
+                'Unknown',
               tests: r.entries?.length || 0,
             }))}
             rowKey={'id'}

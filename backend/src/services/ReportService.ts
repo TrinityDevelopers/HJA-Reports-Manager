@@ -25,18 +25,40 @@ export class ReportService {
     return await query
       .leftJoinAndSelect('report.entries', 'entries')
       .leftJoinAndSelect('report.template', 'template')
+      .leftJoinAndSelect('report.project', 'project')
       .getMany();
   }
 
   async findById(id: string): Promise<Report | null> {
     return await this.reportRepository.findOne({
       where: { id },
-      relations: ['entries', 'template'],
+      relations: ['entries', 'template', 'project'],
     });
   }
 
   async update(id: string, data: Partial<Report>): Promise<Report | null> {
-    await this.reportRepository.update(id, data as Record<string, unknown>);
+    // Filter out properties that shouldn't be updated directly
+    const updateData: Record<string, unknown> = {};
+
+    // Only allow these fields to be updated
+    const allowedFields = ['dateOfTest', 'headerData', 'projectId', 'templateId'];
+
+    for (const field of allowedFields) {
+      if (field in data) {
+        const value = (data as Record<string, unknown>)[field];
+        // Ensure dateOfTest is a valid Date
+        if (field === 'dateOfTest' && value) {
+          updateData[field] = new Date(value as string | Date);
+        } else {
+          updateData[field] = value;
+        }
+      }
+    }
+
+    // Only update if there are valid fields to update
+    if (Object.keys(updateData).length > 0) {
+      await this.reportRepository.update(id, updateData);
+    }
     return await this.findById(id);
   }
 

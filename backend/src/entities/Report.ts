@@ -31,14 +31,8 @@ export class Report {
   @JoinColumn({ name: 'templateId' })
   template!: ReportTemplate;
 
-  @Column({ type: 'varchar' })
-  technicianName!: string;
-
   @Column({ type: 'datetime' })
-  dateOfService!: Date;
-
-  @Column({ type: 'varchar', nullable: true })
-  reportedTo?: string;
+  dateOfTest!: Date;
 
   @Column({ type: 'json', nullable: true })
   headerData?: Record<string, unknown>;

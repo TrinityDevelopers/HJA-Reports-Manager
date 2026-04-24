@@ -1,0 +1,37 @@
+{
+  "templateId": "moisture-contents",
+  "name": "moisture_contents",
+  "displayName": "Moisture Contents (ASTM D 2216)",
+  "filePath": "moisture_contents.xlsx",
+  "format": "xlsx",
+  "maxEntryRows": 25,
+  "standardFields": {
+    "projectName": "C6",
+    "projectNumber": "J6",
+    "dateOfTest": "L6"
+  },
+  "fieldMapping": {
+    "header_scaleNumber": "C7",
+    "header_ovenNumber": "G7",
+    "header_ovenTemperature": "K7",
+    "header_dateInOven": "F8",
+    "header_timeInStarted": "K8",
+    "header_dateOutOven": "F9",
+    "header_timeOut": "K9",
+    "header_pulledBy": "D52",
+    "header_pulledByDate": "J52",
+    "header_dryWeights": "D53",
+    "header_dryWeightsDate": "J53",
+    "header_checkedBy": "D54",
+    "header_checkedByDate": "J54",
+    "entry_boringNumber_row": "A26-50",
+    "entry_sampleNumber_row": "B26-50",
+    "entry_depth_row": "C26-50",
+    "entry_test_row": "D26-50",
+    "entry_materialDescription_row": "F26-50",
+    "entry_wetWeightTare_row": "I26-50",
+    "entry_dryWeightTare_row": "J26-50",
+    "entry_tareWeight_row": "K26-50",
+    "entry_tarePanNumber_row": "L26-50"
+  }
+}

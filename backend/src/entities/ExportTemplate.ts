@@ -29,6 +29,9 @@ export class ExportTemplate {
   @Column({ type: 'json', nullable: true })
   fieldMapping?: Record<string, unknown>;
 
+  @Column({ type: 'json', nullable: true })
+  standardFields?: Record<string, unknown>;
+
   @Column({ type: 'int', nullable: true })
   maxEntryRows?: number;
 

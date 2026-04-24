@@ -37,43 +37,63 @@ router.post('/register-template', async (req: Request, res: Response) => {
 
 router.get('/report/:reportId/export', async (req: Request, res: Response) => {
   try {
-    const { templateId } = req.query;
-
-    if (!templateId) {
-      res.status(400).json({ error: 'templateId query parameter required' });
-      return;
-    }
-
     const report = await reportService.findById(req.params.reportId);
     if (!report) {
       res.status(404).json({ error: 'Report not found' });
       return;
     }
 
-    const exportTemplate = await exportService.findExportTemplate(templateId as string);
+    // Get the report's template to find the matching export template
+    if (!report.template) {
+      res.status(400).json({ error: 'Report has no associated template' });
+      return;
+    }
+
+    // The report template's name matches the export template's templateId
+    // (e.g., ReportTemplate.name='percent-passing-200' -> ExportTemplate.templateId='percent-passing-200')
+    let exportTemplate = await exportService.findExportTemplate(report.template.name);
+
+    // If export template not found, try to seed them and look again
     if (!exportTemplate) {
-      res.status(404).json({ error: 'Export template not found' });
+      try {
+        await exportService.seedDefaultExportTemplates();
+        exportTemplate = await exportService.findExportTemplate(report.template.name);
+      } catch (error) {
+        console.error('Failed to seed export templates:', error);
+      }
+    }
+
+    if (!exportTemplate) {
+      res.status(404).json({
+        error: `Export template not found for type "${report.template.name}"`,
+      });
       return;
     }
 
     const outputPath = path.join(
       process.cwd(),
       'temp',
-      `report_${report.id}_${Date.now()}.${exportTemplate.format}`,
+      `report_${report.template.name}_${Date.now()}.${exportTemplate.format}`,
     );
 
     // Ensure temp directory exists
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
-    await exportService.exportReport(report, exportTemplate, outputPath);
+    // Cast database entity to ExportableTemplate interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await exportService.exportReport(report, exportTemplate as any, outputPath);
 
-    res.download(outputPath, `report_${report.id}.${exportTemplate.format}`, async () => {
-      try {
-        await fs.unlink(outputPath);
-      } catch {
-        // ignore cleanup errors
-      }
-    });
+    res.download(
+      outputPath,
+      `report_${report.template.name}.${exportTemplate.format}`,
+      async () => {
+        try {
+          await fs.unlink(outputPath);
+        } catch {
+          // ignore cleanup errors
+        }
+      },
+    );
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

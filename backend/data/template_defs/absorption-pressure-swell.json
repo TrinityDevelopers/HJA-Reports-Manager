@@ -5,10 +5,12 @@
   "filePath": "absorption-pressure_swell_test.xlsx",
   "format": "xlsx",
   "maxEntryRows": 28,
+  "standardFields": {
+    "projectName": "C6",
+    "projectNumber": "O6",
+    "dateOfTest": "T6"
+  },
   "fieldMapping": {
-    "header_projectName": "C6",
-    "header_hjaNumber": "O6",
-    "header_dateOfTest": "T6",
     "header_boringNumber": "C7",
     "header_depth": "F7",
     "header_sampleNumber": "N7",

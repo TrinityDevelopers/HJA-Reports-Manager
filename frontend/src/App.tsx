@@ -5,12 +5,11 @@ import { DatabasePage } from './components/pages/DatabasePage';
 import { ExportPage } from './components/pages/ExportPage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ReportsPage } from './components/pages/ReportsPage';
-import { NewReportPage } from './components/pages/NewReportPage';
 import { ReportDetailPage } from './components/pages/ReportDetailPage';
 import { NavButton } from './components/ui';
 import { useCRUD, useFormState, useLocalStorage, useFontLoader } from './hooks';
 import { apiClient } from './api/client';
-import type { ID, Project, Report, ReportTemplate, SettingsState } from './types';
+import type { Project, Report, ReportTemplate, SettingsState } from './types';
 import { PAGES, type PageType } from './constants/pages';
 import { FileDown, Database, Settings, FileText, MapPin } from 'lucide-react';
 
@@ -31,9 +30,8 @@ export default function TechnicianReportsManager() {
 
   // Page navigation state
   const [currentPage, setCurrentPage] = useState<PageType>(PAGES.REPORTS);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
+  const [isNewReport, setIsNewReport] = useState(false);
   const [showAddProject, setShowAddProject] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
@@ -175,29 +173,6 @@ export default function TechnicianReportsManager() {
     }
   };
 
-  // Wrapper for addReport that adds empty entries array and calls backend API
-  const addReport = async (report: Partial<Report>): Promise<Report> => {
-    const reportData = {
-      ...report,
-      projectId: report.projectId as ID,
-      entries: report.entries || [],
-    };
-
-    try {
-      const newReport = (await apiClient.reports.create(reportData)) as Report;
-      setReports([...reports, newReport]);
-      return newReport;
-    } catch (error) {
-      // Fallback to local state if API fails
-      console.error('Failed to create report on backend:', error);
-      const localReport: Report = {
-        ...(reportData as Report),
-        id: crypto.randomUUID(),
-      };
-      setReports([...reports, localReport]);
-      return localReport;
-    }
-  };
   const exportData = (format: 'json' | string) => {
     if (format === 'json') {
       const data = { projects, reports };
@@ -260,16 +235,49 @@ export default function TechnicianReportsManager() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {currentPage === PAGES.REPORTS && !selectedProject && !selectedReport && (
+        {currentPage === PAGES.REPORTS && !selectedReport && (
           <ReportsPage
             projects={projects}
             reports={reports}
             templates={templates}
-            onSelectProject={(project, template) => {
-              setSelectedProject(project);
-              setSelectedTemplate(template);
+            onSelectProject={async (project, template) => {
+              // Create a new empty report directly
+              const newReport: Partial<Report> = {
+                projectId: project.id,
+                templateId: template.id,
+                dateOfTest: new Date(),
+                headerData: {},
+                entries: [],
+              };
+
+              try {
+                const created = (await apiClient.reports.create(newReport)) as Report;
+                // Enrich with template info for display
+                created.template = template;
+                setReports([...reports, created]);
+                setSelectedReport(created);
+                setIsNewReport(true);
+              } catch (error) {
+                console.error('Failed to create report:', error);
+                // Fallback to local state
+                const localReport: Report = {
+                  ...(newReport as Report),
+                  id: crypto.randomUUID(),
+                  project: project,
+                  dateOfTest: new Date(),
+                  template: template,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                };
+                setReports([...reports, localReport]);
+                setSelectedReport(localReport);
+                setIsNewReport(true);
+              }
             }}
-            onSelectReport={setSelectedReport}
+            onSelectReport={(report) => {
+              setSelectedReport(report);
+              setIsNewReport(false);
+            }}
             onDeleteReport={async (id) => {
               try {
                 await apiClient.reports.delete(id);
@@ -285,36 +293,26 @@ export default function TechnicianReportsManager() {
             }}
           />
         )}
-        {currentPage === PAGES.REPORTS &&
-          selectedProject &&
-          selectedTemplate &&
-          !selectedReport && (
-            <NewReportPage
-              project={selectedProject}
-              template={selectedTemplate}
-              onBack={() => {
-                setSelectedTemplate(null);
-                setSelectedProject(null);
-              }}
-              onCreateReport={async (report) => {
-                const created = await addReport(report as Partial<Report>);
-                setSelectedReport(created);
-              }}
-            />
-          )}
         {currentPage === PAGES.REPORTS && selectedReport && (
           <ReportDetailPage
             report={reports.find((r) => r.id === selectedReport.id) || selectedReport}
             project={projects.find((p) => p.id === selectedReport.projectId)}
             template={selectedReport.template}
+            isNew={isNewReport}
             onBack={() => {
               setSelectedReport(null);
-              setSelectedProject(null);
-              setSelectedTemplate(null);
+              setIsNewReport(false);
             }}
             onUpdateReport={async (updated) => {
               try {
-                await apiClient.reports.update(selectedReport.id, updated);
+                // Filter out nested objects and relations before sending to API
+                const updatePayload = {
+                  dateOfTest: updated.dateOfTest,
+                  headerData: updated.headerData,
+                  projectId: updated.projectId,
+                  templateId: updated.templateId,
+                };
+                await apiClient.reports.update(selectedReport.id, updatePayload);
                 updateReport(selectedReport.id, updated);
               } catch (error) {
                 console.error('Failed to update report:', error);

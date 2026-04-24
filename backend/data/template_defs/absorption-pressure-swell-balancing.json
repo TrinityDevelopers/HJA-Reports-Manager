@@ -5,10 +5,12 @@
   "filePath": "absorption-pressure_swell_balancing.xlsx",
   "format": "xlsx",
   "maxEntryRows": 23,
+  "standardFields": {
+    "projectName": "B6",
+    "projectNumber": "I6",
+    "dateOfTest": "L6"
+  },
   "fieldMapping": {
-    "header_projectName": "B6",
-    "header_hjaNumber": "I6",
-    "header_dateOfTest": "L6",
     "header_boringNumber": "B7",
     "header_depth": "E7",
     "header_sampleNumber": "J7",

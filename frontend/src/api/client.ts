@@ -66,8 +66,7 @@ export const apiClient = {
     listFiles: () => request('/export/list'),
     registerTemplate: (data: unknown) =>
       request('/export/register-template', { method: 'POST', body: JSON.stringify(data) }),
-    downloadXLS: (reportId: string, templateId: string) =>
-      `${API_BASE_URL}/export/report/${reportId}/xls?templateId=${templateId}`,
+    downloadXLS: (reportId: string) => `${API_BASE_URL}/export/report/${reportId}/export`,
   },
 
   // Settings

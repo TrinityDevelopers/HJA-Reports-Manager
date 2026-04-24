@@ -63,8 +63,11 @@ const report = await apiClient.reports.getById('report-id');
 const newReport = await apiClient.reports.create({
   projectId: 'project-id',
   templateId: 'template-id',
-  technicianName: 'John Doe',
-  dateOfService: new Date(),
+  projectName: 'Project Name',
+  dateOfTest: new Date(),
+  headerData: {
+    // Template-specific fields only
+  },
 });
 
 // Report Entries

@@ -5,24 +5,6 @@
   "version": "1.0.0",
   "headerFields": [
     {
-      "id": "projectName",
-      "label": "Project",
-      "type": "text",
-      "required": true
-    },
-    {
-      "id": "jobNumber",
-      "label": "Job No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "dateOfTest",
-      "label": "Date",
-      "type": "date",
-      "required": true
-    },
-    {
       "id": "boringNumber",
       "label": "Boring No.",
       "type": "text",

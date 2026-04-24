@@ -34,16 +34,26 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
         templateDef.default.maxEntryRows || 1, // Create all available entry rows
       );
 
+      // Add mock project object to match ExportableReport interface
+      const reportWithProject = {
+        ...testReport,
+        project: {
+          projectNumber: '12345G',
+          projectName: 'Test Project',
+        },
+      };
+
       // Create export template (plain object, not entity)
       const exportTemplate = {
         filePath: templateDef.default.filePath,
         fieldMapping: templateDef.default.fieldMapping,
         maxEntryRows: templateDef.default.maxEntryRows,
         rowsPerEntry: templateDef.default.rowsPerEntry,
+        standardFields: templateDef.default.standardFields,
       };
 
       // Export to XLSX
-      await exportService.exportReport(testReport, exportTemplate, outputFile);
+      await exportService.exportReport(reportWithProject, exportTemplate, outputFile);
 
       // Verify file was created
       const fileExists = await fs

@@ -5,10 +5,12 @@
   "filePath": "percent_passing_200.xlsx",
   "format": "xlsx",
   "maxEntryRows": 20,
+  "standardFields": {
+    "projectName": "B7",
+    "projectNumber": "G7",
+    "dateOfTest": "J7"
+  },
   "fieldMapping": {
-    "header_projectName": "B7",
-    "header_hjaNumber": "G7",
-    "header_dateOfTest": "J7",
     "header_scaleNumber": "B9",
     "header_sieveNumber": "F9",
     "header_ovenNumber": "J9",

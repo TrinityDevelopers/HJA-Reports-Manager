@@ -6,6 +6,9 @@ import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
 
 interface ExportableReport {
+  projectName?: string;
+  dateOfTest: Date;
+  project?: { projectNumber?: string; projectName?: string };
   headerData?: Record<string, unknown>;
   entries?: Array<{ data: Record<string, unknown> }>;
 }
@@ -18,6 +21,7 @@ interface CellRange {
 
 interface ExportableTemplate {
   filePath: string;
+  standardFields?: Record<string, string>;
   fieldMapping?: Record<string, unknown>;
   maxEntryRows?: number;
   rowsPerEntry?: number;
@@ -122,6 +126,23 @@ export class ExportService {
       throw new Error('Template workbook has no worksheets');
     }
 
+    // Fill standard fields (projectName, projectNumber, dateOfTest)
+    if (exportTemplate.standardFields) {
+      const standardFieldsMap: Record<string, string | number | Date> = {
+        projectName: report.project?.projectName || '',
+        dateOfTest: report.dateOfTest,
+        projectNumber: report.project?.projectNumber || '',
+      };
+
+      for (const [key, cellLocation] of Object.entries(exportTemplate.standardFields)) {
+        const value = standardFieldsMap[key];
+        if (value !== undefined && value !== null && value !== '') {
+          const cell = worksheet.getCell(cellLocation);
+          cell.value = value as string | number | Date;
+        }
+      }
+    }
+
     // Fill header data
     if (report.headerData) {
       for (const [key, value] of Object.entries(report.headerData)) {
@@ -205,6 +226,7 @@ export class ExportService {
           existingTemplate.filePath = templateDef.filePath as string;
           existingTemplate.format = templateDef.format as 'xlsx';
           existingTemplate.fieldMapping = templateDef.fieldMapping as Record<string, unknown>;
+          existingTemplate.standardFields = templateDef.standardFields as Record<string, unknown>;
           existingTemplate.maxEntryRows = templateDef.maxEntryRows as number | undefined;
           existingTemplate.rowsPerEntry = templateDef.rowsPerEntry as number | undefined;
           await this.exportTemplateRepository.save(existingTemplate);
@@ -218,6 +240,7 @@ export class ExportService {
             filePath: templateDef.filePath as string,
             format: templateDef.format as 'xlsx',
             fieldMapping: templateDef.fieldMapping as Record<string, unknown>,
+            standardFields: templateDef.standardFields as Record<string, unknown>,
             maxEntryRows: templateDef.maxEntryRows as number | undefined,
             rowsPerEntry: templateDef.rowsPerEntry as number | undefined,
           });

@@ -43,9 +43,9 @@ export interface Report {
   projectId: ID;
   templateId: ID;
   template?: ReportTemplate;
-  technicianName: string;
-  dateOfService: Date;
-  reportedTo?: string;
+  project?: Project;
+  projectName?: string;
+  dateOfTest: Date;
   headerData?: Record<string, unknown>;
   entries?: ReportEntry[];
   createdAt: Date;
@@ -69,3 +69,13 @@ export interface SettingsState {
   units: 'imperial' | 'metric';
   autoSave: boolean;
 }
+
+export type FieldConfig = {
+  id: string;
+  label: string;
+  type?: 'text' | 'number' | 'date' | 'select';
+  required?: boolean;
+  step?: string | number;
+  options?: Array<{ id: string | number; name: string }>;
+  readOnly?: boolean;
+};

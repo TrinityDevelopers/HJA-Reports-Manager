@@ -17,6 +17,8 @@ export interface ReportEntry {
 export interface TestReport {
   id: string;
   reportType: string;
+  projectNumber: string;
+  dateOfTest: Date;
   headerData: Record<string, unknown>;
   entries?: ReportEntry[];
 }
@@ -79,10 +81,14 @@ export function createTestReport(
   headerFields: SchemaField[],
   entryFields: SchemaField[] = [],
   entryRowCount: number = 1,
+  projectNumber: string = '12345G',
+  dateOfTest: Date = new Date(),
 ): TestReport {
   const report: TestReport = {
     id: uuid(),
     reportType: reportType,
+    projectNumber: projectNumber,
+    dateOfTest: dateOfTest,
     headerData: generateHeaderData(headerFields),
   };
 
@@ -113,7 +119,7 @@ const templateDefsDir = path.join(__dirname, '../data/template_defs');
 export const TEMPLATE_CONFIGS: Record<string, TemplateTestConfig> = {};
 
 const schemaFiles = readdirSync(schemasDir)
-  .filter((file) => file.endsWith('.json'))
+  .filter((file: string) => file.endsWith('.json'))
   .sort();
 
 for (const file of schemaFiles) {
@@ -125,7 +131,7 @@ for (const file of schemaFiles) {
     // Convert kebab-case to Title Case for displayName
     const displayName = templateId
       .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
     TEMPLATE_CONFIGS[templateId] = {

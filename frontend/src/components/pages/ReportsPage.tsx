@@ -95,13 +95,7 @@ export function ReportsPage({
                           {project?.projectName || 'Unknown Project'}
                         </h4>
                         <div className="subtext mt-1">
-                          <p>
-                            Technician: {report.technicianName} | Date:{' '}
-                            {new Date(report.dateOfService).toLocaleDateString()}
-                          </p>
-                          <p>
-                            Reported to: {report.reportedTo} | Tests: {report.entries?.length || 0}
-                          </p>
+                          <p>Tests: {report.entries?.length || 0}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -186,12 +180,8 @@ export function ReportsPage({
                       </h4>
                       <div className="subtext mt-1">
                         <p>
-                          Type: {template?.displayName || 'Unknown'} | Technician:{' '}
-                          {report.technicianName}
-                        </p>
-                        <p>
-                          Date: {new Date(report.dateOfService).toLocaleDateString()} | Reported to:{' '}
-                          {report.reportedTo} | Tests: {report.entries?.length || 0}
+                          Type: {template?.displayName || 'Unknown'} | Tests:{' '}
+                          {report.entries?.length || 0}
                         </p>
                       </div>
                     </div>

@@ -5,15 +5,17 @@
   "filePath": "resistivity.xlsx",
   "format": "xlsx",
   "maxEntryRows": 0,
+  "standardFields": {
+    "projectName": "B6",
+    "projectNumber": "H6",
+    "dateOfTest": "K6"
+  },
   "fieldMapping": {
-    "header_projectName": "B6",
-    "header_jobNumber": "H6",
-    "header_dateOfTest": "K6",
     "header_boringNumber": "B7",
     "header_depth": "E7",
     "header_sampleNumber": "G7",
     "header_testNumber": "K7",
-    "header_materialDescription": "C8",
+    "header_materialDescription": "D8",
     "header_containerNumber": "F14",
     "header_wtWetSoilTare": "F15",
     "header_wtDrySoilTare": "F16",

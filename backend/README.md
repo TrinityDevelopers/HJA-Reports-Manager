@@ -74,10 +74,9 @@ Individual report instance
 - `id` (UUID, PK)
 - `projectId` (UUID, FK)
 - `templateId` (UUID, FK)
-- `technicianName` (string)
-- `dateOfService` (datetime)
-- `reportedTo` (string, nullable)
-- `headerData` (JSON) - Header field values
+- `projectName` (string) - Denormalized from project for quick access
+- `dateOfTest` (datetime) - Date the test was performed (editable)
+- `headerData` (JSON) - Template-specific header field values
 - `createdAt`, `updatedAt` (timestamp)
 - Relations: hasMany(entries)
 
