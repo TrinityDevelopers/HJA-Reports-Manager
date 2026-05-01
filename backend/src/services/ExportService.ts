@@ -146,9 +146,38 @@ export class ExportService {
     // Fill header data
     if (report.headerData) {
       for (const [key, value] of Object.entries(report.headerData)) {
-        const cellMapping = (exportTemplate.fieldMapping as Record<string, unknown>)?.[
-          `header_${key}`
-        ] as string | undefined;
+        const fieldMapping = exportTemplate.fieldMapping as Record<string, unknown> | undefined;
+
+        // Support composite nameAndDate fields using bracketed mappings:
+        // - header_<id>[name]
+        // - header_<id>[date]
+        const nameCellMapping = fieldMapping?.[`header_${key}[name]`] as string | undefined;
+        const dateCellMapping = fieldMapping?.[`header_${key}[date]`] as string | undefined;
+        if ((nameCellMapping || dateCellMapping) && value && typeof value === 'object') {
+          const composite = value as Record<string, unknown>;
+
+          if (nameCellMapping && composite.name !== undefined && composite.name !== null) {
+            worksheet.getCell(nameCellMapping).value = composite.name as
+              | string
+              | number
+              | boolean
+              | Date;
+          }
+
+          if (dateCellMapping && composite.date !== undefined && composite.date !== null) {
+            worksheet.getCell(dateCellMapping).value = composite.date as
+              | string
+              | number
+              | boolean
+              | Date;
+          }
+
+          continue;
+        }
+
+        // Standard (single-cell) header mappings:
+        // - header_<id>
+        const cellMapping = fieldMapping?.[`header_${key}`] as string | undefined;
         if (cellMapping && value !== undefined && value !== null) {
           const cell = worksheet.getCell(cellMapping);
           cell.value = value as string | number | boolean | Date;

@@ -4,7 +4,7 @@ import path from 'path';
 
 export interface SchemaField {
   id: string;
-  type: 'text' | 'number' | 'date' | 'time' | 'datetime';
+  type: 'text' | 'number' | 'date' | 'time' | 'datetime' | 'nameAndDate';
   [key: string]: unknown;
 }
 
@@ -38,6 +38,8 @@ export function generateFieldValue(field: SchemaField): unknown {
       return new Date().toTimeString().split(' ')[0];
     case 'datetime':
       return new Date().toISOString();
+    case 'nameAndDate':
+      return { name: 'test', date: new Date().toISOString().split('T')[0] };
     default:
       return 'test';
   }

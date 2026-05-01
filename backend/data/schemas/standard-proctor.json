@@ -134,37 +134,19 @@
     {
       "id": "testedBy",
       "label": "Tested By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "testedByDate",
-      "label": "Tested By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "computedBy",
       "label": "Computed By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "computedByDate",
-      "label": "Computed By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "checkedBy",
       "label": "Checked By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "checkedByDate",
-      "label": "Checked By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     }
   ],

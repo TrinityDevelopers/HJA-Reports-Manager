@@ -27,9 +27,9 @@
     "entry_dryWeightTareAfter_row": "H30-49",
     "entry_tarePanNumber_row": "J30-49",
     "entry_tareWeight_row": "K30-49",
-    "header_testedBy": "C51",
-    "header_testedByDate": "H51",
-    "header_checkedBy": "C52",
-    "header_checkedByDate": "H52"
+    "header_testedBy[name]": "C51",
+    "header_testedBy[date]": "H51",
+    "header_checkedBy[name]": "C52",
+    "header_checkedBy[date]": "H52"
   }
 }

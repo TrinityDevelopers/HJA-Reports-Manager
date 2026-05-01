@@ -43,37 +43,19 @@
     {
       "id": "setupBy",
       "label": "Set Up By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "setupByDate",
-      "label": "Set Up By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "takenDownBy",
       "label": "Taken Down By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "takenDownByDate",
-      "label": "Taken Down By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "dryWeightsBy",
       "label": "Dry Weights By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "dryWeightsByDate",
-      "label": "Dry Weights By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     }
   ],

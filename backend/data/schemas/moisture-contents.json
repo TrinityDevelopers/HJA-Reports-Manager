@@ -49,37 +49,19 @@
     {
       "id": "pulledBy",
       "label": "Pulled By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "pulledByDate",
-      "label": "Pulled By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "dryWeights",
       "label": "Dry Weights",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "dryWeightsDate",
-      "label": "Dry Weights Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "checkedBy",
       "label": "Checked By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "checkedByDate",
-      "label": "Checked By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     }
   ],
@@ -99,7 +81,7 @@
     {
       "id": "depth",
       "label": "Depth (ft.)",
-      "type": "number",
+      "type": "text",
       "required": false
     },
     {

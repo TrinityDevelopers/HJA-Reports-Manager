@@ -1,0 +1,40 @@
+{
+  "templateId": "sieve-analysis",
+  "name": "sieve_analysis",
+  "displayName": "Grain Size Analysis (ASTM D422)",
+  "filePath": "sieve-analysis.xlsx",
+  "format": "xlsx",
+  "maxEntryRows": 17,
+  "standardFields": {
+    "projectName": "B7",
+    "projectNumber": "Q7",
+    "dateOfTest": "T7"
+  },
+  "fieldMapping": {
+    "header_boringNumber": "C8",
+    "header_depth": "I8",
+    "header_sampleNumber": "Q8",
+    "header_materialDescription": "H9",
+    "header_totalWetWeightSamplePan": "H12",
+    "header_totalDryWeightSamplePan": "H13",
+    "header_tarePanNumber": "D14",
+    "header_tareWeight": "H14",
+    "header_scaleNumber": "Q12",
+    "header_ovenNumber": "Q13",
+    "entry_sieveNumber_row": "A20-36",
+    "entry_sieveSize_row": "B20-36",
+    "entry_individualWtRetainedPlusPan_row": "E20-36",
+    "entry_cumulativeWtRetainedPlusPan_row": "G20-36",
+    "entry_cumulativeWtRetained_row": "L20-36",
+    "entry_percentCoarser_row": "P20-36",
+    "entry_percentFiner_row": "R20-36",
+    "entry_specificationRequiredPercentPassing_row": "T20-36",
+    "header_testedBy[name]": "D39",
+    "header_testedBy[date]": "M39",
+    "header_dryWeights[name]": "D40",
+    "header_dryWeights[date]": "M40",
+    "header_checkedBy[name]": "D41",
+    "header_checkedBy[date]": "M41"
+  }
+}
+

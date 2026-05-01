@@ -23,11 +23,11 @@
     "header_measuredResistivity": "J28",
     "header_temperatureOfSample": "J29",
     "header_remarks": "B33",
-    "header_preparedBy": "F39",
-    "header_preparedByDate": "K39",
-    "header_testedBy": "F40",
-    "header_testedByDate": "K40",
-    "header_checkedBy": "F41",
-    "header_checkedByDate": "K41"
+    "header_preparedBy[name]": "F39",
+    "header_preparedBy[date]": "K39",
+    "header_testedBy[name]": "F40",
+    "header_testedBy[date]": "K40",
+    "header_checkedBy[name]": "F41",
+    "header_checkedBy[date]": "K41"
   }
 }

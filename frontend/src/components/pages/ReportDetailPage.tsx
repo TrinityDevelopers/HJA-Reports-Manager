@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, ArrowLeft, FileDown } from 'lucide-react';
-import { InputField } from '../ui';
+import { InputField, NameAndDateField } from '../ui';
 import EditableTable from '../EditableTable';
 import { apiClient } from '../../api/client';
 import type { Project, Report, ReportTemplate, FieldConfig } from '../../types';
@@ -375,7 +375,9 @@ export function ReportDetailPage({
         )}
       </div>
       <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Report Details</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          {report.template?.displayName || 'Report Details'}
+        </h2>
 
         {/* Standard Fields (Read-only summary and editable date) */}
         <div className="card-border border-gray-200 p-4 mb-6">
@@ -484,7 +486,21 @@ export function ReportDetailPage({
                       {headerData[field.id]
                         ? field.type === 'date'
                           ? new Date(headerData[field.id]).toLocaleDateString()
-                          : String(headerData[field.id])
+                          : field.type === 'nameAndDate'
+                            ? (() => {
+                                const v = headerData[field.id] as
+                                  | { name?: string; date?: string }
+                                  | undefined;
+                                const name = v?.name?.trim();
+                                const date = v?.date
+                                  ? new Date(v.date).toLocaleDateString()
+                                  : undefined;
+                                if (name && date) return `${name} — ${date}`;
+                                if (name) return name;
+                                if (date) return date;
+                                return '-';
+                              })()
+                            : String(headerData[field.id])
                         : '-'}
                     </p>
                   </div>
@@ -587,6 +603,13 @@ function HeaderForm({
                   ))}
                 </select>
               </>
+            ) : field.type === 'nameAndDate' ? (
+              <NameAndDateField
+                label={field.label}
+                required={field.required}
+                value={formData[field.id] as { name?: string; date?: string } | undefined}
+                onChange={(v) => setFormData({ ...formData, [field.id]: v })}
+              />
             ) : (
               <InputField
                 label={field.label}

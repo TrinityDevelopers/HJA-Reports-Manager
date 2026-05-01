@@ -28,6 +28,58 @@ export function InputField({
   );
 }
 
+export function NameAndDateField({
+  label,
+  value,
+  onChange,
+  required = false,
+}: {
+  label: string;
+  value: { name?: string; date?: string } | undefined;
+  onChange: (v: { name?: string; date?: string } | undefined) => void;
+  required?: boolean;
+}) {
+  const nameValue = value?.name ?? '';
+  const dateValue = value?.date ?? '';
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="flex items-stretch w-full rounded border bg-white overflow-hidden">
+        <input
+          type="text"
+          value={nameValue}
+          onChange={(e) => {
+            const nextName = e.target.value;
+            if (!nextName && !dateValue) {
+              onChange(undefined);
+              return;
+            }
+            onChange({ name: nextName, date: dateValue || undefined });
+          }}
+          required={required}
+          placeholder="Name"
+          className="flex-1 px-3 py-2 outline-none"
+        />
+        <div className="w-px bg-gray-200" />
+        <input
+          type="date"
+          value={dateValue}
+          onChange={(e) => {
+            const nextDate = e.target.value;
+            if (!nameValue && !nextDate) {
+              onChange(undefined);
+              return;
+            }
+            onChange({ name: nameValue || undefined, date: nextDate || undefined });
+          }}
+          className="px-3 py-2 outline-none"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function NavButton({
   icon,
   label,

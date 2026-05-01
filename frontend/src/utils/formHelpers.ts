@@ -8,6 +8,13 @@ export interface FieldDefinition {
   options?: string[];
 }
 
+export type NameAndDateValue = { name?: string; date?: string };
+
+export function asNameAndDateValue(value: unknown): NameAndDateValue {
+  if (value && typeof value === 'object') return value as NameAndDateValue;
+  return {};
+}
+
 export interface FormSection {
   title: string;
   fields: FieldDefinition[];
@@ -87,6 +94,19 @@ export function validateField(
     }
   }
 
+  if (fieldDef.type === 'nameAndDate' && value !== undefined && value !== null && value !== '') {
+    if (typeof value !== 'object') {
+      return { valid: false, error: `${fieldDef.label} must include a name and/or date` };
+    }
+    const v = value as NameAndDateValue;
+    if (v.date) {
+      const date = new Date(v.date);
+      if (isNaN(date.getTime())) {
+        return { valid: false, error: `${fieldDef.label} date must be a valid date` };
+      }
+    }
+  }
+
   if (fieldDef.type === 'select' && fieldDef.options && value) {
     if (!fieldDef.options.includes(String(value))) {
       return {
@@ -134,6 +154,15 @@ export function formatFieldValue(fieldDef: FieldDefinition, value: unknown): str
     return date.toLocaleDateString();
   }
 
+  if (fieldDef.type === 'nameAndDate') {
+    if (typeof value !== 'object' || value === null) return '';
+    const v = value as NameAndDateValue;
+    const name = v.name?.trim();
+    const date = v.date ? new Date(v.date).toLocaleDateString() : undefined;
+    if (name && date) return `${name} — ${date}`;
+    return name || date || '';
+  }
+
   if (fieldDef.type === 'number') {
     const num = Number(value);
     return isNaN(num) ? String(value) : num.toLocaleString();
@@ -155,6 +184,9 @@ export function parseFieldValue(fieldDef: FieldDefinition, value: string): unkno
       return parseFloat(value);
     case 'date':
       return new Date(value).toISOString();
+    case 'nameAndDate':
+      // This field is parsed/updated via a dedicated UI control, not a single string.
+      return undefined;
     case 'select':
     case 'text':
     default:

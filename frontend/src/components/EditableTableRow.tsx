@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Save } from 'lucide-react';
 import type { FieldConfig } from '../types';
+import { asNameAndDateValue } from '../utils/formHelpers';
 
 interface EditableTableRowProps {
   data: Record<string, unknown>;
@@ -48,6 +49,34 @@ export function EditableTableRow({
                 </option>
               ))}
             </select>
+          ) : field.type === 'nameAndDate' ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={String(asNameAndDateValue(editData[field.id]).name ?? '')}
+                onChange={(e) => {
+                  const prev = asNameAndDateValue(editData[field.id]);
+                  setEditData({
+                    ...editData,
+                    [field.id]: { ...prev, name: e.target.value || undefined },
+                  });
+                }}
+                className="w-full px-2 py-1 border rounded text-sm"
+                placeholder="Name"
+              />
+              <input
+                type="date"
+                value={String(asNameAndDateValue(editData[field.id]).date ?? '')}
+                onChange={(e) => {
+                  const prev = asNameAndDateValue(editData[field.id]);
+                  setEditData({
+                    ...editData,
+                    [field.id]: { ...prev, date: e.target.value || undefined },
+                  });
+                }}
+                className="w-full px-2 py-1 border rounded text-sm"
+              />
+            </div>
           ) : field.type === 'text' || field.type === 'date' || field.type === 'number' ? (
             <input
               type={field.type || 'text'}

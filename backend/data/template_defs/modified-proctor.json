@@ -41,11 +41,11 @@
     "header_moistureTW": "K51",
     "header_moistureWW": "O51",
     "header_moistureDW": "S51",
-    "header_testedBy": "D53",
-    "header_testedByDate": "L53",
-    "header_computedBy": "D54",
-    "header_computedByDate": "L54",
-    "header_checkedBy": "D55",
-    "header_checkedByDate": "L55"
+    "header_testedBy[name]": "D53",
+    "header_testedBy[date]": "L53",
+    "header_computedBy[name]": "D54",
+    "header_computedBy[date]": "L54",
+    "header_checkedBy[name]": "D55",
+    "header_checkedBy[date]": "L55"
   }
 }

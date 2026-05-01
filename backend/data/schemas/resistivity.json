@@ -79,37 +79,19 @@
     {
       "id": "preparedBy",
       "label": "Prepared By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "preparedByDate",
-      "label": "Prepared By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "testedBy",
       "label": "Tested By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "testedByDate",
-      "label": "Tested By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     },
     {
       "id": "checkedBy",
       "label": "Checked By",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "checkedByDate",
-      "label": "Checked By Date",
-      "type": "date",
+      "type": "nameAndDate",
       "required": false
     }
   ],

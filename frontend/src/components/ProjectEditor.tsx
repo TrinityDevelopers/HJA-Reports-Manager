@@ -15,7 +15,7 @@ export function EditLocationRow({
   onSave: (updated: Location) => void;
   onCancel: () => void;
 }) {
-  const locationFields = [{ key: 'name', label: 'Location Name', type: 'text' as const }];
+  const locationFields = [{ id: 'name', label: 'Location Name', type: 'text' as const }];
 
   return (
     <EditableTableRow

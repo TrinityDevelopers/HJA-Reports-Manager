@@ -73,7 +73,7 @@ export interface SettingsState {
 export type FieldConfig = {
   id: string;
   label: string;
-  type?: 'text' | 'number' | 'date' | 'select';
+  type?: 'text' | 'number' | 'date' | 'select' | 'nameAndDate';
   required?: boolean;
   step?: string | number;
   options?: Array<{ id: string | number; name: string }>;
