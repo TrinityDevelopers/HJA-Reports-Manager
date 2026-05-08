@@ -4,6 +4,7 @@ import ExcelJS from 'exceljs';
 import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
+import { seedFromDefinitions } from '../utils/seedFromDefinitions';
 
 interface ExportableReport {
   projectName?: string;
@@ -188,16 +189,22 @@ export class ExportService {
     // Fill entry rows
     if (report.entries) {
       // Validate entry count against maxEntryRows if specified
-      if (exportTemplate.maxEntryRows && report.entries.length > exportTemplate.maxEntryRows) {
+      const entriesSorted = [...report.entries].sort((a, b) => {
+        const ao = (a as unknown as { entryOrder?: number }).entryOrder ?? 0;
+        const bo = (b as unknown as { entryOrder?: number }).entryOrder ?? 0;
+        return ao - bo;
+      });
+
+      if (exportTemplate.maxEntryRows && entriesSorted.length > exportTemplate.maxEntryRows) {
         console.warn(
-          `Warning: Report has ${report.entries.length} entries but template maxEntryRows is ${exportTemplate.maxEntryRows}. Some entries may overflow.`,
+          `Warning: Report has ${entriesSorted.length} entries but template maxEntryRows is ${exportTemplate.maxEntryRows}. Some entries may overflow.`,
         );
       }
 
       const rowsPerEntry = exportTemplate.rowsPerEntry ?? 1;
 
-      for (let i = 0; i < report.entries.length; i++) {
-        const entry = report.entries[i];
+      for (let i = 0; i < entriesSorted.length; i++) {
+        const entry = entriesSorted[i];
         if (!entry.data) continue;
 
         for (const [key, value] of Object.entries(entry.data)) {
@@ -240,42 +247,45 @@ export class ExportService {
       const files = await fs.readdir(templateDefsDir);
       const jsonFiles = files.filter((f) => f.endsWith('.json'));
 
-      for (const file of jsonFiles) {
-        const filePath = path.join(templateDefsDir, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const templateDef = JSON.parse(content) as Record<string, unknown>;
+      const defs = await Promise.all(
+        jsonFiles.map(async (file) => {
+          const filePath = path.join(templateDefsDir, file);
+          const content = await fs.readFile(filePath, 'utf-8');
+          const templateDef = JSON.parse(content) as Record<string, unknown>;
+          const key = String(templateDef.templateId);
+          return { key, def: templateDef };
+        }),
+      );
 
-        // Check if template already exists
-        const existingTemplate = await this.findExportTemplate(templateDef.templateId as string);
-
-        if (existingTemplate) {
-          // Update existing template
-          existingTemplate.name = templateDef.name as string;
-          existingTemplate.displayName = templateDef.displayName as string;
-          existingTemplate.filePath = templateDef.filePath as string;
-          existingTemplate.format = templateDef.format as 'xlsx';
-          existingTemplate.fieldMapping = templateDef.fieldMapping as Record<string, unknown>;
-          existingTemplate.standardFields = templateDef.standardFields as Record<string, unknown>;
-          existingTemplate.maxEntryRows = templateDef.maxEntryRows as number | undefined;
-          existingTemplate.rowsPerEntry = templateDef.rowsPerEntry as number | undefined;
-          await this.exportTemplateRepository.save(existingTemplate);
-          console.log(`✓ Updated export template: ${templateDef.displayName}`);
-        } else {
-          // Create new template
+      await seedFromDefinitions({
+        defs,
+        findExisting: async (key) => await this.findExportTemplate(key),
+        updateExisting: async (existing, _key, def) => {
+          existing.name = def.name as string;
+          existing.displayName = def.displayName as string;
+          existing.filePath = def.filePath as string;
+          existing.format = def.format as 'xlsx';
+          existing.fieldMapping = def.fieldMapping as Record<string, unknown>;
+          existing.standardFields = def.standardFields as Record<string, unknown>;
+          existing.maxEntryRows = def.maxEntryRows as number | undefined;
+          existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
+          await this.exportTemplateRepository.save(existing);
+        },
+        createNew: async (_key, def) => {
           await this.createExportTemplate({
-            templateId: templateDef.templateId as string,
-            name: templateDef.name as string,
-            displayName: templateDef.displayName as string,
-            filePath: templateDef.filePath as string,
-            format: templateDef.format as 'xlsx',
-            fieldMapping: templateDef.fieldMapping as Record<string, unknown>,
-            standardFields: templateDef.standardFields as Record<string, unknown>,
-            maxEntryRows: templateDef.maxEntryRows as number | undefined,
-            rowsPerEntry: templateDef.rowsPerEntry as number | undefined,
+            templateId: def.templateId as string,
+            name: def.name as string,
+            displayName: def.displayName as string,
+            filePath: def.filePath as string,
+            format: def.format as 'xlsx',
+            fieldMapping: def.fieldMapping as Record<string, unknown>,
+            standardFields: def.standardFields as Record<string, unknown>,
+            maxEntryRows: def.maxEntryRows as number | undefined,
+            rowsPerEntry: def.rowsPerEntry as number | undefined,
           });
-          console.log(`✓ Created export template: ${templateDef.displayName}`);
-        }
-      }
+        },
+        logLabel: (_key, def) => String(def.displayName ?? _key),
+      });
     } catch (error) {
       console.error('Failed to seed export templates:', error);
       throw error;

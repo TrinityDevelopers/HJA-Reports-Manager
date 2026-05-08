@@ -118,14 +118,14 @@ Helper functions for working with dynamic form schemas:
 
 ```typescript
 import { 
-  parseTemplateSchema,
+  normalizeTemplateSchema,
   validateField,
   formatFieldValue,
   parseFieldValue
 } from './utils/formHelpers';
 
-// Parse template structure
-const { header, entries } = parseTemplateSchema(template);
+// Parse template structure (new canonical pipeline)
+const normalized = normalizeTemplateSchema(template);
 
 // Validate a field
 const validation = validateField(fieldDef, value);
@@ -246,7 +246,7 @@ function CreateProjectForm() {
 
 ```typescript
 function ReportForm({ template }) {
-  const { header, entries } = parseTemplateSchema(template);
+  const normalized = normalizeTemplateSchema(template);
   const [headerData, setHeaderData] = useState({});
 
   const handleHeaderChange = (fieldId: string, value: unknown) => {
@@ -255,8 +255,8 @@ function ReportForm({ template }) {
 
   return (
     <div>
-      <h2>{header.title}</h2>
-      {header.fields.map(field => (
+      <h2>Report Header</h2>
+      {normalized.beforeEntriesSections.flatMap(s => s.fields).map(field => (
         <div key={field.id}>
           <label>{field.label}</label>
           <input

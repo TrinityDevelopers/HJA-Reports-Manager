@@ -12,6 +12,7 @@ import { apiClient } from './api/client';
 import type { Project, Report, ReportTemplate, SettingsState } from './types';
 import { PAGES, type PageType } from './constants/pages';
 import { FileDown, Database, Settings, FileText, MapPin } from 'lucide-react';
+import { toISODateOnly } from './utils/dateAndNormalize.ts';
 
 export default function TechnicianReportsManager() {
   // Font loading via hook (loads CSS and applies family when ready)
@@ -181,7 +182,7 @@ export default function TechnicianReportsManager() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `technician-reports-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `technician-reports-${toISODateOnly(new Date())}.json`;
       a.click();
     }
   };

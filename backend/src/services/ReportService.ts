@@ -26,14 +26,21 @@ export class ReportService {
       .leftJoinAndSelect('report.entries', 'entries')
       .leftJoinAndSelect('report.template', 'template')
       .leftJoinAndSelect('report.project', 'project')
+      .orderBy('entries.entryOrder', 'ASC')
       .getMany();
   }
 
   async findById(id: string): Promise<Report | null> {
-    return await this.reportRepository.findOne({
-      where: { id },
-      relations: ['entries', 'template', 'project'],
-    });
+    const report = await this.reportRepository
+      .createQueryBuilder('report')
+      .leftJoinAndSelect('report.entries', 'entries')
+      .leftJoinAndSelect('report.template', 'template')
+      .leftJoinAndSelect('report.project', 'project')
+      .where('report.id = :id', { id })
+      .orderBy('entries.entryOrder', 'ASC')
+      .getOne();
+
+    return report ?? null;
   }
 
   async update(id: string, data: Partial<Report>): Promise<Report | null> {

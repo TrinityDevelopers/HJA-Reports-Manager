@@ -1,87 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Plus, ArrowLeft, FileDown } from 'lucide-react';
-import { InputField, NameAndDateField } from '../ui';
 import EditableTable from '../EditableTable';
 import { apiClient } from '../../api/client';
 import type { Project, Report, ReportTemplate, FieldConfig } from '../../types';
-
-// Transform entries from backend format to frontend format
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function transformEntriesFromBackend(backendEntries: any[]): any[] {
-  if (!Array.isArray(backendEntries)) {
-    return [];
-  }
-
-  return (
-    backendEntries
-      .sort((a, b) => (a.entryOrder || 0) - (b.entryOrder || 0))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((entry: any) => ({
-        id: entry.id,
-        testNumber: entry.entryOrder || 0,
-        // Spread the data object fields at the top level
-        ...(entry.data || {}),
-      }))
-  );
-}
-
-// Convert Date objects in an object to YYYY-MM-DD string format
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeDatesInObject(obj: any): any {
-  if (!obj) return obj;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const normalized: any = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value instanceof Date) {
-      // Convert Date to YYYY-MM-DD string
-      normalized[key] = value.toISOString().split('T')[0];
-    } else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-      // Convert ISO datetime strings to just date strings
-      normalized[key] = value.split('T')[0];
-    } else if (typeof value === 'object' && value !== null) {
-      // Recursively normalize nested objects
-      normalized[key] = normalizeDatesInObject(value);
-    } else {
-      normalized[key] = value;
-    }
-  }
-  return normalized;
-}
-
-// Convert numeric strings in an object to actual numbers
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeNumbersInObject(obj: any): any {
-  if (!obj) return obj;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const normalized: any = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      // Check if string is a valid number
-      if (trimmed !== '' && !isNaN(Number(trimmed))) {
-        normalized[key] = Number(trimmed);
-      } else {
-        normalized[key] = value;
-      }
-    } else if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
-      // Recursively normalize nested objects (but not Dates)
-      normalized[key] = normalizeNumbersInObject(value);
-    } else {
-      normalized[key] = value;
-    }
-  }
-  return normalized;
-}
-
-// Normalize both dates and numbers in an object
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeData(obj: any): any {
-  let normalized = normalizeDatesInObject(obj);
-  normalized = normalizeNumbersInObject(normalized);
-  return normalized;
-}
+import { normalizeTemplateSchema } from '../../utils/formHelpers';
+import { fromISODateOnly, normalizeForApi, toISODateOnly } from '../../utils/dateAndNormalize.ts';
+import { toEntryRows, toReportEntries, type EntryRow } from '../../utils/reportEntryMapping';
+import { FieldInput } from '../forms/FieldInput';
 
 export function ReportDetailPage({
   report,
@@ -98,155 +23,77 @@ export function ReportDetailPage({
   onBack: () => void;
   onUpdateReport: (updated: Report) => void | Promise<void>;
 }) {
-  // Helper function to normalize options from strings to { id, name } format
-  const normalizeOptions = (
-    options: Array<{ id: string | number; name: string }> | string[] | undefined,
-  ): Array<{ id: string | number; name: string }> | undefined => {
-    if (!options) return undefined;
-    if (Array.isArray(options)) {
-      // If already in object format, return as-is
-      if (options.length > 0 && typeof options[0] === 'object') {
-        return options as Array<{ id: string | number; name: string }>;
-      }
-      // If string array, convert to object format
-      return (options as string[]).map((opt) => ({ id: opt, name: opt }));
+  type HeaderData = Record<string, unknown>;
+
+  const getDefaultEntryFields = (): FieldConfig[] => [
+    { id: 'testNumber', label: 'Test #', type: 'text', required: false },
+    { id: 'materialDescription', label: 'Material', type: 'text', required: false },
+    { id: 'testLocation', label: 'Location', type: 'text', required: false },
+    { id: 'probeDepth', label: 'Depth (in)', type: 'number', required: false, step: '0.1' },
+    { id: 'liftBFG', label: 'Lift/BFG', type: 'text', required: false },
+    { id: 'dryDensity', label: 'Dry Density', type: 'number', required: false, step: '0.1' },
+    {
+      id: 'moistureContent',
+      label: 'Moisture %',
+      type: 'number',
+      required: false,
+      step: '0.1',
+    },
+  ];
+
+  const [headerData, setHeaderData] = useState<HeaderData>(() => {
+    if (report.headerData && typeof report.headerData === 'object') {
+      return report.headerData as HeaderData;
     }
-    return undefined;
-  };
-
-  // Generate header fields from template schema
-  const getHeaderFields = (): FieldConfig[] => {
-    if (!template?.schema) {
-      return [];
-    }
-
-    const schema = template.schema as {
-      headerFields?: Array<{
-        id?: string;
-        label: string;
-        type?: string;
-        required?: boolean;
-        step?: string | number;
-        options?: string[];
-      }>;
-    };
-
-    if (schema.headerFields) {
-      return schema.headerFields
-        .filter((field): field is typeof field & { id: string } => !!field.id)
-        .map((field) => ({
-          id: field.id,
-          label: field.label,
-          type: (field.type || 'text') as FieldConfig['type'],
-          required: field.required ?? false,
-          step: field.type === 'number' ? field.step || '0.1' : undefined,
-          options: field.type === 'select' ? normalizeOptions(field.options) : undefined,
-        }));
-    }
-
-    return [];
-  };
-
-  // Generate entry fields from template schema or use defaults
-  const getEntryFields = (): FieldConfig[] => {
-    if (!template?.schema) {
-      // Fallback to default Digital Density fields
-      return [
-        { id: 'testNumber', label: 'Test #', type: 'text', required: false },
-        { id: 'materialDescription', label: 'Material', type: 'text', required: false },
-        { id: 'testLocation', label: 'Location', type: 'text', required: false },
-        { id: 'probeDepth', label: 'Depth (in)', type: 'number', required: false, step: '0.1' },
-        { id: 'liftBFG', label: 'Lift/BFG', type: 'text', required: false },
-        { id: 'dryDensity', label: 'Dry Density', type: 'number', required: false, step: '0.1' },
-        {
-          id: 'moistureContent',
-          label: 'Moisture %',
-          type: 'number',
-          required: false,
-          step: '0.1',
-        },
-      ];
-    }
-
-    const schema = template.schema as {
-      entryFields?: Array<{
-        id?: string;
-        label: string;
-        type?: string;
-        required?: boolean;
-        step?: string | number;
-        options?: string[];
-      }>;
-    };
-
-    if (schema.entryFields) {
-      return schema.entryFields
-        .filter((field): field is typeof field & { id: string } => !!field.id)
-        .map((field) => ({
-          id: field.id,
-          label: field.label,
-          type: (field.type || 'text') as FieldConfig['type'],
-          required: field.required ?? false,
-          step: field.type === 'number' ? field.step || '0.1' : undefined,
-          options: field.type === 'select' ? normalizeOptions(field.options) : undefined,
-        }));
-    }
-
-    return [];
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [headerData, setHeaderData] = useState<any>(report.headerData || {});
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [entries, setEntries] = useState<any>(transformEntriesFromBackend(report.entries || []));
+    return {};
+  });
+  const [entries, setEntries] = useState<EntryRow[]>(toEntryRows(report.entries));
   const [dateOfTest, setDateOfTest] = useState<Date>(
     report.dateOfTest instanceof Date ? report.dateOfTest : new Date(report.dateOfTest),
   );
   const [showAddEntry, setShowAddEntry] = useState(false);
   const [editingTestNumber, setEditingTestNumber] = useState<number | null>(null);
   const [isNewReport, setIsNewReport] = useState(isNew);
-  const [editingHeader, setEditingHeader] = useState(isNew);
   const [editingDateOfTest, setEditingDateOfTest] = useState(isNew);
+  const [editingSectionKey, setEditingSectionKey] = useState<string | null>(
+    isNew ? '__all__' : null,
+  );
 
   // Update entries when report changes (e.g., when re-opening an existing report)
   useEffect(() => {
-    setEntries(transformEntriesFromBackend(report.entries || []));
-    setHeaderData(report.headerData || {});
+    setEntries(toEntryRows(report.entries));
+    if (report.headerData && typeof report.headerData === 'object') {
+      setHeaderData(report.headerData as HeaderData);
+    } else {
+      setHeaderData({});
+    }
     setDateOfTest(
       report.dateOfTest instanceof Date ? report.dateOfTest : new Date(report.dateOfTest),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.id]); // Only re-transform when report ID changes
 
+  const normalizedSchema = normalizeTemplateSchema(template);
+  const entrySectionTitle = normalizedSchema.entrySection.title || 'Test Entries';
+  const normalizedEntryFields =
+    normalizedSchema.entrySection.fields.length > 0
+      ? normalizedSchema.entrySection.fields
+      : template?.schema
+        ? []
+        : getDefaultEntryFields();
+
   // Field configuration for editable entry rows
-  const entryFields = getEntryFields().map((f) => ({
+  const entryFields = normalizedEntryFields.map((f) => ({
     ...f,
     readOnly: f.id === 'testNumber',
   })) as Array<FieldConfig & { readOnly: boolean }>;
 
-  const headerFields = getHeaderFields();
-
   // Helper function to convert display entries back to backend format
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const entriesToBackendFormat = (displayEntries: any[]): any[] => {
-    return displayEntries.map((entry) => ({
-      id: entry.id,
-      entryOrder: entry.testNumber,
-      data: {
-        ...entry,
-        id: undefined,
-        testNumber: undefined,
-        entryOrder: undefined,
-      },
-    }));
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const addEntry = async (entry: any) => {
+  const addEntry = async (entry: Record<string, unknown>) => {
     try {
       const newNumber = entries.length + 1;
       const entryData = {
-        data: normalizeData(entry),
+        data: normalizeForApi(entry),
         entryOrder: newNumber,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -258,31 +105,31 @@ export function ReportDetailPage({
         testNumber: newNumber,
         ...entry,
       };
-      const newEntries = [...entries, displayEntry];
+      const newEntries: EntryRow[] = [...entries, displayEntry];
       setEntries(newEntries);
       setShowAddEntry(false);
       // Update parent component with new entries so reports page shows correct count
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onUpdateReport({ ...report, entries: entriesToBackendFormat(newEntries) } as any);
+      onUpdateReport({
+        ...report,
+        entries: toReportEntries(newEntries) as unknown as Report['entries'],
+      });
     } catch (error) {
       console.error('Failed to add entry:', error);
       alert('Failed to add entry');
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateEntry = async (testNumber: number, updated: any) => {
+  const updateEntry = async (testNumber: number, updated: Record<string, unknown>) => {
     try {
       // Find the entry to get its ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const entryToUpdate = entries.find((e: any) => e.testNumber === testNumber);
+      const entryToUpdate = entries.find((e) => e.testNumber === testNumber);
       if (!entryToUpdate?.id) {
         alert('Entry ID not found');
         return;
       }
 
       const updateData = {
-        data: normalizeData(updated),
+        data: normalizeForApi(updated),
         entryOrder: testNumber,
       };
 
@@ -296,13 +143,14 @@ export function ReportDetailPage({
         testNumber,
         ...(updatedEntry.data || updated),
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const newEntries = entries.map((e: any) => (e.testNumber === testNumber ? displayEntry : e));
+      const newEntries = entries.map((e) => (e.testNumber === testNumber ? displayEntry : e));
       setEntries(newEntries);
       setEditingTestNumber(null);
       // Update parent component with updated entries
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onUpdateReport({ ...report, entries: entriesToBackendFormat(newEntries) } as any);
+      onUpdateReport({
+        ...report,
+        entries: toReportEntries(newEntries) as unknown as Report['entries'],
+      });
     } catch (error) {
       console.error('Failed to update entry:', error);
       alert('Failed to update entry');
@@ -312,34 +160,62 @@ export function ReportDetailPage({
   const deleteEntry = async (testNumber: number) => {
     try {
       // Find the entry to get its ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const entryToDelete = entries.find((e: any) => e.testNumber === testNumber) as any;
+      const entryToDelete = entries.find((e) => e.testNumber === testNumber);
       if (!entryToDelete?.id) {
         alert('Entry ID not found');
         return;
       }
 
       await apiClient.reports.deleteEntry(entryToDelete.id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const newEntries = entries.filter((e: any) => e.testNumber !== testNumber);
+      const newEntries = entries.filter((e) => e.testNumber !== testNumber);
       setEntries(newEntries);
       // Update parent component with updated entries so reports page shows correct count
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onUpdateReport({ ...report, entries: entriesToBackendFormat(newEntries) } as any);
+      onUpdateReport({
+        ...report,
+        entries: toReportEntries(newEntries) as unknown as Report['entries'],
+      });
     } catch (error) {
       console.error('Failed to delete entry:', error);
       alert('Failed to delete entry');
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleHeaderSave = (data: any) => {
-    const normalizedData = normalizeData(data);
-    setHeaderData(normalizedData);
+  const handleSectionSave = (data: Record<string, unknown>) => {
+    const normalizedData = normalizeForApi(data);
+    const merged = { ...(headerData || {}), ...(normalizedData || {}) };
+    setHeaderData(merged);
     setIsNewReport(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onUpdateReport({ ...report, headerData: normalizedData as any });
-    setEditingHeader(false);
+    onUpdateReport({ ...report, headerData: merged as any });
+    setEditingSectionKey(null);
+  };
+
+  const formatHeaderFieldValue = (field: FieldConfig): string => {
+    const raw = headerData[field.id];
+    if (raw === null || raw === undefined || raw === '') return '-';
+
+    const formatDate = (v: unknown): string => {
+      const d =
+        v instanceof Date ? v : typeof v === 'string' || typeof v === 'number' ? new Date(v) : null;
+      if (!d || Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleDateString();
+    };
+
+    if (field.type === 'date') return formatDate(raw);
+
+    if (field.type === 'nameAndDate') {
+      if (!raw || typeof raw !== 'object') return '-';
+      const obj = raw as Record<string, unknown>;
+      const name = typeof obj.name === 'string' ? obj.name.trim() : '';
+      const date = typeof obj.date === 'string' ? formatDate(obj.date) : '-';
+
+      if (name && date !== '-') return `${name} — ${date}`;
+      if (name) return name;
+      if (date !== '-') return date;
+      return '-';
+    }
+
+    return String(raw);
   };
 
   const handleExportXLSX = async () => {
@@ -398,8 +274,8 @@ export function ReportDetailPage({
                 <div className="flex gap-2">
                   <input
                     type="date"
-                    value={dateOfTest.toISOString().split('T')[0]}
-                    onChange={(e) => setDateOfTest(new Date(e.target.value + 'T00:00:00'))}
+                    value={toISODateOnly(dateOfTest)}
+                    onChange={(e) => setDateOfTest(fromISODateOnly(e.target.value))}
                     className="input flex-1"
                   />
                   <button
@@ -407,7 +283,7 @@ export function ReportDetailPage({
                       setEditingDateOfTest(false);
                       setIsNewReport(false);
                       // Convert Date to YYYY-MM-DD string format
-                      const dateStr = dateOfTest.toISOString().split('T')[0];
+                      const dateStr = toISODateOnly(dateOfTest);
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       onUpdateReport({ ...report, dateOfTest: dateStr } as any);
                     }}
@@ -451,65 +327,61 @@ export function ReportDetailPage({
         </div>
       </div>
 
-      {/* Header Data Section */}
-      {headerFields.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Report Header</h3>
-            {!editingHeader && !isNewReport && (
-              <button onClick={() => setEditingHeader(true)} className="button-secondary text-sm">
-                Edit
-              </button>
+      {/* Schema-defined Sections (before entries) */}
+      {(normalizedSchema.beforeEntriesSections || []).map((section) => {
+        const isEditing =
+          editingSectionKey === '__all__' || editingSectionKey === section.key || false;
+        const sectionInitialData = section.fields.reduce((acc, f) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (acc as any)[f.id] = (headerData as any)?.[f.id];
+          return acc;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }, {} as any);
+
+        return (
+          <div key={section.key} className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
+              {!isEditing && !isNewReport && section.fields.length > 0 && (
+                <button
+                  onClick={() => setEditingSectionKey(section.key)}
+                  className="button-secondary text-sm"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="card-border mb-6 border-primary-light">
+                <SectionForm
+                  title={`Edit ${section.title}`}
+                  fields={section.fields}
+                  initialData={sectionInitialData}
+                  onSave={handleSectionSave}
+                  onCancel={() => setEditingSectionKey(null)}
+                  saveLabel="Save"
+                />
+              </div>
+            ) : (
+              section.fields.length > 0 && (
+                <div className="card-border border-gray-200 p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {section.fields.map((field) => (
+                      <div key={field.id}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {field.label}
+                        </label>
+                        <p className="text-gray-800">{formatHeaderFieldValue(field)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
           </div>
-
-          {editingHeader ? (
-            <div className="card-border mb-6 border-primary-light">
-              <HeaderForm
-                fields={headerFields}
-                initialData={headerData}
-                onSave={handleHeaderSave}
-                onCancel={() => {
-                  setEditingHeader(false);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="card-border border-gray-200 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {headerFields.map((field) => (
-                  <div key={field.id}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {field.label}
-                    </label>
-                    <p className="text-gray-800">
-                      {headerData[field.id]
-                        ? field.type === 'date'
-                          ? new Date(headerData[field.id]).toLocaleDateString()
-                          : field.type === 'nameAndDate'
-                            ? (() => {
-                                const v = headerData[field.id] as
-                                  | { name?: string; date?: string }
-                                  | undefined;
-                                const name = v?.name?.trim();
-                                const date = v?.date
-                                  ? new Date(v.date).toLocaleDateString()
-                                  : undefined;
-                                if (name && date) return `${name} — ${date}`;
-                                if (name) return name;
-                                if (date) return date;
-                                return '-';
-                              })()
-                            : String(headerData[field.id])
-                        : '-'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        );
+      })}
 
       {!showAddEntry && (
         <button onClick={() => setShowAddEntry(true)} className="button-base">
@@ -527,7 +399,7 @@ export function ReportDetailPage({
         </div>
       )}
       <div className="mt-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Test Entries</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">{entrySectionTitle}</h3>
         {entries.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No test entries yet</p>
         ) : (
@@ -544,22 +416,81 @@ export function ReportDetailPage({
           />
         )}
       </div>
+
+      {/* Schema-defined Sections (after entries) */}
+      {(normalizedSchema.afterEntriesSections || []).map((section) => {
+        const isEditing = editingSectionKey === section.key || false;
+        const sectionInitialData = section.fields.reduce((acc, f) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (acc as any)[f.id] = (headerData as any)?.[f.id];
+          return acc;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }, {} as any);
+
+        return (
+          <div key={section.key} className="mt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
+              {!isEditing && !isNewReport && section.fields.length > 0 && (
+                <button
+                  onClick={() => setEditingSectionKey(section.key)}
+                  className="button-secondary text-sm"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="card-border mb-6 border-primary-light">
+                <SectionForm
+                  title={`Edit ${section.title}`}
+                  fields={section.fields}
+                  initialData={sectionInitialData}
+                  onSave={handleSectionSave}
+                  onCancel={() => setEditingSectionKey(null)}
+                  saveLabel="Save"
+                />
+              </div>
+            ) : (
+              section.fields.length > 0 && (
+                <div className="card-border border-gray-200 p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {section.fields.map((field) => (
+                      <div key={field.id}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {field.label}
+                        </label>
+                        <p className="text-gray-800">{formatHeaderFieldValue(field)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function HeaderForm({
+function SectionForm({
+  title,
   fields,
   initialData,
   onSave,
   onCancel,
+  saveLabel,
 }: {
+  title: string;
   fields: FieldConfig[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialData: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSave: (data: any) => void;
   onCancel: () => void;
+  saveLabel: string;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState<any>(initialData || {});
@@ -577,70 +508,45 @@ function HeaderForm({
 
   return (
     <>
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Edit Report Header</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">{title}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {fields.map((field) => (
           <div
             key={field.id}
             className={field.type === 'text' || field.type === 'number' ? '' : 'md:col-span-2'}
           >
-            {field.type === 'select' ? (
-              <>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <select
-                  value={formData[field.id] || ''}
-                  onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                  className="select focus-ring-primary"
-                >
-                  <option value="">-- Select {field.label} --</option>
-                  {field.options?.map((option) => (
-                    <option key={option.id} value={option.name}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : field.type === 'nameAndDate' ? (
-              <NameAndDateField
-                label={field.label}
-                required={field.required}
-                value={formData[field.id] as { name?: string; date?: string } | undefined}
-                onChange={(v) => setFormData({ ...formData, [field.id]: v })}
-              />
-            ) : (
-              <InputField
-                label={field.label}
-                type={field.type}
-                value={
-                  field.type === 'date' && formData[field.id]
-                    ? formData[field.id] instanceof Date
-                      ? formData[field.id].toISOString().split('T')[0]
-                      : formData[field.id]
-                    : formData[field.id] || ''
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <FieldInput
+              field={field}
+              mode="form"
+              value={
+                field.type === 'date' && formData[field.id]
+                  ? formData[field.id] instanceof Date
+                    ? toISODateOnly(formData[field.id])
+                    : formData[field.id]
+                  : formData[field.id]
+              }
+              onChange={(next) => {
+                if (field.type === 'date') {
+                  setFormData({
+                    ...formData,
+                    [field.id]:
+                      typeof next === 'string' && next ? fromISODateOnly(next) : new Date(),
+                  });
+                } else {
+                  setFormData({ ...formData, [field.id]: next });
                 }
-                onChange={(v) => {
-                  if (field.type === 'date') {
-                    setFormData({
-                      ...formData,
-                      [field.id]: v ? new Date(v + 'T00:00:00') : new Date(),
-                    });
-                  } else {
-                    setFormData({ ...formData, [field.id]: v });
-                  }
-                }}
-                required={field.required}
-                step={field.step}
-              />
-            )}
+              }}
+            />
           </div>
         ))}
       </div>
       <div className="flex gap-4 mt-4">
         <button onClick={handleSubmit} className="button-base">
-          Save Header
+          {saveLabel}
         </button>
         <button onClick={onCancel} className="button-secondary border-primary text-primary">
           Cancel
@@ -691,35 +597,16 @@ function AddEntryForm({
             key={field.id}
             className={field.type === 'text' || field.type === 'number' ? '' : 'md:col-span-2'}
           >
-            {field.type === 'select' ? (
-              <>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <select
-                  value={formData[field.id] || ''}
-                  onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                  className="select focus-ring-primary"
-                >
-                  <option value="">-- Select {field.label} --</option>
-                  {field.options?.map((option) => (
-                    <option key={option.id} value={option.name}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : (
-              <InputField
-                label={field.label}
-                type={field.type}
-                value={formData[field.id] || ''}
-                onChange={(v) => setFormData({ ...formData, [field.id]: v })}
-                required={field.required}
-                step={field.step}
-              />
-            )}
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <FieldInput
+              field={field}
+              mode="form"
+              value={formData[field.id]}
+              onChange={(next) => setFormData({ ...formData, [field.id]: next })}
+            />
           </div>
         ))}
       </div>

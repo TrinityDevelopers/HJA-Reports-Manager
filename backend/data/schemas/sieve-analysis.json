@@ -3,6 +3,57 @@
   "displayName": "Grain Size Analysis (ASTM D422)",
   "description": "Grain size analysis (sieve analysis) data sheet",
   "version": "1.0.0",
+  "sections": [
+    {
+      "title": "Header",
+      "placement": "beforeEntries",
+      "fields": [
+        { "id": "boringNumber", "label": "Boring No.", "type": "text", "required": false },
+        { "id": "depth", "label": "Depth", "type": "text", "required": false },
+        { "id": "sampleNumber", "label": "Sample No.", "type": "text", "required": false },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Sieve Analysis Sample",
+      "placement": "beforeEntries",
+      "fields": [
+        {
+          "id": "totalWetWeightSamplePan",
+          "label": "Total Wet Weight (Sample + Pan)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "totalDryWeightSamplePan",
+          "label": "Total Dry Weight (Sample + Pan)",
+          "type": "number",
+          "required": false
+        },
+        { "id": "tarePanNumber", "label": "Tare Pan No.", "type": "text", "required": false },
+        { "id": "tareWeight", "label": "Tare Weight", "type": "number", "required": false },
+        { "id": "scaleNumber", "label": "Scale No.", "type": "text", "required": false },
+        { "id": "ovenNumber", "label": "Oven No.", "type": "text", "required": false }
+      ]
+    },
+    {
+      "title": "Sign-off",
+      "placement": "afterEntries",
+      "fields": [
+        { "id": "testedBy", "label": "Tested By", "type": "nameAndDate", "required": false },
+        { "id": "dryWeights", "label": "Dry Weights", "type": "nameAndDate", "required": false },
+        { "id": "checkedBy", "label": "Checked By", "type": "nameAndDate", "required": false }
+      ]
+    }
+  ],
+  "entrySection": {
+    "displayName": "Sieve Analysis"
+  },
   "headerFields": [
     {
       "id": "boringNumber",

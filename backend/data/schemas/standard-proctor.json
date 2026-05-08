@@ -3,6 +3,9 @@
   "displayName": "Standard Proctor (ASTM D698)",
   "description": "Standard Proctor soil compaction test data sheet",
   "version": "1.0.0",
+  "entrySection": {
+    "displayName": "Moisture / Density Points"
+  },
   "headerFields": [
     {
       "id": "dateDroppedOff",

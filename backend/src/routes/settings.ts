@@ -24,7 +24,7 @@ router.put('/', async (req: Request, res: Response) => {
     if (units !== undefined) updatedData.units = units;
     if (autoSave !== undefined) updatedData.autoSave = autoSave;
 
-    const updated = await settingsService.update(updatedData);
+    const updated = await settingsService.updateSettings(updatedData);
     res.json(updated);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });

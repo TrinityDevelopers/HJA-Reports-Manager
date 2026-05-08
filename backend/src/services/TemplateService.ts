@@ -1,58 +1,48 @@
-import { Repository } from 'typeorm';
 import { ReportTemplate } from '../entities/ReportTemplate';
 import { AppDataSource } from '../database/connection';
 import { REPORT_SCHEMAS } from '../schemas/reportSchemas';
+import { BaseCrudService } from './BaseCrudService';
+import { seedFromDefinitions } from '../utils/seedFromDefinitions';
 
-export class TemplateService {
-  private templateRepository: Repository<ReportTemplate>;
-
+export class TemplateService extends BaseCrudService<ReportTemplate> {
   constructor() {
-    this.templateRepository = AppDataSource.getRepository(ReportTemplate);
-  }
-
-  async create(data: Partial<ReportTemplate>): Promise<ReportTemplate> {
-    const template = this.templateRepository.create(data);
-    return await this.templateRepository.save(template);
+    super(AppDataSource.getRepository(ReportTemplate));
   }
 
   async findAll(): Promise<ReportTemplate[]> {
-    return await this.templateRepository.find();
+    return await super.findAll();
   }
 
   async findById(id: string): Promise<ReportTemplate | null> {
-    return await this.templateRepository.findOne({ where: { id } });
+    return (await super.findById(id)) ?? null;
   }
 
   async findByName(name: string): Promise<ReportTemplate | null> {
-    return await this.templateRepository.findOne({ where: { name } });
+    return await this.repository.findOne({ where: { name } });
   }
 
   async update(id: string, data: Partial<ReportTemplate>): Promise<ReportTemplate | null> {
-    await this.templateRepository.update(id, data as Record<string, unknown>);
-    return await this.findById(id);
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const result = await this.templateRepository.delete(id);
-    return (result.affected ?? 0) > 0;
+    return (await super.update(id, data)) ?? null;
   }
 
   async seedDefaultTemplates(): Promise<void> {
     // Always update/sync report templates from schemas
-    for (const [key, schemaValue] of Object.entries(REPORT_SCHEMAS)) {
-      const schema = schemaValue as Record<string, unknown>;
-      const existing = await this.templateRepository.findOne({ where: { name: key } });
+    const defs = Object.entries(REPORT_SCHEMAS).map(([key, schemaValue]) => ({
+      key,
+      def: schemaValue as Record<string, unknown>,
+    }));
 
-      if (existing) {
-        // Update existing template
+    await seedFromDefinitions({
+      defs,
+      findExisting: async (key) => await this.findByName(key),
+      updateExisting: async (existing, _key, schema) => {
         existing.displayName = schema.displayName as string;
         existing.description = schema.description as string;
         existing.schema = schema as Record<string, unknown>;
         existing.version = schema.version as string;
-        await this.templateRepository.save(existing);
-        console.log(`✓ Updated report template: ${schema.displayName}`);
-      } else {
-        // Create new template
+        await this.repository.save(existing);
+      },
+      createNew: async (key, schema) => {
         await this.create({
           name: key,
           displayName: schema.displayName as string,
@@ -60,8 +50,8 @@ export class TemplateService {
           schema: schema,
           version: schema.version as string,
         });
-        console.log(`✓ Created report template: ${schema.displayName}`);
-      }
-    }
+      },
+      logLabel: (_key, schema) => String(schema.displayName ?? _key),
+    });
   }
 }

@@ -1,4 +1,4 @@
-import type { ReportTemplate } from '../types';
+import type { FieldConfig, ReportTemplate } from '../types';
 
 export interface FieldDefinition {
   id: string;
@@ -6,6 +6,7 @@ export interface FieldDefinition {
   type: string;
   required?: boolean;
   options?: string[];
+  step?: string | number;
 }
 
 export type NameAndDateValue = { name?: string; date?: string };
@@ -15,36 +16,142 @@ export function asNameAndDateValue(value: unknown): NameAndDateValue {
   return {};
 }
 
-export interface FormSection {
+export type SectionPlacement = 'beforeEntries' | 'afterEntries';
+
+export interface TemplateSectionSchema {
   title: string;
-  fields: FieldDefinition[];
+  placement?: SectionPlacement;
+  fields: Array<Partial<FieldDefinition> & { label: string }>;
+}
+
+export interface EntrySectionSchema {
+  displayName?: string;
+  fields?: Array<Partial<FieldDefinition> & { label: string }>;
+}
+
+export interface NormalizedTemplateSection {
+  /**
+   * Stable-ish key for React lists / editing state.
+   * (We avoid depending on array index alone in case schema order changes.)
+   */
+  key: string;
+  title: string;
+  placement: SectionPlacement;
+  fields: FieldConfig[];
+}
+
+export interface NormalizedTemplateSchema {
+  beforeEntriesSections: NormalizedTemplateSection[];
+  afterEntriesSections: NormalizedTemplateSection[];
+  entrySection: {
+    title: string;
+    fields: FieldConfig[];
+  };
+}
+
+function normalizeOptions(
+  options: Array<{ id: string | number; name: string }> | string[] | undefined,
+): Array<{ id: string | number; name: string }> | undefined {
+  if (!options) return undefined;
+  if (!Array.isArray(options)) return undefined;
+  if (options.length > 0 && typeof options[0] === 'object') {
+    return options as Array<{ id: string | number; name: string }>;
+  }
+  return (options as string[]).map((opt) => ({ id: opt, name: opt }));
+}
+
+function normalizeField(field: Partial<FieldDefinition> & { label: string }): FieldConfig | null {
+  if (!field.id) return null;
+  const type = (field.type || 'text') as FieldConfig['type'];
+  return {
+    id: field.id,
+    label: field.label,
+    type,
+    required: field.required ?? false,
+    step: type === 'number' ? field.step || '0.1' : undefined,
+    options: type === 'select' ? normalizeOptions(field.options) : undefined,
+  };
+}
+
+function toSectionKey(placement: SectionPlacement, title: string, fields: FieldConfig[]): string {
+  const ids = fields
+    .map((f) => f.id)
+    .filter(Boolean)
+    .join('|');
+  return `${placement}::${title}::${ids}`;
 }
 
 /**
- * Parse a report template schema and return structured form sections
+ * Normalize the template schema into ordered sections and an entry section.
+ * Backward compatible with existing `headerFields` / `entryFields`.
+ *
+ * Supported schema keys (optional):
+ * - `sections: Array<{ title: string; placement?: "beforeEntries" | "afterEntries"; fields: FieldDef[] }>`
+ * - `entrySection?: { displayName?: string; fields?: FieldDef[] }`
  */
-export function parseTemplateSchema(template: ReportTemplate): {
-  header: FormSection;
-  entries: FormSection;
-} {
-  const schema = template.schema as Record<string, unknown>;
+export function normalizeTemplateSchema(template?: ReportTemplate): NormalizedTemplateSchema {
+  const schema = (template?.schema ?? {}) as Record<string, unknown>;
 
-  const headerFields: FieldDefinition[] = Array.isArray(schema.headerFields)
-    ? (schema.headerFields as FieldDefinition[])
+  const rawSections: TemplateSectionSchema[] = Array.isArray(schema.sections)
+    ? (schema.sections as TemplateSectionSchema[])
     : [];
 
-  const entryFields: FieldDefinition[] = Array.isArray(schema.entryFields)
-    ? (schema.entryFields as FieldDefinition[])
+  const headerFields: Array<Partial<FieldDefinition> & { label: string }> = Array.isArray(
+    schema.headerFields,
+  )
+    ? ((schema.headerFields as Array<Partial<FieldDefinition> & { label: string }>) ?? [])
     : [];
+
+  const entryFields: Array<Partial<FieldDefinition> & { label: string }> = Array.isArray(
+    schema.entryFields,
+  )
+    ? ((schema.entryFields as Array<Partial<FieldDefinition> & { label: string }>) ?? [])
+    : [];
+
+  const entrySection = (schema.entrySection ?? {}) as EntrySectionSchema;
+
+  const beforeEntriesSections: NormalizedTemplateSection[] = [];
+  const afterEntriesSections: NormalizedTemplateSection[] = [];
+
+  if (rawSections.length > 0) {
+    for (const section of rawSections) {
+      const placement: SectionPlacement =
+        section.placement === 'afterEntries' ? 'afterEntries' : 'beforeEntries';
+      const fields = (Array.isArray(section.fields) ? section.fields : [])
+        .map(normalizeField)
+        .filter((f): f is FieldConfig => !!f);
+      const title = section.title || 'Section';
+      const normalized: NormalizedTemplateSection = {
+        key: toSectionKey(placement, title, fields),
+        title,
+        placement,
+        fields,
+      };
+      if (placement === 'afterEntries') afterEntriesSections.push(normalized);
+      else beforeEntriesSections.push(normalized);
+    }
+  } else if (headerFields.length > 0) {
+    // Backward-compatible default: one header section
+    const fields = headerFields.map(normalizeField).filter((f): f is FieldConfig => !!f);
+    beforeEntriesSections.push({
+      key: toSectionKey('beforeEntries', 'Report Header', fields),
+      title: 'Report Header',
+      placement: 'beforeEntries',
+      fields,
+    });
+  }
+
+  const normalizedEntryFields =
+    Array.isArray(entrySection.fields) && entrySection.fields.length > 0
+      ? entrySection.fields.map(normalizeField).filter((f): f is FieldConfig => !!f)
+      : entryFields.map(normalizeField).filter((f): f is FieldConfig => !!f);
 
   return {
-    header: {
-      title: 'Report Header',
-      fields: headerFields,
-    },
-    entries: {
-      title: 'Data Entries',
-      fields: entryFields,
+    beforeEntriesSections,
+    afterEntriesSections,
+    entrySection: {
+      title: entrySection.displayName?.trim() || 'Test Entries',
+      fields: normalizedEntryFields,
     },
   };
 }
