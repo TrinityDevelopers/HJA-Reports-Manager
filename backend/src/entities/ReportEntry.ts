@@ -27,6 +27,10 @@ export class ReportEntry {
   @Column({ type: 'int' })
   entryOrder!: number;
 
+  /** Groups trials when a report schema has multiple entry sections (e.g. liquid vs plastic limit). */
+  @Column({ type: 'varchar', nullable: true })
+  sectionId?: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

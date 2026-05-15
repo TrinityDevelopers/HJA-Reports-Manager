@@ -5,8 +5,8 @@
   "version": "1.0.0",
   "sections": [
     {
+      "type": "header",
       "title": "Header",
-      "placement": "beforeEntries",
       "fields": [
         { "id": "boringNumber", "label": "Boring No.", "type": "text", "required": false },
         { "id": "depth", "label": "Depth", "type": "text", "required": false },
@@ -20,8 +20,8 @@
       ]
     },
     {
+      "type": "header",
       "title": "Sieve Analysis Sample",
-      "placement": "beforeEntries",
       "fields": [
         {
           "id": "totalWetWeightSamplePan",
@@ -42,147 +42,47 @@
       ]
     },
     {
+      "type": "entry",
+      "title": "Sieve Analysis",
+      "fields": [
+        { "id": "sieveNumber", "label": "Sieve Number", "type": "text", "required": false },
+        { "id": "sieveSize", "label": "Sieve Size", "type": "text", "required": false },
+        {
+          "id": "individualWtRetainedPlusPan",
+          "label": "Individual Wt. Retained + Pan",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "cumulativeWtRetainedPlusPan",
+          "label": "Cumulative Wt. Retained + Pan",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "cumulativeWtRetained",
+          "label": "Cumulative Wt. Retained",
+          "type": "number",
+          "required": false
+        },
+        { "id": "percentCoarser", "label": "% Coarser", "type": "number", "required": false },
+        { "id": "percentFiner", "label": "% Finer", "type": "number", "required": false },
+        {
+          "id": "specificationRequiredPercentPassing",
+          "label": "Specification Req'd % Passing",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
       "title": "Sign-off",
-      "placement": "afterEntries",
       "fields": [
         { "id": "testedBy", "label": "Tested By", "type": "nameAndDate", "required": false },
         { "id": "dryWeights", "label": "Dry Weights", "type": "nameAndDate", "required": false },
         { "id": "checkedBy", "label": "Checked By", "type": "nameAndDate", "required": false }
       ]
     }
-  ],
-  "entrySection": {
-    "displayName": "Sieve Analysis"
-  },
-  "headerFields": [
-    {
-      "id": "boringNumber",
-      "label": "Boring No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "depth",
-      "label": "Depth",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "sampleNumber",
-      "label": "Sample No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "materialDescription",
-      "label": "Material Description",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "totalWetWeightSamplePan",
-      "label": "Total Wet Weight (Sample + Pan)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "totalDryWeightSamplePan",
-      "label": "Total Dry Weight (Sample + Pan)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "tarePanNumber",
-      "label": "Tare Pan No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "tareWeight",
-      "label": "Tare Weight",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "scaleNumber",
-      "label": "Scale No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "ovenNumber",
-      "label": "Oven No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "testedBy",
-      "label": "Tested By",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "dryWeights",
-      "label": "Dry Weights",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "checkedBy",
-      "label": "Checked By",
-      "type": "nameAndDate",
-      "required": false
-    }
-  ],
-  "entryFields": [
-    {
-      "id": "sieveNumber",
-      "label": "Sieve Number",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "sieveSize",
-      "label": "Sieve Size",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "individualWtRetainedPlusPan",
-      "label": "Individual Wt. Retained + Pan",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "cumulativeWtRetainedPlusPan",
-      "label": "Cumulative Wt. Retained + Pan",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "cumulativeWtRetained",
-      "label": "Cumulative Wt. Retained",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "percentCoarser",
-      "label": "% Coarser",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "percentFiner",
-      "label": "% Finer",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "specificationRequiredPercentPassing",
-      "label": "Specification Req'd % Passing",
-      "type": "number",
-      "required": false
-    }
   ]
 }
-

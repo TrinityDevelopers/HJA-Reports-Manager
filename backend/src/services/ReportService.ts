@@ -2,6 +2,43 @@ import { Repository } from 'typeorm';
 import { Report } from '../entities/Report';
 import { ReportEntry } from '../entities/ReportEntry';
 import { AppDataSource } from '../database/connection';
+import { pickAndCoerce } from '../utils/pickAndCoerce';
+
+function coerceDateOnly(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+
+  if (typeof value === 'string') {
+    const s = value.trim();
+    if (!s) return undefined;
+    // If it's an ISO string or already date-only, keep the date-only part.
+    const m = /^(\d{4}-\d{2}-\d{2})/.exec(s);
+    if (m) return m[1];
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    return undefined;
+  }
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return undefined;
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return undefined;
+    return d.toISOString().slice(0, 10);
+  }
+
+  return undefined;
+}
+
+function todayDateOnlyLocal(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 export class ReportService {
   private reportRepository: Repository<Report>;
@@ -13,7 +50,14 @@ export class ReportService {
   }
 
   async create(data: Partial<Report>): Promise<Report> {
-    const report = this.reportRepository.create(data);
+    const createData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
+      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId'],
+      coerce: {
+        dateOfTest: (value) => coerceDateOnly(value) ?? todayDateOnlyLocal(),
+      },
+    });
+
+    const report = this.reportRepository.create(createData as unknown as Partial<Report>);
     return await this.reportRepository.save(report);
   }
 
@@ -44,27 +88,16 @@ export class ReportService {
   }
 
   async update(id: string, data: Partial<Report>): Promise<Report | null> {
-    // Filter out properties that shouldn't be updated directly
-    const updateData: Record<string, unknown> = {};
-
-    // Only allow these fields to be updated
-    const allowedFields = ['dateOfTest', 'headerData', 'projectId', 'templateId'];
-
-    for (const field of allowedFields) {
-      if (field in data) {
-        const value = (data as Record<string, unknown>)[field];
-        // Ensure dateOfTest is a valid Date
-        if (field === 'dateOfTest' && value) {
-          updateData[field] = new Date(value as string | Date);
-        } else {
-          updateData[field] = value;
-        }
-      }
-    }
+    const updateData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
+      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId'],
+      coerce: {
+        dateOfTest: (value) => coerceDateOnly(value),
+      },
+    });
 
     // Only update if there are valid fields to update
     if (Object.keys(updateData).length > 0) {
-      await this.reportRepository.update(id, updateData);
+      await this.reportRepository.update(id, updateData as Record<string, unknown>);
     }
     return await this.findById(id);
   }

@@ -2,7 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'path';
 import fs from 'fs/promises';
 import { ExportService } from '../../src/services/ExportService';
-import { createTestReport, TEMPLATE_CONFIGS, TemplateTestConfig, SchemaField } from '../helpers';
+import {
+  createTestReport,
+  extractSchemaFields,
+  TEMPLATE_CONFIGS,
+  TemplateTestConfig,
+} from '../helpers';
 
 describe.each(Object.values(TEMPLATE_CONFIGS))(
   '$displayName Form Export',
@@ -26,12 +31,17 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
       const schema = await import(path.join(__dirname, config.schemaPath));
       const templateDef = await import(path.join(__dirname, config.templatePath));
 
+      const { headerFields, entryFields, entrySections } = extractSchemaFields(schema.default);
+
       // Create test data
       const testReport = createTestReport(
         config.templateId,
-        schema.default.headerFields as SchemaField[],
-        schema.default.entryFields as SchemaField[],
-        templateDef.default.maxEntryRows || 1, // Create all available entry rows
+        headerFields,
+        entryFields,
+        templateDef.default.maxEntryRows || 1,
+        '12345G',
+        new Date(),
+        entrySections,
       );
 
       // Add mock project object to match ExportableReport interface
@@ -49,6 +59,8 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
         fieldMapping: templateDef.default.fieldMapping,
         maxEntryRows: templateDef.default.maxEntryRows,
         rowsPerEntry: templateDef.default.rowsPerEntry,
+        colsPerEntry: templateDef.default.colsPerEntry,
+        entryLayout: templateDef.default.entryLayout,
         standardFields: templateDef.default.standardFields,
       };
 

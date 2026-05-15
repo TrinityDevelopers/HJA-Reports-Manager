@@ -38,6 +38,12 @@ export class ExportTemplate {
   @Column({ type: 'int', nullable: true, default: 1 })
   rowsPerEntry?: number;
 
+  @Column({ type: 'int', nullable: true, default: 1 })
+  colsPerEntry?: number;
+
+  @Column({ type: 'varchar', nullable: true })
+  entryLayout?: 'row' | 'column';
+
   @CreateDateColumn()
   createdAt!: Date;
 

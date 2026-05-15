@@ -29,12 +29,10 @@ export function InputField({
 }
 
 export function NameAndDateField({
-  label,
   value,
   onChange,
   required = false,
 }: {
-  label: string;
   value: { name?: string; date?: string } | undefined;
   onChange: (v: { name?: string; date?: string } | undefined) => void;
   required?: boolean;
@@ -44,7 +42,6 @@ export function NameAndDateField({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
       <div className="flex items-stretch w-full rounded border bg-white overflow-hidden">
         <input
           type="text"

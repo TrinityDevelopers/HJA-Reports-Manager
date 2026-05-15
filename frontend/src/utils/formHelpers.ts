@@ -1,4 +1,5 @@
 import type { FieldConfig, ReportTemplate } from '../types';
+import { parseDateLike } from './dateAndNormalize.ts';
 
 export interface FieldDefinition {
   id: string;
@@ -16,17 +17,11 @@ export function asNameAndDateValue(value: unknown): NameAndDateValue {
   return {};
 }
 
-export type SectionPlacement = 'beforeEntries' | 'afterEntries';
-
 export interface TemplateSectionSchema {
-  title: string;
-  placement?: SectionPlacement;
+  type: 'header' | 'entry';
+  id?: string;
+  title?: string;
   fields: Array<Partial<FieldDefinition> & { label: string }>;
-}
-
-export interface EntrySectionSchema {
-  displayName?: string;
-  fields?: Array<Partial<FieldDefinition> & { label: string }>;
 }
 
 export interface NormalizedTemplateSection {
@@ -34,19 +29,42 @@ export interface NormalizedTemplateSection {
    * Stable-ish key for React lists / editing state.
    * (We avoid depending on array index alone in case schema order changes.)
    */
+  type: 'header';
   key: string;
   title: string;
-  placement: SectionPlacement;
   fields: FieldConfig[];
 }
 
+export interface NormalizedEntrySection {
+  type: 'entry';
+  /** Stable key for React lists / per-section entry UI state */
+  key: string;
+  /** When set, entries are stored with matching ReportEntry.sectionId */
+  id?: string;
+  title: string;
+  fields: FieldConfig[];
+}
+
+export type NormalizedSchemaBlock = NormalizedTemplateSection | NormalizedEntrySection;
+
 export interface NormalizedTemplateSchema {
-  beforeEntriesSections: NormalizedTemplateSection[];
-  afterEntriesSections: NormalizedTemplateSection[];
+  /**
+   * Ordered blocks to render on the report detail page.
+   * If a schema defines an `entry` section in `sections[]`, the entries table should render
+   * exactly at that position.
+   */
+  blocks: NormalizedSchemaBlock[];
   entrySection: {
     title: string;
     fields: FieldConfig[];
   };
+  /** All entry sections in schema order (supports multiple tables per report). */
+  entrySections: Array<{
+    id?: string;
+    key: string;
+    title: string;
+    fields: FieldConfig[];
+  }>;
 }
 
 function normalizeOptions(
@@ -73,12 +91,12 @@ function normalizeField(field: Partial<FieldDefinition> & { label: string }): Fi
   };
 }
 
-function toSectionKey(placement: SectionPlacement, title: string, fields: FieldConfig[]): string {
+function toSectionKey(type: 'header' | 'entry', title: string, fields: FieldConfig[]): string {
   const ids = fields
     .map((f) => f.id)
     .filter(Boolean)
     .join('|');
-  return `${placement}::${title}::${ids}`;
+  return `${type}::${title}::${ids}`;
 }
 
 /**
@@ -86,8 +104,7 @@ function toSectionKey(placement: SectionPlacement, title: string, fields: FieldC
  * Backward compatible with existing `headerFields` / `entryFields`.
  *
  * Supported schema keys (optional):
- * - `sections: Array<{ title: string; placement?: "beforeEntries" | "afterEntries"; fields: FieldDef[] }>`
- * - `entrySection?: { displayName?: string; fields?: FieldDef[] }`
+ * - `sections: Array<{ type: "header" | "entry"; title?: string; fields: FieldDef[] }>`
  */
 export function normalizeTemplateSchema(template?: ReportTemplate): NormalizedTemplateSchema {
   const schema = (template?.schema ?? {}) as Record<string, unknown>;
@@ -108,51 +125,89 @@ export function normalizeTemplateSchema(template?: ReportTemplate): NormalizedTe
     ? ((schema.entryFields as Array<Partial<FieldDefinition> & { label: string }>) ?? [])
     : [];
 
-  const entrySection = (schema.entrySection ?? {}) as EntrySectionSchema;
-
-  const beforeEntriesSections: NormalizedTemplateSection[] = [];
-  const afterEntriesSections: NormalizedTemplateSection[] = [];
+  const blocks: NormalizedSchemaBlock[] = [];
+  let entrySectionTitle: string | undefined;
+  let entrySectionFields: FieldConfig[] | undefined;
+  const entrySectionsList: NormalizedTemplateSchema['entrySections'] = [];
 
   if (rawSections.length > 0) {
     for (const section of rawSections) {
-      const placement: SectionPlacement =
-        section.placement === 'afterEntries' ? 'afterEntries' : 'beforeEntries';
       const fields = (Array.isArray(section.fields) ? section.fields : [])
         .map(normalizeField)
         .filter((f): f is FieldConfig => !!f);
-      const title = section.title || 'Section';
-      const normalized: NormalizedTemplateSection = {
-        key: toSectionKey(placement, title, fields),
+
+      if (section.type === 'entry') {
+        const title = section.title?.trim() || 'Test Entries';
+        if (!entrySectionFields) {
+          entrySectionFields = fields;
+          entrySectionTitle = title;
+        }
+        const entryBlock: NormalizedEntrySection = {
+          type: 'entry',
+          id: section.id?.trim() || undefined,
+          key: section.id?.trim()
+            ? `entry::${section.id}::${title}`
+            : toSectionKey('entry', title, fields),
+          title,
+          fields,
+        };
+        entrySectionsList.push({
+          id: entryBlock.id,
+          key: entryBlock.key,
+          title: entryBlock.title,
+          fields: entryBlock.fields,
+        });
+        blocks.push(entryBlock);
+        continue;
+      }
+
+      const title = section.title?.trim() || 'Section';
+      blocks.push({
+        type: 'header',
+        key: toSectionKey('header', title, fields),
         title,
-        placement,
         fields,
-      };
-      if (placement === 'afterEntries') afterEntriesSections.push(normalized);
-      else beforeEntriesSections.push(normalized);
+      });
     }
   } else if (headerFields.length > 0) {
     // Backward-compatible default: one header section
     const fields = headerFields.map(normalizeField).filter((f): f is FieldConfig => !!f);
-    beforeEntriesSections.push({
-      key: toSectionKey('beforeEntries', 'Report Header', fields),
+    blocks.push({
+      type: 'header',
+      key: toSectionKey('header', 'Report Header', fields),
       title: 'Report Header',
-      placement: 'beforeEntries',
       fields,
     });
   }
 
   const normalizedEntryFields =
-    Array.isArray(entrySection.fields) && entrySection.fields.length > 0
-      ? entrySection.fields.map(normalizeField).filter((f): f is FieldConfig => !!f)
+    entrySectionFields && entrySectionFields.length > 0
+      ? entrySectionFields
       : entryFields.map(normalizeField).filter((f): f is FieldConfig => !!f);
 
+  if (entrySectionsList.length === 0 && normalizedEntryFields.length > 0) {
+    const title = entrySectionTitle || 'Test Entries';
+    const entryBlock: NormalizedEntrySection = {
+      type: 'entry',
+      key: toSectionKey('entry', title, normalizedEntryFields),
+      title,
+      fields: normalizedEntryFields,
+    };
+    entrySectionsList.push({
+      key: entryBlock.key,
+      title: entryBlock.title,
+      fields: entryBlock.fields,
+    });
+    blocks.push(entryBlock);
+  }
+
   return {
-    beforeEntriesSections,
-    afterEntriesSections,
+    blocks,
     entrySection: {
-      title: entrySection.displayName?.trim() || 'Test Entries',
+      title: entrySectionTitle || 'Test Entries',
       fields: normalizedEntryFields,
     },
+    entrySections: entrySectionsList,
   };
 }
 
@@ -257,15 +312,15 @@ export function formatFieldValue(fieldDef: FieldDefinition, value: unknown): str
   }
 
   if (fieldDef.type === 'date') {
-    const date = new Date(value as string);
-    return date.toLocaleDateString();
+    const date = parseDateLike(value);
+    return date ? date.toLocaleDateString() : String(value);
   }
 
   if (fieldDef.type === 'nameAndDate') {
     if (typeof value !== 'object' || value === null) return '';
     const v = value as NameAndDateValue;
     const name = v.name?.trim();
-    const date = v.date ? new Date(v.date).toLocaleDateString() : undefined;
+    const date = v.date ? parseDateLike(v.date)?.toLocaleDateString() : undefined;
     if (name && date) return `${name} — ${date}`;
     return name || date || '';
   }

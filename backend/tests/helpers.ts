@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import path from 'path';
+import { loadJsonDirSync } from '../src/utils/jsonDir';
 
 export interface SchemaField {
   id: string;
@@ -8,9 +9,76 @@ export interface SchemaField {
   [key: string]: unknown;
 }
 
+export interface SchemaSection {
+  type: 'header' | 'entry' | string;
+  id?: string;
+  title?: string;
+  fields?: SchemaField[];
+}
+
+export interface ReportSchemaShape {
+  sections?: SchemaSection[];
+  headerFields?: SchemaField[];
+  entryFields?: SchemaField[];
+}
+
+/**
+ * Resolve header/entry field lists from a report schema.
+ * Supports `sections[]` ({ type: "header" | "entry", fields }) and legacy
+ * `headerFields` / `entryFields`. When sections exist but omit a type, falls
+ * back to the legacy arrays for that type (e.g. entry-only sections + headerFields).
+ */
+export interface SchemaEntrySection {
+  id?: string;
+  title?: string;
+  fields: SchemaField[];
+}
+
+export function extractSchemaFields(schema: ReportSchemaShape): {
+  headerFields: SchemaField[];
+  entryFields: SchemaField[];
+  entrySections: SchemaEntrySection[];
+} {
+  const sections = Array.isArray(schema.sections) ? schema.sections : [];
+
+  if (sections.length > 0) {
+    const headerFromSections = sections
+      .filter((s) => s.type === 'header')
+      .flatMap((s) => (Array.isArray(s.fields) ? s.fields : []));
+    const entrySections = sections
+      .filter((s) => s.type === 'entry')
+      .map((s) => ({
+        id: s.id,
+        title: s.title,
+        fields: Array.isArray(s.fields) ? s.fields : [],
+      }))
+      .filter((s) => s.fields.length > 0);
+    const entryFromSections = entrySections.flatMap((s) => s.fields);
+
+    return {
+      headerFields:
+        headerFromSections.length > 0 ? headerFromSections : (schema.headerFields ?? []),
+      entryFields: entryFromSections.length > 0 ? entryFromSections : (schema.entryFields ?? []),
+      entrySections:
+        entrySections.length > 0
+          ? entrySections
+          : schema.entryFields?.length
+            ? [{ fields: schema.entryFields }]
+            : [],
+    };
+  }
+
+  return {
+    headerFields: schema.headerFields ?? [],
+    entryFields: schema.entryFields ?? [],
+    entrySections: schema.entryFields?.length ? [{ fields: schema.entryFields }] : [],
+  };
+}
+
 export interface ReportEntry {
   id: string;
   entryOrder: number;
+  sectionId?: string | null;
   data: Record<string, unknown>;
 }
 
@@ -18,7 +86,7 @@ export interface TestReport {
   id: string;
   reportType: string;
   projectNumber: string;
-  dateOfTest: Date;
+  dateOfTest: string | Date;
   headerData: Record<string, unknown>;
   entries?: ReportEntry[];
 }
@@ -50,7 +118,7 @@ export function generateFieldValue(field: SchemaField): unknown {
  */
 export function generateHeaderData(headerFields: SchemaField[]): Record<string, unknown> {
   const data: Record<string, unknown> = {};
-  for (const field of headerFields) {
+  for (const field of headerFields ?? []) {
     data[field.id] = generateFieldValue(field);
   }
   return data;
@@ -59,12 +127,17 @@ export function generateHeaderData(headerFields: SchemaField[]): Record<string, 
 /**
  * Generate sample entry rows from schema fields
  */
-export function generateEntryRows(entryFields: SchemaField[], rowCount: number = 1): ReportEntry[] {
+export function generateEntryRows(
+  entryFields: SchemaField[],
+  rowCount: number = 1,
+  sectionId?: string,
+): ReportEntry[] {
   const entries: ReportEntry[] = [];
   for (let i = 0; i < rowCount; i++) {
     const entry: ReportEntry = {
       id: uuid(),
-      entryOrder: i,
+      entryOrder: i + 1,
+      sectionId,
       data: {},
     };
     for (const field of entryFields) {
@@ -73,6 +146,19 @@ export function generateEntryRows(entryFields: SchemaField[], rowCount: number =
     entries.push(entry);
   }
   return entries;
+}
+
+export function generateEntryRowsForSections(
+  entrySections: SchemaEntrySection[],
+  rowCountPerSection: number = 1,
+): ReportEntry[] {
+  if (entrySections.length === 0) return [];
+  if (entrySections.length === 1 && !entrySections[0].id) {
+    return generateEntryRows(entrySections[0].fields, rowCountPerSection);
+  }
+  return entrySections.flatMap((section) =>
+    generateEntryRows(section.fields, rowCountPerSection, section.id),
+  );
 }
 
 /**
@@ -85,6 +171,7 @@ export function createTestReport(
   entryRowCount: number = 1,
   projectNumber: string = '12345G',
   dateOfTest: Date = new Date(),
+  entrySections: SchemaEntrySection[] = [],
 ): TestReport {
   const report: TestReport = {
     id: uuid(),
@@ -94,8 +181,15 @@ export function createTestReport(
     headerData: generateHeaderData(headerFields),
   };
 
-  if (entryFields.length > 0) {
-    report.entries = generateEntryRows(entryFields, entryRowCount);
+  const sections =
+    entrySections.length > 0
+      ? entrySections
+      : entryFields.length > 0
+        ? [{ fields: entryFields }]
+        : [];
+
+  if (sections.length > 0) {
+    report.entries = generateEntryRowsForSections(sections, entryRowCount);
   }
 
   return report;
@@ -120,9 +214,7 @@ const templateDefsDir = path.join(__dirname, '../data/template_defs');
 
 export const TEMPLATE_CONFIGS: Record<string, TemplateTestConfig> = {};
 
-const schemaFiles = readdirSync(schemasDir)
-  .filter((file: string) => file.endsWith('.json'))
-  .sort();
+const schemaFiles = loadJsonDirSync(schemasDir, { sort: true, stripExt: false }).map((e) => e.file);
 
 for (const file of schemaFiles) {
   const templateId = file.replace('.json', '');

@@ -4,8 +4,20 @@ import EditableTable from '../EditableTable';
 import { apiClient } from '../../api/client';
 import type { Project, Report, ReportTemplate, FieldConfig } from '../../types';
 import { normalizeTemplateSchema } from '../../utils/formHelpers';
-import { fromISODateOnly, normalizeForApi, toISODateOnly } from '../../utils/dateAndNormalize.ts';
-import { toEntryRows, toReportEntries, type EntryRow } from '../../utils/reportEntryMapping';
+import {
+  fromISODateOnly,
+  normalizeForApi,
+  parseDateLike,
+  toISODateOnly,
+} from '../../utils/dateAndNormalize.ts';
+import {
+  entriesForSection,
+  entryRowKey,
+  toEntryRows,
+  toReportEntries,
+  type EntryRow,
+} from '../../utils/reportEntryMapping';
+import type { NormalizedEntrySection } from '../../utils/formHelpers';
 import { FieldInput } from '../forms/FieldInput';
 
 export function ReportDetailPage({
@@ -24,6 +36,8 @@ export function ReportDetailPage({
   onUpdateReport: (updated: Report) => void | Promise<void>;
 }) {
   type HeaderData = Record<string, unknown>;
+
+  const reportDateOfTest = parseDateLike(report.dateOfTest) ?? new Date();
 
   const getDefaultEntryFields = (): FieldConfig[] => [
     { id: 'testNumber', label: 'Test #', type: 'text', required: false },
@@ -48,16 +62,12 @@ export function ReportDetailPage({
     return {};
   });
   const [entries, setEntries] = useState<EntryRow[]>(toEntryRows(report.entries));
-  const [dateOfTest, setDateOfTest] = useState<Date>(
-    report.dateOfTest instanceof Date ? report.dateOfTest : new Date(report.dateOfTest),
-  );
-  const [showAddEntry, setShowAddEntry] = useState(false);
-  const [editingTestNumber, setEditingTestNumber] = useState<number | null>(null);
+  const [dateOfTest, setDateOfTest] = useState<Date>(reportDateOfTest);
+  const [showAddEntrySection, setShowAddEntrySection] = useState<string | null>(null);
+  const [editingEntryKey, setEditingEntryKey] = useState<string | null>(null);
   const [isNewReport, setIsNewReport] = useState(isNew);
   const [editingDateOfTest, setEditingDateOfTest] = useState(isNew);
-  const [editingSectionKey, setEditingSectionKey] = useState<string | null>(
-    isNew ? '__all__' : null,
-  );
+  const [editingSectionKeys, setEditingSectionKeys] = useState<Set<string>>(() => new Set());
 
   // Update entries when report changes (e.g., when re-opening an existing report)
   useEffect(() => {
@@ -67,48 +77,49 @@ export function ReportDetailPage({
     } else {
       setHeaderData({});
     }
-    setDateOfTest(
-      report.dateOfTest instanceof Date ? report.dateOfTest : new Date(report.dateOfTest),
-    );
+    setDateOfTest(parseDateLike(report.dateOfTest) ?? new Date());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.id]); // Only re-transform when report ID changes
 
   const normalizedSchema = normalizeTemplateSchema(template);
-  const entrySectionTitle = normalizedSchema.entrySection.title || 'Test Entries';
-  const normalizedEntryFields =
-    normalizedSchema.entrySection.fields.length > 0
-      ? normalizedSchema.entrySection.fields
-      : template?.schema
-        ? []
-        : getDefaultEntryFields();
 
-  // Field configuration for editable entry rows
-  const entryFields = normalizedEntryFields.map((f) => ({
-    ...f,
-    readOnly: f.id === 'testNumber',
-  })) as Array<FieldConfig & { readOnly: boolean }>;
+  const entryFieldsFor = (block: NormalizedEntrySection) =>
+    (block.fields.length > 0 ? block.fields : template?.schema ? [] : getDefaultEntryFields()).map(
+      (f) => ({
+        ...f,
+        readOnly: f.id === 'testNumber',
+      }),
+    ) as Array<FieldConfig & { readOnly: boolean }>;
 
-  // Helper function to convert display entries back to backend format
-  const addEntry = async (entry: Record<string, unknown>) => {
+  // When creating a new report, start with all header sections open for editing.
+  useEffect(() => {
+    if (!isNewReport) return;
+    if (editingSectionKeys.size > 0) return;
+    const headerKeys = normalizedSchema.blocks.filter((b) => b.type === 'header').map((b) => b.key);
+    if (headerKeys.length === 0) return;
+    setEditingSectionKeys(new Set(headerKeys));
+  }, [editingSectionKeys.size, isNewReport, normalizedSchema.blocks]);
+
+  const addEntry = async (sectionId: string | undefined, entry: Record<string, unknown>) => {
     try {
-      const newNumber = entries.length + 1;
+      const sectionEntries = entriesForSection(entries, sectionId);
+      const newNumber = sectionEntries.length + 1;
       const entryData = {
         data: normalizeForApi(entry),
         entryOrder: newNumber,
+        sectionId: sectionId ?? null,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const createdEntry = (await apiClient.reports.addEntry(report.id, entryData)) as any;
-      // The API will return the created entry, merge it with the frontend structure
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const displayEntry: any = {
+      const displayEntry: EntryRow = {
         id: createdEntry.id,
         testNumber: newNumber,
+        sectionId: sectionId ?? null,
         ...entry,
       };
       const newEntries: EntryRow[] = [...entries, displayEntry];
       setEntries(newEntries);
-      setShowAddEntry(false);
-      // Update parent component with new entries so reports page shows correct count
+      setShowAddEntrySection(null);
       onUpdateReport({
         ...report,
         entries: toReportEntries(newEntries) as unknown as Report['entries'],
@@ -119,10 +130,15 @@ export function ReportDetailPage({
     }
   };
 
-  const updateEntry = async (testNumber: number, updated: Record<string, unknown>) => {
+  const updateEntry = async (
+    sectionId: string | undefined,
+    testNumber: number,
+    updated: Record<string, unknown>,
+  ) => {
     try {
-      // Find the entry to get its ID
-      const entryToUpdate = entries.find((e) => e.testNumber === testNumber);
+      const entryToUpdate = entriesForSection(entries, sectionId).find(
+        (e) => e.testNumber === testNumber,
+      );
       if (!entryToUpdate?.id) {
         alert('Entry ID not found');
         return;
@@ -131,22 +147,25 @@ export function ReportDetailPage({
       const updateData = {
         data: normalizeForApi(updated),
         entryOrder: testNumber,
+        sectionId: sectionId ?? null,
       };
 
-      const updatedEntry = (await apiClient.reports.updateEntry(
-        entryToUpdate.id,
-        updateData,
-      )) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const displayEntry: any = {
+      const updatedEntry = (await apiClient.reports.updateEntry(entryToUpdate.id, updateData)) as {
+        id: string;
+        data?: Record<string, unknown>;
+      };
+      const displayEntry: EntryRow = {
         id: updatedEntry.id,
         testNumber,
+        sectionId: sectionId ?? null,
         ...(updatedEntry.data || updated),
       };
-      const newEntries = entries.map((e) => (e.testNumber === testNumber ? displayEntry : e));
+      const rowKey = entryRowKey(sectionId, testNumber);
+      const newEntries = entries.map((e) =>
+        entryRowKey(e.sectionId ?? undefined, e.testNumber) === rowKey ? displayEntry : e,
+      );
       setEntries(newEntries);
-      setEditingTestNumber(null);
-      // Update parent component with updated entries
+      setEditingEntryKey(null);
       onUpdateReport({
         ...report,
         entries: toReportEntries(newEntries) as unknown as Report['entries'],
@@ -157,19 +176,22 @@ export function ReportDetailPage({
     }
   };
 
-  const deleteEntry = async (testNumber: number) => {
+  const deleteEntry = async (sectionId: string | undefined, testNumber: number) => {
     try {
-      // Find the entry to get its ID
-      const entryToDelete = entries.find((e) => e.testNumber === testNumber);
+      const entryToDelete = entriesForSection(entries, sectionId).find(
+        (e) => e.testNumber === testNumber,
+      );
       if (!entryToDelete?.id) {
         alert('Entry ID not found');
         return;
       }
 
       await apiClient.reports.deleteEntry(entryToDelete.id);
-      const newEntries = entries.filter((e) => e.testNumber !== testNumber);
+      const rowKey = entryRowKey(sectionId, testNumber);
+      const newEntries = entries.filter(
+        (e) => entryRowKey(e.sectionId ?? undefined, e.testNumber) !== rowKey,
+      );
       setEntries(newEntries);
-      // Update parent component with updated entries so reports page shows correct count
       onUpdateReport({
         ...report,
         entries: toReportEntries(newEntries) as unknown as Report['entries'],
@@ -180,14 +202,18 @@ export function ReportDetailPage({
     }
   };
 
-  const handleSectionSave = (data: Record<string, unknown>) => {
+  const handleSectionSaveFor = (sectionKey: string) => (data: Record<string, unknown>) => {
     const normalizedData = normalizeForApi(data);
     const merged = { ...(headerData || {}), ...(normalizedData || {}) };
     setHeaderData(merged);
     setIsNewReport(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onUpdateReport({ ...report, headerData: merged as any });
-    setEditingSectionKey(null);
+    setEditingSectionKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(sectionKey);
+      return next;
+    });
   };
 
   const formatHeaderFieldValue = (field: FieldConfig): string => {
@@ -195,9 +221,8 @@ export function ReportDetailPage({
     if (raw === null || raw === undefined || raw === '') return '-';
 
     const formatDate = (v: unknown): string => {
-      const d =
-        v instanceof Date ? v : typeof v === 'string' || typeof v === 'number' ? new Date(v) : null;
-      if (!d || Number.isNaN(d.getTime())) return '-';
+      const d = parseDateLike(v);
+      if (!d) return '-';
       return d.toLocaleDateString();
     };
 
@@ -293,11 +318,7 @@ export function ReportDetailPage({
                   </button>
                   <button
                     onClick={() => {
-                      setDateOfTest(
-                        report.dateOfTest instanceof Date
-                          ? report.dateOfTest
-                          : new Date(report.dateOfTest),
-                      );
+                      setDateOfTest(parseDateLike(report.dateOfTest) ?? new Date());
                       setEditingDateOfTest(false);
                     }}
                     className="button-secondary text-sm px-3"
@@ -308,14 +329,12 @@ export function ReportDetailPage({
               ) : (
                 <div className="flex justify-between items-center">
                   <p className="text-gray-800 font-semibold">{dateOfTest.toLocaleDateString()}</p>
-                  {!isNewReport && (
-                    <button
-                      onClick={() => setEditingDateOfTest(true)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setEditingDateOfTest(true)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Edit
+                  </button>
                 </div>
               )}
             </div>
@@ -327,113 +346,70 @@ export function ReportDetailPage({
         </div>
       </div>
 
-      {/* Schema-defined Sections (before entries) */}
-      {(normalizedSchema.beforeEntriesSections || []).map((section) => {
-        const isEditing =
-          editingSectionKey === '__all__' || editingSectionKey === section.key || false;
-        const sectionInitialData = section.fields.reduce((acc, f) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (acc as any)[f.id] = (headerData as any)?.[f.id];
-          return acc;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }, {} as any);
-
-        return (
-          <div key={section.key} className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
-              {!isEditing && !isNewReport && section.fields.length > 0 && (
+      {normalizedSchema.blocks.map((block) => {
+        if (block.type === 'entry') {
+          return (
+            <div key={block.key} className="mb-8">
+              {showAddEntrySection !== block.key && (
                 <button
-                  onClick={() => setEditingSectionKey(section.key)}
-                  className="button-secondary text-sm"
+                  onClick={() => setShowAddEntrySection(block.key)}
+                  className="button-base mb-4"
                 >
-                  Edit
+                  <Plus size={20} className="inline mr-2" />
+                  Add Trial
                 </button>
               )}
-            </div>
-
-            {isEditing ? (
-              <div className="card-border mb-6 border-primary-light">
-                <SectionForm
-                  title={`Edit ${section.title}`}
-                  fields={section.fields}
-                  initialData={sectionInitialData}
-                  onSave={handleSectionSave}
-                  onCancel={() => setEditingSectionKey(null)}
-                  saveLabel="Save"
-                />
-              </div>
-            ) : (
-              section.fields.length > 0 && (
-                <div className="card-border border-gray-200 p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {section.fields.map((field) => (
-                      <div key={field.id}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {field.label}
-                        </label>
-                        <p className="text-gray-800">{formatHeaderFieldValue(field)}</p>
-                      </div>
-                    ))}
-                  </div>
+              {showAddEntrySection === block.key && (
+                <div className="card-border mb-6 border-primary-light">
+                  <AddEntryForm
+                    fields={entryFieldsFor(block)}
+                    onSave={(entry) => addEntry(block.id, entry)}
+                    onCancel={() => setShowAddEntrySection(null)}
+                  />
                 </div>
-              )
-            )}
-          </div>
-        );
-      })}
+              )}
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">{block.title}</h3>
+              {entriesForSection(entries, block.id).length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No trials yet</p>
+              ) : (
+                <EditableTable
+                  columns={entryFieldsFor(block).map((f) => ({ key: f.id, label: f.label }))}
+                  rows={entriesForSection(entries, block.id)}
+                  rowKey={'testNumber'}
+                  editingRowId={
+                    editingEntryKey?.startsWith(`${block.id ?? ''}:`)
+                      ? Number(editingEntryKey.split(':')[1])
+                      : null
+                  }
+                  onEdit={(id) => setEditingEntryKey(entryRowKey(block.id, id as number))}
+                  onDelete={(id) => deleteEntry(block.id, id as number)}
+                  fields={entryFieldsFor(block)}
+                  onSave={(id, updated) => updateEntry(block.id, id as number, updated)}
+                />
+              )}
+            </div>
+          );
+        }
 
-      {!showAddEntry && (
-        <button onClick={() => setShowAddEntry(true)} className="button-base">
-          <Plus size={20} className="inline mr-2" />
-          Add Test Entry
-        </button>
-      )}
-      {showAddEntry && (
-        <div className="card-border mb-6 border-primary-light">
-          <AddEntryForm
-            fields={entryFields}
-            onSave={addEntry}
-            onCancel={() => setShowAddEntry(false)}
-          />
-        </div>
-      )}
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">{entrySectionTitle}</h3>
-        {entries.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No test entries yet</p>
-        ) : (
-          <EditableTable
-            columns={entryFields.map((f) => ({ key: f.id, label: f.label }))}
-            rows={entries}
-            rowKey={'testNumber'}
-            editingRowId={editingTestNumber}
-            onEdit={(id) => setEditingTestNumber(id as number)}
-            onDelete={(id) => deleteEntry(id as number)}
-            fields={entryFields}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onSave={(id, updated) => updateEntry(id as number, updated as any)}
-          />
-        )}
-      </div>
-
-      {/* Schema-defined Sections (after entries) */}
-      {(normalizedSchema.afterEntriesSections || []).map((section) => {
-        const isEditing = editingSectionKey === section.key || false;
-        const sectionInitialData = section.fields.reduce((acc, f) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (acc as any)[f.id] = (headerData as any)?.[f.id];
+        const isEditing = editingSectionKeys.has(block.key);
+        const sectionInitialData = block.fields.reduce<HeaderData>((acc, f) => {
+          acc[f.id] = headerData[f.id];
           return acc;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }, {} as any);
+        }, {});
 
         return (
-          <div key={section.key} className="mt-8">
+          <div key={block.key} className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
-              {!isEditing && !isNewReport && section.fields.length > 0 && (
+              <h3 className="text-xl font-semibold text-gray-800">{block.title}</h3>
+              {!isEditing && block.fields.length > 0 && (
                 <button
-                  onClick={() => setEditingSectionKey(section.key)}
+                  onClick={() =>
+                    setEditingSectionKeys((prev) => {
+                      const next = new Set(prev);
+                      next.add(block.key);
+                      return next;
+                    })
+                  }
                   className="button-secondary text-sm"
                 >
                   Edit
@@ -444,19 +420,25 @@ export function ReportDetailPage({
             {isEditing ? (
               <div className="card-border mb-6 border-primary-light">
                 <SectionForm
-                  title={`Edit ${section.title}`}
-                  fields={section.fields}
+                  title={`Edit ${block.title}`}
+                  fields={block.fields}
                   initialData={sectionInitialData}
-                  onSave={handleSectionSave}
-                  onCancel={() => setEditingSectionKey(null)}
+                  onSave={handleSectionSaveFor(block.key)}
+                  onCancel={() =>
+                    setEditingSectionKeys((prev) => {
+                      const next = new Set(prev);
+                      next.delete(block.key);
+                      return next;
+                    })
+                  }
                   saveLabel="Save"
                 />
               </div>
             ) : (
-              section.fields.length > 0 && (
+              block.fields.length > 0 && (
                 <div className="card-border border-gray-200 p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {section.fields.map((field) => (
+                    {block.fields.map((field) => (
                       <div key={field.id}>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           {field.label}

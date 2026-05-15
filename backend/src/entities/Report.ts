@@ -31,8 +31,10 @@ export class Report {
   @JoinColumn({ name: 'templateId' })
   template!: ReportTemplate;
 
-  @Column({ type: 'datetime' })
-  dateOfTest!: Date;
+  // Store as MySQL DATE (no time). TypeORM returns this as a YYYY-MM-DD string.
+  // NOTE: We avoid DEFAULT CURRENT_DATE for compatibility with older MySQL/MariaDB.
+  @Column({ type: 'date', nullable: true })
+  dateOfTest?: string;
 
   @Column({ type: 'json', nullable: true })
   headerData?: Record<string, unknown>;

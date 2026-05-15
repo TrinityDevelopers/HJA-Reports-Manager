@@ -1,0 +1,166 @@
+{
+  "name": "atterberg-limit",
+  "displayName": "Atterberg Limits (ASTM D4318)",
+  "description": "Liquid and plastic limit determination data sheet",
+  "version": "1.0.0",
+  "sections": [
+    {
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "panNumber",
+          "label": "Pan No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "liquidLimitMachine",
+          "label": "Liquid Limit Machine",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "id": "liquidLimit",
+      "title": "Determination of Liquid Limit",
+      "fields": [
+        {
+          "id": "trial",
+          "label": "Trial",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dishNumber",
+          "label": "Dish Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "wetWeightSampleDish",
+          "label": "Wet Weight Sample + Dish (A)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightSampleDish",
+          "label": "Dry Weight Sample + Dish (B)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfDish",
+          "label": "Weight of Dish (C)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "numberOfBlows",
+          "label": "Number of Blows",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "id": "plasticLimit",
+      "title": "Determination of Plastic Limit",
+      "fields": [
+        {
+          "id": "trial",
+          "label": "Trial",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dishNumber",
+          "label": "Dish Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "wetWeightSampleDish",
+          "label": "Wet Weight Sample + Dish (A)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightSampleDish",
+          "label": "Dry Weight Sample + Dish (B)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfDish",
+          "label": "Weight of Dish (C)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "dryWeights",
+          "label": "Dry Weights",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

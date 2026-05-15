@@ -12,8 +12,8 @@
     "dateOfTest": "S7"
   },
   "fieldMapping": {
-    "header_dateDroppedOff": "E8",
-    "header_droppedOffBy": "K8",
+    "header_droppedOffBy[date]": "E8",
+    "header_droppedOffBy[name]": "K8",
     "header_labCode": "S8",
     "header_sampleLocation": "E9",
     "header_materialDescription": "F10",

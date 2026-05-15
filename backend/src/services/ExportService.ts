@@ -5,27 +5,29 @@ import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
 import { seedFromDefinitions } from '../utils/seedFromDefinitions';
+import type { FieldMapping } from '../exports/fillers';
+import { fillEntryFields, fillHeaderFields, fillStandardFields } from '../exports/fillers';
 
 interface ExportableReport {
   projectName?: string;
-  dateOfTest: Date;
+  dateOfTest: string | Date;
   project?: { projectNumber?: string; projectName?: string };
   headerData?: Record<string, unknown>;
-  entries?: Array<{ data: Record<string, unknown> }>;
-}
-
-interface CellRange {
-  column: string;
-  startRow: number;
-  endRow: number;
+  entries?: Array<{
+    entryOrder?: number;
+    sectionId?: string | null;
+    data: Record<string, unknown>;
+  }>;
 }
 
 interface ExportableTemplate {
   filePath: string;
   standardFields?: Record<string, string>;
-  fieldMapping?: Record<string, unknown>;
+  fieldMapping?: FieldMapping;
   maxEntryRows?: number;
   rowsPerEntry?: number;
+  colsPerEntry?: number;
+  entryLayout?: 'row' | 'column';
 }
 
 export class ExportService {
@@ -41,59 +43,6 @@ export class ExportService {
       this.exportTemplateRepository = {} as unknown as Repository<ExportTemplate>;
     }
     this.templatesDir = path.join(process.cwd(), 'data', 'templates');
-  }
-
-  /**
-   * Parse entry field mapping format to extract column ranges
-   * Supports format like "A38-51,K38-51" for multiple columns with overflow
-   */
-  private parseFieldMapping(mappingString: string): CellRange[] {
-    const sections = mappingString.split(',');
-    return sections.map((section) => {
-      const trimmed = section.trim();
-      const match = trimmed.match(/^([A-Z]+)(\d+)-(\d+)$/);
-      if (!match) {
-        throw new Error(
-          `Invalid entry field mapping format: "${trimmed}". Expected format: "A38-51" or "A38-51,K38-51"`,
-        );
-      }
-
-      const column = match[1];
-      const startRow = parseInt(match[2]);
-      const endRow = parseInt(match[3]);
-
-      if (startRow > endRow) {
-        throw new Error(
-          `Invalid row range in field mapping "${trimmed}": start row ${startRow} is greater than end row ${endRow}`,
-        );
-      }
-
-      return { column, startRow, endRow };
-    });
-  }
-
-  /**
-   * Determine the target cell for an entry based on its index
-   * Handles overflow across multiple column ranges and multi-row entries
-   */
-  private getTargetCell(ranges: CellRange[], entryIndex: number, rowsPerEntry: number = 1): string {
-    let currentIndex = 0;
-
-    for (const range of ranges) {
-      const rangeSize = range.endRow - range.startRow + 1;
-      const entriesPerRange = Math.floor(rangeSize / rowsPerEntry);
-
-      if (entryIndex < currentIndex + entriesPerRange) {
-        const offsetInRange = entryIndex - currentIndex;
-        const targetRow = range.startRow + offsetInRange * rowsPerEntry;
-        return `${range.column}${targetRow}`;
-      }
-      currentIndex += entriesPerRange;
-    }
-
-    throw new Error(
-      `Entry index ${entryIndex} exceeds available rows in field mapping with rowsPerEntry ${rowsPerEntry} (total available entries: ${currentIndex})`,
-    );
   }
 
   async findExportTemplate(templateId: string): Promise<ExportTemplate | null> {
@@ -127,106 +76,14 @@ export class ExportService {
       throw new Error('Template workbook has no worksheets');
     }
 
-    // Fill standard fields (projectName, projectNumber, dateOfTest)
-    if (exportTemplate.standardFields) {
-      const standardFieldsMap: Record<string, string | number | Date> = {
-        projectName: report.project?.projectName || '',
-        dateOfTest: report.dateOfTest,
-        projectNumber: report.project?.projectNumber || '',
-      };
-
-      for (const [key, cellLocation] of Object.entries(exportTemplate.standardFields)) {
-        const value = standardFieldsMap[key];
-        if (value !== undefined && value !== null && value !== '') {
-          const cell = worksheet.getCell(cellLocation);
-          cell.value = value as string | number | Date;
-        }
-      }
-    }
-
-    // Fill header data
-    if (report.headerData) {
-      for (const [key, value] of Object.entries(report.headerData)) {
-        const fieldMapping = exportTemplate.fieldMapping as Record<string, unknown> | undefined;
-
-        // Support composite nameAndDate fields using bracketed mappings:
-        // - header_<id>[name]
-        // - header_<id>[date]
-        const nameCellMapping = fieldMapping?.[`header_${key}[name]`] as string | undefined;
-        const dateCellMapping = fieldMapping?.[`header_${key}[date]`] as string | undefined;
-        if ((nameCellMapping || dateCellMapping) && value && typeof value === 'object') {
-          const composite = value as Record<string, unknown>;
-
-          if (nameCellMapping && composite.name !== undefined && composite.name !== null) {
-            worksheet.getCell(nameCellMapping).value = composite.name as
-              | string
-              | number
-              | boolean
-              | Date;
-          }
-
-          if (dateCellMapping && composite.date !== undefined && composite.date !== null) {
-            worksheet.getCell(dateCellMapping).value = composite.date as
-              | string
-              | number
-              | boolean
-              | Date;
-          }
-
-          continue;
-        }
-
-        // Standard (single-cell) header mappings:
-        // - header_<id>
-        const cellMapping = fieldMapping?.[`header_${key}`] as string | undefined;
-        if (cellMapping && value !== undefined && value !== null) {
-          const cell = worksheet.getCell(cellMapping);
-          cell.value = value as string | number | boolean | Date;
-        }
-      }
-    }
-
-    // Fill entry rows
-    if (report.entries) {
-      // Validate entry count against maxEntryRows if specified
-      const entriesSorted = [...report.entries].sort((a, b) => {
-        const ao = (a as unknown as { entryOrder?: number }).entryOrder ?? 0;
-        const bo = (b as unknown as { entryOrder?: number }).entryOrder ?? 0;
-        return ao - bo;
-      });
-
-      if (exportTemplate.maxEntryRows && entriesSorted.length > exportTemplate.maxEntryRows) {
-        console.warn(
-          `Warning: Report has ${entriesSorted.length} entries but template maxEntryRows is ${exportTemplate.maxEntryRows}. Some entries may overflow.`,
-        );
-      }
-
-      const rowsPerEntry = exportTemplate.rowsPerEntry ?? 1;
-
-      for (let i = 0; i < entriesSorted.length; i++) {
-        const entry = entriesSorted[i];
-        if (!entry.data) continue;
-
-        for (const [key, value] of Object.entries(entry.data)) {
-          const cellMapping = (exportTemplate.fieldMapping as Record<string, unknown>)?.[
-            `entry_${key}_row`
-          ] as string | undefined;
-
-          if (cellMapping && value !== undefined && value !== null) {
-            try {
-              const ranges = this.parseFieldMapping(cellMapping as string);
-              const targetCell = this.getTargetCell(ranges, i, rowsPerEntry);
-              const cell = worksheet.getCell(targetCell);
-              cell.value = value as string | number | boolean | Date;
-            } catch (error) {
-              console.error(
-                `Failed to map entry field "${key}" at index ${i}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              );
-            }
-          }
-        }
-      }
-    }
+    fillStandardFields(worksheet, exportTemplate.standardFields, report);
+    fillHeaderFields(worksheet, exportTemplate.fieldMapping, report.headerData);
+    fillEntryFields(worksheet, exportTemplate.fieldMapping, report.entries, {
+      rowsPerEntry: exportTemplate.rowsPerEntry ?? 1,
+      colsPerEntry: exportTemplate.colsPerEntry ?? 1,
+      maxEntryRows: exportTemplate.maxEntryRows,
+      entryLayout: exportTemplate.entryLayout ?? 'row',
+    });
 
     // Write workbook to output file
     await workbook.xlsx.writeFile(outputPath);
@@ -269,6 +126,8 @@ export class ExportService {
           existing.standardFields = def.standardFields as Record<string, unknown>;
           existing.maxEntryRows = def.maxEntryRows as number | undefined;
           existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
+          existing.colsPerEntry = def.colsPerEntry as number | undefined;
+          existing.entryLayout = def.entryLayout as 'row' | 'column' | undefined;
           await this.exportTemplateRepository.save(existing);
         },
         createNew: async (_key, def) => {
@@ -282,6 +141,8 @@ export class ExportService {
             standardFields: def.standardFields as Record<string, unknown>,
             maxEntryRows: def.maxEntryRows as number | undefined,
             rowsPerEntry: def.rowsPerEntry as number | undefined,
+            colsPerEntry: def.colsPerEntry as number | undefined,
+            entryLayout: def.entryLayout as 'row' | 'column' | undefined,
           });
         },
         logLabel: (_key, def) => String(def.displayName ?? _key),

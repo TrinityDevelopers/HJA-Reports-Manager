@@ -3,201 +3,269 @@
   "displayName": "Modified Proctor (ASTM D1557)",
   "description": "Modified Proctor soil compaction test data sheet",
   "version": "1.0.0",
-  "headerFields": [
+  "sections": [
     {
-      "id": "dateDroppedOff",
-      "label": "Date Dropped Off",
-      "type": "date",
-      "required": false
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "droppedOffBy",
+          "label": "Dropped Off By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "labCode",
+          "label": "Lab Code",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleLocation",
+          "label": "Sample Location",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "methodUsed",
+          "label": "Method Used (A, B, or C)",
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "required": true
+        },
+        {
+          "id": "specificGravity",
+          "label": "Specific Gravity",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "testNumber",
+          "label": "Test No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "moldSize",
+          "label": "Mold Size (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "volOfMold",
+          "label": "Vol. of Mold (cu. ft.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfMold",
+          "label": "Weight of Mold (g)",
+          "type": "number",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "droppedOffBy",
-      "label": "Dropped Off By",
-      "type": "text",
-      "required": false
+      "type": "entry",
+      "title": "Moisture / Density Points",
+      "fields": [
+        {
+          "id": "estimatedMoisture",
+          "label": "Estimated Moisture",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfMoldSpecimen",
+          "label": "Weight of Mold & Specimen (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightOfSpecimen",
+          "label": "Wet Weight of Specimen (lb/cu. ft.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightOfSpecimen",
+          "label": "Dry Weight of Specimen (lb/cu. ft.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryDensityWhenMolded",
+          "label": "Dry Density When Molded (lb/cu. ft.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "panNumber",
+          "label": "Pan No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "panWeight",
+          "label": "Weights (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moisturePercentage",
+          "label": "% Moisture",
+          "type": "number",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "labCode",
-      "label": "Lab Code",
-      "type": "text",
-      "required": false
+      "type": "header",
+      "title": "Sieve Data",
+      "fields": [
+        {
+          "id": "sieveUsedToSeparateSample",
+          "label": "Sieve Used to Separate Sample",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "percentRetainedOnSieve",
+          "label": "Percent Retained on Sieve (%)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "percentPassingSieve",
+          "label": "Percent Passing Sieve (%)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moistureTareNo",
+          "label": "Moisture Content - Tare No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "moistureTW",
+          "label": "Moisture Content - TW (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moistureWW",
+          "label": "Moisture Content - WW (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moistureDW",
+          "label": "Moisture Content - DW (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "computedBy",
+          "label": "Computed By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "sampleLocation",
-      "label": "Sample Location",
-      "type": "text",
-      "required": false
+      "type": "header",
+      "title": "Moisture Content",
+      "fields": [
+        {
+          "id": "moistureTareNo",
+          "label": "Moisture Content - Tare No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "moistureTW",
+          "label": "Moisture Content - TW (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moistureWW",
+          "label": "Moisture Content - WW (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "moistureDW",
+          "label": "Moisture Content - DW (g)",
+          "type": "number",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "materialDescription",
-      "label": "Material Description",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "methodUsed",
-      "label": "Method Used (A, B, or C)",
-      "type": "select",
-      "options": ["A", "B", "C"],
-      "required": true
-    },
-    {
-      "id": "specificGravity",
-      "label": "Specific Gravity",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "sampleNumber",
-      "label": "Sample No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "testNumber",
-      "label": "Test No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "scaleNumber",
-      "label": "Scale No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "ovenNumber",
-      "label": "Oven No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "moldSize",
-      "label": "Mold Size (in.)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "volOfMold",
-      "label": "Vol. of Mold (cu. ft.)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "weightOfMold",
-      "label": "Weight of Mold (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "sieveUsedToSeparateSample",
-      "label": "Sieve Used to Separate Sample",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "percentRetainedOnSieve",
-      "label": "Percent Retained on Sieve (%)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "percentPassingSieve",
-      "label": "Percent Passing Sieve (%)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "moistureTareNo",
-      "label": "Moisture Content - Tare No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "moistureTW",
-      "label": "Moisture Content - TW (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "moistureWW",
-      "label": "Moisture Content - WW (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "moistureDW",
-      "label": "Moisture Content - DW (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "testedBy",
-      "label": "Tested By",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "computedBy",
-      "label": "Computed By",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "checkedBy",
-      "label": "Checked By",
-      "type": "nameAndDate",
-      "required": false
-    }
-  ],
-  "entryFields": [
-    {
-      "id": "estimatedMoisture",
-      "label": "Estimated Moisture",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "weightOfMoldSpecimen",
-      "label": "Weight of Mold & Specimen (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "wetWeightOfSpecimen",
-      "label": "Wet Weight of Specimen (lb/cu. ft.)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "dryWeightOfSpecimen",
-      "label": "Dry Weight of Specimen (lb/cu. ft.)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "dryDensityWhenMolded",
-      "label": "Dry Density When Molded (lb/cu. ft.)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "panNumber",
-      "label": "Pan No.",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "panWeight",
-      "label": "Weights (g)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "moisturePercentage",
-      "label": "% Moisture",
-      "type": "number",
-      "required": false
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "computedBy",
+          "label": "Computed By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
     }
   ]
 }

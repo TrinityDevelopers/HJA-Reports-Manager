@@ -34,6 +34,7 @@ export interface ReportEntry {
   reportId: ID;
   data: Record<string, unknown>;
   entryOrder: number;
+  sectionId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,7 +46,8 @@ export interface Report {
   template?: ReportTemplate;
   project?: Project;
   projectName?: string;
-  dateOfTest: Date;
+  // API stores date-only as YYYY-MM-DD; some local state still uses Date.
+  dateOfTest: string | Date;
   headerData?: Record<string, unknown>;
   entries?: ReportEntry[];
   createdAt: Date;
@@ -58,7 +60,7 @@ export interface ExportTemplate {
   name: string;
   displayName: string;
   filePath: string;
-  format: 'xls' | 'xlsx';
+  format: 'xlsx';
   fieldMapping?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;

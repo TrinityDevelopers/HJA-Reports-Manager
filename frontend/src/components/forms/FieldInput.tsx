@@ -57,7 +57,6 @@ export function FieldInput({
     if (mode === 'form') {
       return (
         <NameAndDateField
-          label={field.label}
           required={field.required}
           value={asNameAndDateValue(value)}
           onChange={(v) => onChange(v)}

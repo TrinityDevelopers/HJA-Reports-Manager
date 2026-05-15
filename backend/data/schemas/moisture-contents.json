@@ -3,122 +3,138 @@
   "displayName": "Moisture Contents (ASTM D 2216)",
   "description": "Moisture content test data sheet",
   "version": "1.0.0",
-  "headerFields": [
+  "sections": [
     {
-      "id": "scaleNumber",
-      "label": "Scale No.",
-      "type": "text",
-      "required": false
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenTemperature",
+          "label": "Oven Temp (°C)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dateInOven",
+          "label": "Date In Oven",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "timeInStarted",
+          "label": "Time In/Started",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dateOutOven",
+          "label": "Date Out Oven",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "timeOut",
+          "label": "Time Out",
+          "type": "text",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "ovenNumber",
-      "label": "Oven No.",
-      "type": "text",
-      "required": false
+      "type": "entry",
+      "title": "Entries",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth (ft.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "test",
+          "label": "Test",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "wetWeightTare",
+          "label": "Wet Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTare",
+          "label": "Dry Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tareWeight",
+          "label": "Tare Weight (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tarePanNumber",
+          "label": "Tare Pan No.",
+          "type": "text",
+          "required": false
+        }
+      ]
     },
     {
-      "id": "ovenTemperature",
-      "label": "Oven Temp (°C)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "dateInOven",
-      "label": "Date In Oven",
-      "type": "date",
-      "required": false
-    },
-    {
-      "id": "timeInStarted",
-      "label": "Time In/Started",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "dateOutOven",
-      "label": "Date Out Oven",
-      "type": "date",
-      "required": false
-    },
-    {
-      "id": "timeOut",
-      "label": "Time Out",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "pulledBy",
-      "label": "Pulled By",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "dryWeights",
-      "label": "Dry Weights",
-      "type": "nameAndDate",
-      "required": false
-    },
-    {
-      "id": "checkedBy",
-      "label": "Checked By",
-      "type": "nameAndDate",
-      "required": false
-    }
-  ],
-  "entryFields": [
-    {
-      "id": "boringNumber",
-      "label": "Boring Number",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "sampleNumber",
-      "label": "Sample Number",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "depth",
-      "label": "Depth (ft.)",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "test",
-      "label": "Test",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "materialDescription",
-      "label": "Material Description",
-      "type": "text",
-      "required": false
-    },
-    {
-      "id": "wetWeightTare",
-      "label": "Wet Weight + Tare (gm)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "dryWeightTare",
-      "label": "Dry Weight + Tare (gm)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "tareWeight",
-      "label": "Tare Weight (gm)",
-      "type": "number",
-      "required": false
-    },
-    {
-      "id": "tarePanNumber",
-      "label": "Tare Pan No.",
-      "type": "text",
-      "required": false
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "pulledBy",
+          "label": "Pulled By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "dryWeights",
+          "label": "Dry Weights",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
     }
   ]
 }

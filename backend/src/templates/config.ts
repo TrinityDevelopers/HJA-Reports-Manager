@@ -1,6 +1,6 @@
 import path from 'path';
-import { readFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { loadJsonDirSync } from '../utils/jsonDir';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,16 +11,9 @@ const TEMPLATE_DEFS_DIR = path.join(__dirname, '../../data/template_defs');
  * Automatically load all export template configurations from JSON files in backend/data/template_defs
  * Each JSON file is loaded and keyed by its filename (without .json extension)
  */
-export const EXPORT_TEMPLATES: Record<string, unknown> = {};
-
-const templateFiles = readdirSync(TEMPLATE_DEFS_DIR).filter((file) => file.endsWith('.json'));
-
-for (const file of templateFiles) {
-  const templateName = file.replace('.json', '');
-  const configPath = path.join(TEMPLATE_DEFS_DIR, file);
-  const content = readFileSync(configPath, 'utf-8');
-  EXPORT_TEMPLATES[templateName] = JSON.parse(content);
-}
+export const EXPORT_TEMPLATES: Record<string, unknown> = Object.fromEntries(
+  loadJsonDirSync<unknown>(TEMPLATE_DEFS_DIR, { sort: true }).map((e) => [e.name, e.value]),
+);
 
 /**
  * Template directory path where XLSX files are stored
