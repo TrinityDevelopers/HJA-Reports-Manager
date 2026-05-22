@@ -104,6 +104,7 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `moisture-contents.json` | Moisture content | 2 header, 1 entry |
 | `absorption-pressure-swell.json` | Absorption / swell | 7 header, 1 entry |
 | `absorption-pressure-swell-balancing.json` | Absorption balancing | 1 header, 1 entry |
+| `free-swell.json` | ASTM D 4546 free swell | 7 header, 1 entry |
 | `resistivity.json` | ASTM G187 resistivity | 4 header (no entry table) |
 
 ### Adding a New Report Type
@@ -182,7 +183,7 @@ Reports can lay out repeating trials **down the sheet** (row layout) or **across
 
 #### Row layout (default)
 
-Each trial occupies the next row(s) in a fixed column. Mapping value format: `COLUMNstartRow-endRow`.
+Each trial occupies the next row(s) in a fixed column. Mapping value format: `COLUMNstartRow-endRow`, or `COLUMNrow` for a single row (equivalent to `COLUMNrow-row`).
 
 ```json
 "entry_estimatedMoisture_row": "A17-46"
@@ -199,12 +200,12 @@ Each trial occupies the next row(s) in a fixed column. Mapping value format: `CO
 
 #### Column layout
 
-Each trial occupies the next column(s) on a fixed row. Set `"entryLayout": "column"` and use `_col` keys. Mapping value format: `ROW@startCol-endCol`.
+Each trial occupies the next column(s) on a fixed row. Set `"entryLayout": "column"` and use `_col` keys. Mapping value format: `ROW@startCol-endCol`, or `ROW@col` for a single column (equivalent to `ROW@col-col`).
 
 ```json
 "entryLayout": "column",
 "colsPerEntry": 1,
-"entry_liquidLimit_trial_col": "17@E-J"
+"entry_liquidLimit_trial_col": "17@E-H,17@J"
 ```
 
 - Trial 0 → `E17`, trial 1 → `F17`, … through column `J17`
@@ -250,6 +251,7 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 | `moisture-contents.json` | XLSX | row | 1 | varies |
 | `absorption-pressure-swell.json` | XLSX | row | 2 | varies |
 | `absorption-pressure-swell-balancing.json` | XLSX | row | 1 | varies |
+| `free-swell.json` | XLSX | row | 2 | 28 |
 | `resistivity.json` | XLSX | row | 1 | varies |
 
 ### Adding a New Export Template

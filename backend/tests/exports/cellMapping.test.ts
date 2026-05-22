@@ -17,8 +17,14 @@ describe('cellMapping', () => {
     ]);
   });
 
+  it('parses a single row slot', () => {
+    expect(parseFieldMapping('A38')).toEqual([{ column: 'A', startRow: 38, endRow: 38 }]);
+    const single = parseFieldMapping('A38');
+    const range = parseFieldMapping('A38-38');
+    expect(getTargetCell(single, 0, 1)).toBe(getTargetCell(range, 0, 1));
+  });
+
   it('rejects malformed ranges', () => {
-    expect(() => parseFieldMapping('A38')).toThrow();
     expect(() => parseFieldMapping('38-51')).toThrow();
     expect(() => parseFieldMapping('A51-38')).toThrow();
   });
@@ -41,6 +47,12 @@ describe('cellMapping', () => {
     expect(parseColumnFieldMapping('18@D-J')).toEqual([
       { row: 18, startColumn: 'D', endColumn: 'J' },
     ]);
+    expect(parseColumnFieldMapping('17@J')).toEqual([
+      { row: 17, startColumn: 'J', endColumn: 'J' },
+    ]);
+    const single = parseColumnFieldMapping('17@E-H,17@J');
+    const range = parseColumnFieldMapping('17@E-H,17@J-J');
+    expect(getTargetCellForColumn(single, 4, 1)).toBe(getTargetCellForColumn(range, 4, 1));
   });
 
   it('targets cells across columns with colsPerEntry stepping', () => {

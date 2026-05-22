@@ -36,24 +36,31 @@ export function parseFieldMapping(mappingString: string): CellRange[] {
   const sections = mappingString.split(',');
   return sections.map((section) => {
     const trimmed = section.trim();
-    const match = trimmed.match(/^([A-Z]+)(\d+)-(\d+)$/);
-    if (!match) {
-      throw new Error(
-        `Invalid entry field mapping format: "${trimmed}". Expected format: "A38-51" or "A38-51,K38-51"`,
-      );
+    const rangeMatch = trimmed.match(/^([A-Z]+)(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const column = rangeMatch[1];
+      const startRow = parseInt(rangeMatch[2]);
+      const endRow = parseInt(rangeMatch[3]);
+
+      if (startRow > endRow) {
+        throw new Error(
+          `Invalid row range in field mapping "${trimmed}": start row ${startRow} is greater than end row ${endRow}`,
+        );
+      }
+
+      return { column, startRow, endRow };
     }
 
-    const column = match[1];
-    const startRow = parseInt(match[2]);
-    const endRow = parseInt(match[3]);
-
-    if (startRow > endRow) {
-      throw new Error(
-        `Invalid row range in field mapping "${trimmed}": start row ${startRow} is greater than end row ${endRow}`,
-      );
+    const singleMatch = trimmed.match(/^([A-Z]+)(\d+)$/);
+    if (singleMatch) {
+      const column = singleMatch[1];
+      const row = parseInt(singleMatch[2]);
+      return { column, startRow: row, endRow: row };
     }
 
-    return { column, startRow, endRow };
+    throw new Error(
+      `Invalid entry field mapping format: "${trimmed}". Expected format: "A38-51", "A38", or "A38-51,K38"`,
+    );
   });
 }
 
@@ -64,24 +71,31 @@ export function parseColumnFieldMapping(mappingString: string): ColumnSlotRange[
   const sections = mappingString.split(',');
   return sections.map((section) => {
     const trimmed = section.trim();
-    const match = trimmed.match(/^(\d+)@([A-Z]+)-([A-Z]+)$/);
-    if (!match) {
-      throw new Error(
-        `Invalid column entry mapping format: "${trimmed}". Expected format: "18@D-J" or "18@D-J,18@L-P"`,
-      );
+    const rangeMatch = trimmed.match(/^(\d+)@([A-Z]+)-([A-Z]+)$/);
+    if (rangeMatch) {
+      const row = parseInt(rangeMatch[1]);
+      const startColumn = rangeMatch[2];
+      const endColumn = rangeMatch[3];
+
+      if (columnToNumber(startColumn) > columnToNumber(endColumn)) {
+        throw new Error(
+          `Invalid column range in field mapping "${trimmed}": start column ${startColumn} is after end column ${endColumn}`,
+        );
+      }
+
+      return { row, startColumn, endColumn };
     }
 
-    const row = parseInt(match[1]);
-    const startColumn = match[2];
-    const endColumn = match[3];
-
-    if (columnToNumber(startColumn) > columnToNumber(endColumn)) {
-      throw new Error(
-        `Invalid column range in field mapping "${trimmed}": start column ${startColumn} is after end column ${endColumn}`,
-      );
+    const singleMatch = trimmed.match(/^(\d+)@([A-Z]+)$/);
+    if (singleMatch) {
+      const row = parseInt(singleMatch[1]);
+      const column = singleMatch[2];
+      return { row, startColumn: column, endColumn: column };
     }
 
-    return { row, startColumn, endColumn };
+    throw new Error(
+      `Invalid column entry mapping format: "${trimmed}". Expected format: "18@D-J", "18@J", or "18@D-J,18@L"`,
+    );
   });
 }
 

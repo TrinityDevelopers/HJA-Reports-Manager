@@ -42,11 +42,11 @@ export const TEMPLATES_DIR = path.join(__dirname, '../../data/templates');
  *   "entry_<sectionId>_<fieldId>_col"
  *
  * Row layout (default entryLayout "row"):
- *   Value: "A17-46" or "A38-51,K38-51" (column + row range, trials step down)
+ *   Value: "A17-46", "A38", or "A38-51,K38" (column + row range, trials step down)
  *   rowsPerEntry: rows consumed per trial (e.g. 3 for proctor blocks)
  *
  * Column layout (entryLayout "column"):
- *   Value: "17@E-J" (fixed row, trials step across columns E→J)
+ *   Value: "17@E-J", "17@J", or "17@E-H,17@J" (fixed row, trials step across columns)
  *   colsPerEntry: columns consumed per trial
  *
  * maxEntries: max trials per entry section (row or column slots); warns on overflow
