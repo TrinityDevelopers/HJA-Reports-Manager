@@ -12,7 +12,7 @@ export type FieldMapping = Record<string, string>;
 export type FillEntryFieldsOptions = {
   rowsPerEntry?: number;
   colsPerEntry?: number;
-  maxEntryRows?: number;
+  maxEntries?: number;
   entryLayout?: 'row' | 'column';
 };
 
@@ -96,7 +96,7 @@ export function fillEntryFields(
   {
     rowsPerEntry = 1,
     colsPerEntry = 1,
-    maxEntryRows,
+    maxEntries,
     entryLayout = 'row',
   }: FillEntryFieldsOptions = {},
 ): void {
@@ -122,9 +122,9 @@ export function fillEntryFields(
       (a, b) => (a.entryOrder ?? 0) - (b.entryOrder ?? 0),
     );
 
-    if (maxEntryRows && sectionEntries.length > maxEntryRows) {
+    if (maxEntries && sectionEntries.length > maxEntries) {
       console.warn(
-        `Warning: Section "${sectionId ?? 'default'}" has ${sectionEntries.length} entries but template maxEntryRows is ${maxEntryRows}. Some entries may overflow.`,
+        `Warning: Section "${sectionId ?? 'default'}" has ${sectionEntries.length} entries but template maxEntries is ${maxEntries}. Some entries may overflow.`,
       );
     }
 

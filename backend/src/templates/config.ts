@@ -21,39 +21,51 @@ export const EXPORT_TEMPLATES: Record<string, unknown> = Object.fromEntries(
 export const TEMPLATES_DIR = path.join(__dirname, '../../data/templates');
 
 /**
- * Instructions for setting up export templates:
+ * Export template setup (see also backend/data/README.md):
  *
- * 1. Create a JSON template configuration file in:
- *    backend/data/template_defs/my-template.json
+ * 1. Add JSON in backend/data/template_defs/my-template.json
+ * 2. Add workbook in backend/data/templates/ (filePath must match)
+ * 3. Config loads here as EXPORT_TEMPLATES['my-template'] (filename without .json)
+ * 4. Register DB record if needed: POST /api/export/register-template
+ * 5. Export: GET /api/export/report/:reportId/export?templateId=<exportTemplateId>
  *
- * 2. Place your corresponding XLSX template file in:
- *    backend/data/templates/my_template.xlsx
+ * Field mapping keys (parsed in ../exports/mappingKeys.ts, filled in ../exports/fillers.ts):
  *
- * 3. The configuration will be automatically loaded and keyed by filename (without .json)
- *    Template config object will be accessible as EXPORT_TEMPLATES['my-template']
+ * Header (schema header sections → report.headerData):
+ *   "header_<fieldId>": "B9"
+ *   "header_<fieldId>[name]" | "[date]": for type nameAndDate
  *
- * 4. Create ExportTemplate records in the database:
- *    POST /api/export/register-template
- *    (Uses the configuration from the JSON file)
+ * Entry (schema entry sections → report.entries, grouped by sectionId):
+ *   "entry_<fieldId>_row"                    — single entry section, row layout
+ *   "entry_<sectionId>_<fieldId>_row"        — multiple entry sections (schema sections[].id)
+ *   "entry_<fieldId>_col"                    — column layout
+ *   "entry_<sectionId>_<fieldId>_col"
  *
- * 5. Templates are automatically used when exporting reports:
- *    GET /api/export/report/:reportId/export?templateId=<exportTemplateId>
+ * Row layout (default entryLayout "row"):
+ *   Value: "A17-46" or "A38-51,K38-51" (column + row range, trials step down)
+ *   rowsPerEntry: rows consumed per trial (e.g. 3 for proctor blocks)
  *
- * Field Mapping Rules:
- * - Header fields: "header_<fieldId>": "CELL_REFERENCE"
- * - Entry fields: "entry_<fieldId>_row": "CELL_REFERENCE"
- *   (system adds row offset for each entry row)
+ * Column layout (entryLayout "column"):
+ *   Value: "17@E-J" (fixed row, trials step across columns E→J)
+ *   colsPerEntry: columns consumed per trial
  *
- * Example JSON Configuration:
+ * maxEntries: max trials per entry section (row or column slots); warns on overflow
+ * standardFields: projectName, projectNumber, dateOfTest → cells on every export
+ *
+ * Example:
  * {
- *   "templateId": "my-template",
- *   "name": "my_template",
- *   "displayName": "My Template",
- *   "filePath": "my_template.xlsx",
+ *   "templateId": "atterberg-limit",
+ *   "filePath": "atterberg-limit.xlsx",
  *   "format": "xlsx",
+ *   "entryLayout": "column",
+ *   "colsPerEntry": 1,
+ *   "maxEntries": 5,
+ *   "standardFields": { "projectName": "B8", "projectNumber": "H8", "dateOfTest": "K8" },
  *   "fieldMapping": {
- *     "header_projectName": "B1",
- *     "entry_boringNumber_row": "A10"
+ *     "header_boringNumber": "B9",
+ *     "entry_liquidLimit_trial_col": "17@E-J",
+ *     "header_testedBy[name]": "C41",
+ *     "header_testedBy[date]": "I41"
  *   }
  * }
  */

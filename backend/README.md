@@ -107,7 +107,7 @@ XLS/XLSX export template mappings
 - `filePath` (string) - Location in `/data/templates/`
 - `format` ('xls' | 'xlsx')
 - `fieldMapping` (JSON) - Maps report fields to Excel cells
-- `maxEntryRows` (int, nullable) - Maximum rows per entry in Excel
+- `maxEntries` (int, nullable) - Maximum trials per entry section in the template (row or column layout)
 - `rowsPerEntry` (int) - Rows used per entry (default: 1)
 - `createdAt`, `updatedAt` (timestamp)
 

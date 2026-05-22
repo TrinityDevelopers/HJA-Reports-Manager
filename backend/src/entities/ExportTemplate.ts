@@ -33,7 +33,7 @@ export class ExportTemplate {
   standardFields?: Record<string, unknown>;
 
   @Column({ type: 'int', nullable: true })
-  maxEntryRows?: number;
+  maxEntries?: number;
 
   @Column({ type: 'int', nullable: true, default: 1 })
   rowsPerEntry?: number;

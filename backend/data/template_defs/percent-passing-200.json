@@ -4,7 +4,7 @@
   "displayName": "Percent Passing #200 Sieve (ASTM D1140)",
   "filePath": "percent_passing_200.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 20,
+  "maxEntries": 20,
   "standardFields": {
     "projectName": "B7",
     "projectNumber": "G7",

@@ -4,7 +4,7 @@
   "displayName": "Moisture Contents (ASTM D 2216)",
   "filePath": "moisture_contents.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 25,
+  "maxEntries": 25,
   "standardFields": {
     "projectName": "C6",
     "projectNumber": "J6",

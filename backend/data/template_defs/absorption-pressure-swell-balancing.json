@@ -4,7 +4,7 @@
   "displayName": "Absorption-Pressure Swell (Balancing) (ASTM D 4546 Method B)",
   "filePath": "absorption-pressure_swell_balancing.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 23,
+  "maxEntries": 23,
   "standardFields": {
     "projectName": "B6",
     "projectNumber": "I6",

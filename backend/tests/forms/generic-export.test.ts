@@ -38,7 +38,7 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
         config.templateId,
         headerFields,
         entryFields,
-        templateDef.default.maxEntryRows || 1,
+        templateDef.default.maxEntries ?? templateDef.default.maxEntryRows ?? 1,
         '12345G',
         new Date(),
         entrySections,
@@ -57,7 +57,7 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
       const exportTemplate = {
         filePath: templateDef.default.filePath,
         fieldMapping: templateDef.default.fieldMapping,
-        maxEntryRows: templateDef.default.maxEntryRows,
+        maxEntries: templateDef.default.maxEntries ?? templateDef.default.maxEntryRows,
         rowsPerEntry: templateDef.default.rowsPerEntry,
         colsPerEntry: templateDef.default.colsPerEntry,
         entryLayout: templateDef.default.entryLayout,

@@ -350,24 +350,6 @@ export function ReportDetailPage({
         if (block.type === 'entry') {
           return (
             <div key={block.key} className="mb-8">
-              {showAddEntrySection !== block.key && (
-                <button
-                  onClick={() => setShowAddEntrySection(block.key)}
-                  className="button-base mb-4"
-                >
-                  <Plus size={20} className="inline mr-2" />
-                  Add Trial
-                </button>
-              )}
-              {showAddEntrySection === block.key && (
-                <div className="card-border mb-6 border-primary-light">
-                  <AddEntryForm
-                    fields={entryFieldsFor(block)}
-                    onSave={(entry) => addEntry(block.id, entry)}
-                    onCancel={() => setShowAddEntrySection(null)}
-                  />
-                </div>
-              )}
               <h3 className="text-xl font-semibold text-gray-800 mb-4">{block.title}</h3>
               {entriesForSection(entries, block.id).length === 0 ? (
                 <p className="text-gray-500 text-center py-8">No trials yet</p>
@@ -386,6 +368,23 @@ export function ReportDetailPage({
                   fields={entryFieldsFor(block)}
                   onSave={(id, updated) => updateEntry(block.id, id as number, updated)}
                 />
+              )}
+              {showAddEntrySection === block.key ? (
+                <div className="card-border mt-4 border-primary-light">
+                  <AddEntryForm
+                    fields={entryFieldsFor(block)}
+                    onSave={(entry) => addEntry(block.id, entry)}
+                    onCancel={() => setShowAddEntrySection(null)}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAddEntrySection(block.key)}
+                  className="button-base mt-4"
+                >
+                  <Plus size={20} className="inline mr-2" />
+                  Add Trial
+                </button>
               )}
             </div>
           );

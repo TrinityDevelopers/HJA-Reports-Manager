@@ -4,7 +4,7 @@
   "displayName": "Standard Proctor (ASTM D698)",
   "filePath": "standard_proctor.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 10,
+  "maxEntries": 10,
   "rowsPerEntry": 3,
   "standardFields": {
     "projectName": "B7",

@@ -4,7 +4,7 @@
   "displayName": "Resistivity (ASTM G 187)",
   "filePath": "resistivity.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 0,
+  "maxEntries": 0,
   "standardFields": {
     "projectName": "B6",
     "projectNumber": "H6",

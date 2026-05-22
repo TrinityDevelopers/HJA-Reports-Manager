@@ -4,7 +4,7 @@
   "displayName": "Modified Proctor (ASTM D1557)",
   "filePath": "modified_proctor.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 10,
+  "maxEntries": 10,
   "rowsPerEntry": 3,
   "standardFields": {
     "projectName": "B7",

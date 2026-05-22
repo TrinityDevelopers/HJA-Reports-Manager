@@ -4,7 +4,7 @@
   "displayName": "Grain Size Analysis (ASTM D422)",
   "filePath": "sieve-analysis.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 17,
+  "maxEntries": 17,
   "standardFields": {
     "projectName": "B7",
     "projectNumber": "Q7",

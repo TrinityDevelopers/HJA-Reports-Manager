@@ -24,10 +24,16 @@ interface ExportableTemplate {
   filePath: string;
   standardFields?: Record<string, string>;
   fieldMapping?: FieldMapping;
-  maxEntryRows?: number;
+  maxEntries?: number;
   rowsPerEntry?: number;
   colsPerEntry?: number;
   entryLayout?: 'row' | 'column';
+}
+
+/** Reads `maxEntries` from template def JSON; accepts legacy `maxEntryRows`. */
+function readMaxEntries(def: Record<string, unknown>): number | undefined {
+  const value = def.maxEntries ?? def.maxEntryRows;
+  return value === undefined || value === null ? undefined : Number(value);
 }
 
 export class ExportService {
@@ -81,7 +87,7 @@ export class ExportService {
     fillEntryFields(worksheet, exportTemplate.fieldMapping, report.entries, {
       rowsPerEntry: exportTemplate.rowsPerEntry ?? 1,
       colsPerEntry: exportTemplate.colsPerEntry ?? 1,
-      maxEntryRows: exportTemplate.maxEntryRows,
+      maxEntries: exportTemplate.maxEntries,
       entryLayout: exportTemplate.entryLayout ?? 'row',
     });
 
@@ -124,7 +130,7 @@ export class ExportService {
           existing.format = def.format as 'xlsx';
           existing.fieldMapping = def.fieldMapping as Record<string, unknown>;
           existing.standardFields = def.standardFields as Record<string, unknown>;
-          existing.maxEntryRows = def.maxEntryRows as number | undefined;
+          existing.maxEntries = readMaxEntries(def);
           existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
           existing.colsPerEntry = def.colsPerEntry as number | undefined;
           existing.entryLayout = def.entryLayout as 'row' | 'column' | undefined;
@@ -139,7 +145,7 @@ export class ExportService {
             format: def.format as 'xlsx',
             fieldMapping: def.fieldMapping as Record<string, unknown>,
             standardFields: def.standardFields as Record<string, unknown>,
-            maxEntryRows: def.maxEntryRows as number | undefined,
+            maxEntries: readMaxEntries(def),
             rowsPerEntry: def.rowsPerEntry as number | undefined,
             colsPerEntry: def.colsPerEntry as number | undefined,
             entryLayout: def.entryLayout as 'row' | 'column' | undefined,

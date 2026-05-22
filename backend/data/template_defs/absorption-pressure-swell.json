@@ -4,7 +4,7 @@
   "displayName": "Absorption-Pressure Swell Test (ASTM D 4546 Method B)",
   "filePath": "absorption-pressure_swell_test.xlsx",
   "format": "xlsx",
-  "maxEntryRows": 28,
+  "maxEntries": 28,
   "standardFields": {
     "projectName": "C6",
     "projectNumber": "O6",
