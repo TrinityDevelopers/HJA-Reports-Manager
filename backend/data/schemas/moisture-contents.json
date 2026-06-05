@@ -3,6 +3,15 @@
   "displayName": "Moisture Contents (ASTM D 2216)",
   "description": "Moisture content test data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

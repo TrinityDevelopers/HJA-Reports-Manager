@@ -3,6 +3,15 @@
   "displayName": "Grain Size Analysis (ASTM D422)",
   "description": "Grain size analysis (sieve analysis) data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

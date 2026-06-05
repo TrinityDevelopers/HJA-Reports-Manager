@@ -3,42 +3,7 @@ import { Report } from '../entities/Report';
 import { ReportEntry } from '../entities/ReportEntry';
 import { AppDataSource } from '../database/connection';
 import { pickAndCoerce } from '../utils/pickAndCoerce';
-
-function coerceDateOnly(value: unknown): string | undefined {
-  if (value === null || value === undefined || value === '') return undefined;
-
-  if (typeof value === 'string') {
-    const s = value.trim();
-    if (!s) return undefined;
-    // If it's an ISO string or already date-only, keep the date-only part.
-    const m = /^(\d{4}-\d{2}-\d{2})/.exec(s);
-    if (m) return m[1];
-    const d = new Date(s);
-    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-    return undefined;
-  }
-
-  if (value instanceof Date) {
-    if (Number.isNaN(value.getTime())) return undefined;
-    return value.toISOString().slice(0, 10);
-  }
-
-  if (typeof value === 'number') {
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return undefined;
-    return d.toISOString().slice(0, 10);
-  }
-
-  return undefined;
-}
-
-function todayDateOnlyLocal(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+import { coerceDateOnly, todayDateOnlyLocal } from '../utils/dateOnly';
 
 export class ReportService {
   private reportRepository: Repository<Report>;
@@ -51,7 +16,7 @@ export class ReportService {
 
   async create(data: Partial<Report>): Promise<Report> {
     const createData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId'],
+      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId', 'labRequestId'],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value) ?? todayDateOnlyLocal(),
       },
@@ -61,10 +26,13 @@ export class ReportService {
     return await this.reportRepository.save(report);
   }
 
-  async findAll(projectId?: string): Promise<Report[]> {
+  async findAll(projectId?: string, labRequestId?: string): Promise<Report[]> {
     const query = this.reportRepository.createQueryBuilder('report');
     if (projectId) {
-      query.where('report.projectId = :projectId', { projectId });
+      query.andWhere('report.projectId = :projectId', { projectId });
+    }
+    if (labRequestId) {
+      query.andWhere('report.labRequestId = :labRequestId', { labRequestId });
     }
     return await query
       .leftJoinAndSelect('report.entries', 'entries')
@@ -89,7 +57,7 @@ export class ReportService {
 
   async update(id: string, data: Partial<Report>): Promise<Report | null> {
     const updateData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId'],
+      allowed: ['dateOfTest', 'headerData', 'projectId', 'templateId', 'labRequestId'],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value),
       },

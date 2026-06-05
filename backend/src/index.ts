@@ -8,6 +8,7 @@ import reportRoutes from './routes/reports';
 import templateRoutes from './routes/templates';
 import exportRoutes from './routes/exports';
 import settingsRoutes from './routes/settings';
+import labRequestRoutes from './routes/labRequests';
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
@@ -24,6 +25,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/lab-requests', labRequestRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

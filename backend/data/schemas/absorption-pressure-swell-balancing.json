@@ -3,6 +3,15 @@
   "displayName": "Absorption-Pressure Swell (Balancing) (ASTM D 4546 Method B)",
   "description": "Absorption-pressure swell balancing loads test data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

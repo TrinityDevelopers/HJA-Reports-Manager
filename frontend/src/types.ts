@@ -42,10 +42,43 @@ export interface ReportEntry {
   updatedAt: Date;
 }
 
+export interface LabRequestSample {
+  id: ID;
+  label: string;
+  depthFrom?: number | string | null;
+  depthTo?: number | string | null;
+  testTemplateIds: ID[];
+}
+
+export interface LabRequestBoring {
+  id: ID;
+  prefix: string;
+  number: string | number;
+  label: string;
+  samplePrefix: string;
+  startDepth?: number | null;
+  interval?: number | null;
+  samples: LabRequestSample[];
+}
+
+export interface LabRequest {
+  id: ID;
+  projectId: ID;
+  project?: Project;
+  requestedBy?: string;
+  technician?: string;
+  dateOfTest?: string | Date;
+  borings?: LabRequestBoring[];
+  reports?: Report[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Report {
   id: ID;
   projectId: ID;
   templateId: ID;
+  labRequestId?: ID | null;
   template?: ReportTemplate;
   project?: Project;
   projectName?: string;

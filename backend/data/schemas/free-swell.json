@@ -3,6 +3,15 @@
   "displayName": "Free Swell Test (ASTM D 4546 Method B)",
   "description": "Free swell test data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

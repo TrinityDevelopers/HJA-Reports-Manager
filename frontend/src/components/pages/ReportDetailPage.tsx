@@ -27,6 +27,7 @@ export function ReportDetailPage({
   isNew,
   onBack,
   onUpdateReport,
+  backLabel = 'Back to Reports',
 }: {
   report: Report;
   project?: Project;
@@ -34,6 +35,7 @@ export function ReportDetailPage({
   isNew?: boolean;
   onBack: () => void;
   onUpdateReport: (updated: Report) => void | Promise<void>;
+  backLabel?: string;
 }) {
   type HeaderData = Record<string, unknown>;
 
@@ -263,7 +265,7 @@ export function ReportDetailPage({
       <div className="flex justify-between items-center mb-6">
         <button onClick={onBack} className="flex items-center text-gray-600 hover:text-gray-800">
           <ArrowLeft size={20} className="mr-2" />
-          Back to Reports
+          {backLabel}
         </button>
         {!isNewReport && (
           <button

@@ -11,6 +11,7 @@ import {
 import { Project } from './Project';
 import { ReportEntry } from './ReportEntry';
 import { ReportTemplate } from './ReportTemplate';
+import { LabRequest } from './LabRequest';
 
 @Entity('reports')
 export class Report {
@@ -30,6 +31,14 @@ export class Report {
   @ManyToOne(() => ReportTemplate)
   @JoinColumn({ name: 'templateId' })
   template!: ReportTemplate;
+
+  // Set when a report was generated from a lab request; links the report back to its source.
+  @Column({ type: 'varchar', nullable: true })
+  labRequestId?: string | null;
+
+  @ManyToOne(() => LabRequest, (labRequest) => labRequest.reports, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'labRequestId' })
+  labRequest?: LabRequest | null;
 
   // Store as MySQL DATE (no time). TypeORM returns this as a YYYY-MM-DD string.
   // NOTE: We avoid DEFAULT CURRENT_DATE for compatibility with older MySQL/MariaDB.

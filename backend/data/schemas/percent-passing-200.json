@@ -3,6 +3,14 @@
   "displayName": "Percent Passing #200 Sieve (ASTM D1140)",
   "description": "Percent passing #200 sieve data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
   "particleSizeRow": [
     {
       "size": "#40",

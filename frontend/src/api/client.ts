@@ -74,4 +74,18 @@ export const apiClient = {
     get: () => request('/settings'),
     update: (data: unknown) => request('/settings', { method: 'PUT', body: JSON.stringify(data) }),
   },
+
+  // Lab Requests
+  labRequests: {
+    getAll: (projectId?: string) =>
+      request(projectId ? `/lab-requests?projectId=${projectId}` : '/lab-requests'),
+    getById: (id: string) => request(`/lab-requests/${id}`),
+    create: (data: unknown) =>
+      request('/lab-requests', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: unknown) =>
+      request(`/lab-requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => request(`/lab-requests/${id}`, { method: 'DELETE' }),
+    getReports: (id: string) => request(`/lab-requests/${id}/reports`),
+    generate: (id: string) => request(`/lab-requests/${id}/generate`, { method: 'POST' }),
+  },
 };

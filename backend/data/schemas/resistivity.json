@@ -3,6 +3,15 @@
   "displayName": "Resistivity (ASTM G 187)",
   "description": "Soil resistivity test data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

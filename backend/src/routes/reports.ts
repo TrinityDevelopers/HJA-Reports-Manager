@@ -15,8 +15,11 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.query;
-    const reports = await reportService.findAll(projectId as string | undefined);
+    const { projectId, labRequestId } = req.query;
+    const reports = await reportService.findAll(
+      projectId as string | undefined,
+      labRequestId as string | undefined,
+    );
     res.json(reports);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

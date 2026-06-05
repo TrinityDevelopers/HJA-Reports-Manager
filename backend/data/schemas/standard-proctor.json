@@ -3,6 +3,13 @@
   "displayName": "Standard Proctor (ASTM D698)",
   "description": "Standard Proctor soil compaction test data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

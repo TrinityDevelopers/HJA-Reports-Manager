@@ -6,12 +6,15 @@ import { ExportPage } from './components/pages/ExportPage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ReportsPage } from './components/pages/ReportsPage';
 import { ReportDetailPage } from './components/pages/ReportDetailPage';
+import { LabRequestsPage } from './components/pages/LabRequestsPage';
+import { LabRequestDetailPage } from './components/pages/LabRequestDetailPage';
+import LabRequestEditor from './components/LabRequestEditor';
 import { NavButton } from './components/ui';
 import { useCRUD, useFormState, useLocalStorage, useFontLoader } from './hooks';
 import { apiClient } from './api/client';
-import type { Project, Report, ReportTemplate, SettingsState } from './types';
+import type { LabRequest, Project, Report, ReportTemplate, SettingsState } from './types';
 import { PAGES, type PageType } from './constants/pages';
-import { FileDown, Database, Settings, FileText, MapPin } from 'lucide-react';
+import { FileDown, Database, Settings, FileText, MapPin, FlaskConical } from 'lucide-react';
 import { toISODateOnly } from './utils/dateAndNormalize.ts';
 
 export default function HJAReportsManager() {
@@ -35,6 +38,11 @@ export default function HJAReportsManager() {
   const [isNewReport, setIsNewReport] = useState(false);
   const [showAddProject, setShowAddProject] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [selectedLabRequest, setSelectedLabRequest] = useState<LabRequest | null>(null);
+  const [editingLabRequest, setEditingLabRequest] = useState<LabRequest | null>(null);
+  const [showAddLabRequest, setShowAddLabRequest] = useState(false);
+  const [labRequestDraft, setLabRequestDraft] = useState<LabRequest | null>(null);
+  const [reportFromLabRequest, setReportFromLabRequest] = useState(false);
 
   // Data management with CRUD hooks and localStorage
   const {
@@ -46,6 +54,7 @@ export default function HJAReportsManager() {
   } = useCRUD<Project>([]);
   const { items: reports, update: updateReport, setItems: setReports } = useCRUD<Report>([]);
   const { items: templates, setItems: setTemplates } = useCRUD<ReportTemplate>([]);
+  const { items: labRequests, setItems: setLabRequests } = useCRUD<LabRequest>([]);
 
   // Load and persist data with localStorage
   const [persistedProjects, setPersistProjectsStorage] = useLocalStorage<Project[]>('projects', []);
@@ -93,6 +102,19 @@ export default function HJAReportsManager() {
       }
     };
     loadReports();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load lab requests from backend on mount - run once on mount only
+  useEffect(() => {
+    const loadLabRequests = async () => {
+      try {
+        const data = (await apiClient.labRequests.getAll()) as LabRequest[];
+        setLabRequests(data);
+      } catch (error) {
+        console.error('Failed to load lab requests from backend:', error);
+      }
+    };
+    loadLabRequests();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize from localStorage on mount if backend fails - run once on mount only
@@ -166,12 +188,66 @@ export default function HJAReportsManager() {
       // Use the backend ID directly, don't generate a new one
       setProjects([...projects, newProject]);
       setShowAddProject(false);
+      // If we came here from the lab request editor, return to it with the new project selected.
+      if (labRequestDraft) {
+        setLabRequestDraft({ ...labRequestDraft, projectId: newProject.id });
+        setEditingProject(null);
+        setCurrentPage(PAGES.LAB_REQUESTS);
+      }
     } catch (error) {
       // Fallback to local state if API fails
       console.error('Failed to create project on backend:', error);
       addProjectToState(project as Omit<Project, 'id'>);
       setShowAddProject(false);
     }
+  };
+
+  const saveLabRequest = async (labRequest: LabRequest) => {
+    const payload = {
+      projectId: labRequest.projectId,
+      requestedBy: labRequest.requestedBy,
+      technician: labRequest.technician,
+      dateOfTest: labRequest.dateOfTest,
+      borings: labRequest.borings,
+    };
+    try {
+      if (editingLabRequest && editingLabRequest.id) {
+        const updated = (await apiClient.labRequests.update(
+          editingLabRequest.id,
+          payload,
+        )) as LabRequest;
+        setLabRequests(labRequests.map((lr) => (lr.id === updated.id ? updated : lr)));
+      } else {
+        const created = (await apiClient.labRequests.create(payload)) as LabRequest;
+        setLabRequests([...labRequests, created]);
+        // After creating, open the saved lab request view rather than the list.
+        setSelectedLabRequest(created);
+      }
+      setShowAddLabRequest(false);
+      setEditingLabRequest(null);
+      setLabRequestDraft(null);
+    } catch (error) {
+      console.error('Failed to save lab request:', error);
+      alert('Failed to save lab request');
+    }
+  };
+
+  const deleteLabRequest = async (id: string) => {
+    try {
+      await apiClient.labRequests.delete(id);
+      setLabRequests(labRequests.filter((lr) => lr.id !== id));
+    } catch (error) {
+      console.error('Failed to delete lab request:', error);
+      alert('Failed to delete lab request');
+    }
+  };
+
+  const openReportFromLabRequest = (report: Report) => {
+    setReports((prev) => (prev.some((r) => r.id === report.id) ? prev : [...prev, report]));
+    setSelectedReport(report);
+    setIsNewReport(false);
+    setReportFromLabRequest(true);
+    setCurrentPage(PAGES.REPORTS);
   };
 
   const exportData = (format: 'json' | string) => {
@@ -200,6 +276,19 @@ export default function HJAReportsManager() {
               <h1 className="text-2xl font-bold text-primary">HJA Reports Manager</h1>
             </div>
             <div className="flex gap-1">
+              <NavButton
+                icon={<FlaskConical />}
+                label="Lab Requests"
+                active={currentPage === PAGES.LAB_REQUESTS}
+                onClick={() => {
+                  setCurrentPage(PAGES.LAB_REQUESTS);
+                  setSelectedLabRequest(null);
+                  setEditingLabRequest(null);
+                  setShowAddLabRequest(false);
+                  setLabRequestDraft(null);
+                  setReportFromLabRequest(false);
+                }}
+              />
               <NavButton
                 icon={<FileText />}
                 label="Reports"
@@ -258,6 +347,7 @@ export default function HJAReportsManager() {
                 setReports([...reports, created]);
                 setSelectedReport(created);
                 setIsNewReport(true);
+                setReportFromLabRequest(false);
               } catch (error) {
                 console.error('Failed to create report:', error);
                 // Fallback to local state
@@ -273,11 +363,13 @@ export default function HJAReportsManager() {
                 setReports([...reports, localReport]);
                 setSelectedReport(localReport);
                 setIsNewReport(true);
+                setReportFromLabRequest(false);
               }
             }}
             onSelectReport={(report) => {
               setSelectedReport(report);
               setIsNewReport(false);
+              setReportFromLabRequest(false);
             }}
             onDeleteReport={async (id) => {
               try {
@@ -300,9 +392,14 @@ export default function HJAReportsManager() {
             project={projects.find((p) => p.id === selectedReport.projectId)}
             template={selectedReport.template}
             isNew={isNewReport}
+            backLabel={reportFromLabRequest ? 'Back to Lab Request' : 'Back to Reports'}
             onBack={() => {
               setSelectedReport(null);
               setIsNewReport(false);
+              if (reportFromLabRequest) {
+                setReportFromLabRequest(false);
+                setCurrentPage(PAGES.LAB_REQUESTS);
+              }
             }}
             onUpdateReport={async (updated) => {
               try {
@@ -361,9 +458,65 @@ export default function HJAReportsManager() {
             onCancel={() => {
               setShowAddProject(false);
               setEditingProject(null);
+              // Return to the in-progress lab request editor if we came from there.
+              if (labRequestDraft) setCurrentPage(PAGES.LAB_REQUESTS);
             }}
           />
         )}
+        {currentPage === PAGES.LAB_REQUESTS &&
+          !selectedLabRequest &&
+          !editingLabRequest &&
+          !showAddLabRequest && (
+            <LabRequestsPage
+              labRequests={labRequests}
+              projects={projects}
+              onAdd={() => {
+                setLabRequestDraft(null);
+                setShowAddLabRequest(true);
+              }}
+              onEdit={(lr) => setEditingLabRequest(lr)}
+              onSelect={(lr) => setSelectedLabRequest(lr)}
+              onDelete={deleteLabRequest}
+            />
+          )}
+        {currentPage === PAGES.LAB_REQUESTS && (showAddLabRequest || editingLabRequest) && (
+          <LabRequestEditor
+            editingLabRequest={editingLabRequest}
+            draft={labRequestDraft}
+            projects={projects}
+            templates={templates}
+            onSave={saveLabRequest}
+            onCancel={() => {
+              setShowAddLabRequest(false);
+              setEditingLabRequest(null);
+              setLabRequestDraft(null);
+            }}
+            onAddProject={(currentDraft) => {
+              setLabRequestDraft(currentDraft);
+              setCurrentPage(PAGES.PROJECTS);
+              setShowAddProject(true);
+            }}
+          />
+        )}
+        {currentPage === PAGES.LAB_REQUESTS &&
+          selectedLabRequest &&
+          !editingLabRequest &&
+          !showAddLabRequest && (
+            <LabRequestDetailPage
+              labRequest={
+                labRequests.find((lr) => lr.id === selectedLabRequest.id) || selectedLabRequest
+              }
+              project={projects.find((p) => p.id === selectedLabRequest.projectId)}
+              templates={templates}
+              onBack={() => setSelectedLabRequest(null)}
+              onEdit={() =>
+                setEditingLabRequest(
+                  labRequests.find((lr) => lr.id === selectedLabRequest.id) || selectedLabRequest,
+                )
+              }
+              onOpenReport={openReportFromLabRequest}
+            />
+          )}
         {currentPage === PAGES.DATABASE && <DatabasePage reports={reports} projects={projects} />}
         {currentPage === PAGES.EXPORT && (
           <ExportPage exportData={exportData} reportCount={reports.length} />

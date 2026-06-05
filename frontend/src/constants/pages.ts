@@ -1,4 +1,5 @@
 export const PAGES = {
+  LAB_REQUESTS: 'labRequests',
   REPORTS: 'reports',
   PROJECTS: 'projects',
   DATABASE: 'database',

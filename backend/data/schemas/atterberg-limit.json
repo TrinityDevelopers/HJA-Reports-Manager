@@ -3,6 +3,15 @@
   "displayName": "Atterberg Limits (ASTM D4318)",
   "description": "Liquid and plastic limit determination data sheet",
   "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "sample": "sampleNumber",
+      "material": "materialDescription"
+    }
+  },
   "sections": [
     {
       "type": "header",

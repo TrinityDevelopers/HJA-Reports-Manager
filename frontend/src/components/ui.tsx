@@ -1,3 +1,46 @@
+import { useState } from 'react';
+import { formatDepthValue } from '../utils/depth';
+
+/**
+ * Depth input that displays at least one decimal place (e.g. "1.0") when not
+ * being edited, while letting the user type freely (and add more precision).
+ * Formatting is applied on blur.
+ */
+export function DepthInput({
+  value,
+  onChange,
+}: {
+  value: number | string | null | undefined;
+  onChange: (next: string | null) => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [text, setText] = useState('');
+
+  const isEmpty = value === null || value === undefined || value === '';
+  const display = focused ? text : isEmpty ? '' : formatDepthValue(value);
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={display}
+      onFocus={() => {
+        setText(isEmpty ? '' : String(value));
+        setFocused(true);
+      }}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(e.target.value === '' ? null : e.target.value);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        onChange(text.trim() === '' ? null : formatDepthValue(text));
+      }}
+      className="input py-1 w-20"
+    />
+  );
+}
+
 export function InputField({
   label,
   type = 'text',
