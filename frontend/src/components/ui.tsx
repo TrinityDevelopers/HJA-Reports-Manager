@@ -77,6 +77,47 @@ export function NameAndDateField({
   );
 }
 
+export function AddressField({
+  label = 'Address',
+  value,
+  onChange,
+}: {
+  label?: string;
+  value: { streetAddress?: string; city?: string; state?: string };
+  onChange: (v: { streetAddress?: string; city?: string; state?: string }) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="flex items-stretch w-full rounded border bg-white overflow-hidden">
+        <input
+          type="text"
+          value={value.streetAddress ?? ''}
+          onChange={(e) => onChange({ ...value, streetAddress: e.target.value })}
+          placeholder="Street Address"
+          className="flex-4 px-3 py-2 outline-none"
+        />
+        <div className="w-px bg-gray-200" />
+        <input
+          type="text"
+          value={value.city ?? ''}
+          onChange={(e) => onChange({ ...value, city: e.target.value })}
+          placeholder="City"
+          className="flex-2 px-3 py-2 outline-none"
+        />
+        <div className="w-px bg-gray-200" />
+        <input
+          type="text"
+          value={value.state ?? ''}
+          onChange={(e) => onChange({ ...value, state: e.target.value })}
+          placeholder="State"
+          className="flex-1 px-3 py-2 outline-none"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function NavButton({
   icon,
   label,

@@ -23,6 +23,15 @@ export class Project {
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  streetAddress?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  city?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  state?: string;
+
   @OneToMany(() => Location, (location) => location.project, { eager: true, cascade: true })
   locations?: (Location | Partial<Location>)[];
 

@@ -2,6 +2,10 @@
 
 /* Base styles (global resets and defaults to revert some changes in tailwind v4) */
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;

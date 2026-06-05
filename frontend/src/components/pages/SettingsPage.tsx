@@ -62,7 +62,7 @@ export function SettingsPage({
         </div>
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">About</h3>
-          <p className="subtext">Technician Reports Manager v1.0</p>
+          <p className="subtext">HJA Reports Manager v1.0</p>
           <p className="subtext">Manage field test reports and project data efficiently.</p>
         </div>
       </div>

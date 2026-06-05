@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useFormState, useCRUD } from '../hooks';
 import type { Project, Location, ID } from '../types';
-import { InputField } from './ui';
+import { InputField, AddressField } from './ui';
 import { EditableTableRow } from './EditableTableRow';
 import EditableTable from './EditableTable';
 
@@ -44,6 +44,9 @@ export default function ProjectEditor({
       id: '',
       projectName: '',
       projectNumber: '',
+      streetAddress: '',
+      city: '',
+      state: '',
       locations: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -133,6 +136,14 @@ export default function ProjectEditor({
           label="Description"
           value={formData.description || ''}
           onChange={(v) => setFormData({ ...formData, description: v })}
+        />
+        <AddressField
+          value={{
+            streetAddress: formData.streetAddress,
+            city: formData.city,
+            state: formData.state,
+          }}
+          onChange={(v) => setFormData({ ...formData, ...v })}
         />
 
         <div className="border-t pt-6">

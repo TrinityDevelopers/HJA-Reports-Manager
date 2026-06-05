@@ -14,7 +14,7 @@ import { PAGES, type PageType } from './constants/pages';
 import { FileDown, Database, Settings, FileText, MapPin } from 'lucide-react';
 import { toISODateOnly } from './utils/dateAndNormalize.ts';
 
-export default function TechnicianReportsManager() {
+export default function HJAReportsManager() {
   // Font loading via hook (loads CSS and applies family when ready)
   const { loaded: fontLoaded } = useFontLoader(
     'https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;600;700;800&display=swap',
@@ -182,7 +182,7 @@ export default function TechnicianReportsManager() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `technician-reports-${toISODateOnly(new Date())}.json`;
+      a.download = `hja-reports-${toISODateOnly(new Date())}.json`;
       a.click();
     }
   };
@@ -197,7 +197,7 @@ export default function TechnicianReportsManager() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <img src="/hja-logo.svg" alt="HJA Logo" className="h-10 w-10" />
-              <h1 className="text-2xl font-bold text-primary">Technician Reports Manager</h1>
+              <h1 className="text-2xl font-bold text-primary">HJA Reports Manager</h1>
             </div>
             <div className="flex gap-1">
               <NavButton

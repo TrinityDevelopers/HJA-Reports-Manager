@@ -12,6 +12,9 @@ export interface Project {
   projectName: string;
   projectNumber: string;
   description?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
   locations?: Location[];
   reports?: Report[];
   createdAt: Date;
