@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Edit2, FileText, RefreshCw } from 'lucide-react';
 import type { LabRequest, Project, Report, ReportTemplate } from '../../types';
 import { apiClient } from '../../api/client';
+import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
 import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
 
@@ -23,9 +24,16 @@ export function LabRequestDetailPage({
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const templateName = (templateId: string): string =>
     templates.find((t) => t.id === templateId)?.displayName || 'Unknown Test';
+
+  const templateAbbreviation = (templateId: string): string => {
+    const t = templates.find((t) => t.id === templateId);
+    const abbr = t?.schema?.abbreviation;
+    return (typeof abbr === 'string' && abbr) || t?.displayName || 'Unknown Test';
+  };
 
   const loadReports = async () => {
     setLoading(true);
@@ -62,6 +70,41 @@ export function LabRequestDetailPage({
       alert('Failed to generate reports');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleExportAll = async (format: ExportFormat) => {
+    setExporting(true);
+    try {
+      // Download each report sequentially: fetch the file as a blob and wait
+      // for the conversion to finish before requesting the next one. This keeps
+      // only one request in flight at a time, which matters for PDF since the
+      // LibreOffice conversion is slow and the browser blocks multiple
+      // simultaneous automatic downloads.
+      for (const report of reports) {
+        const downloadUrl = apiClient.exports.downloadReport(report.id, format);
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          throw new Error(`Export failed (${response.status})`);
+        }
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const name = report.template?.name || report.template?.displayName || 'export';
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `report-${name}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+        // Brief pause so the browser finalizes each download before the next.
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    } catch (error) {
+      console.error('Failed to export reports:', error);
+      alert('Failed to export reports');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -150,7 +193,9 @@ export function LabRequestDetailPage({
                           <td className="table-cell">
                             {sample.testTemplateIds.length === 0
                               ? '-'
-                              : sample.testTemplateIds.map((id) => templateName(id)).join(', ')}
+                              : sample.testTemplateIds
+                                  .map((id) => templateAbbreviation(id))
+                                  .join(', ')}
                           </td>
                         </tr>
                       ))}
@@ -164,9 +209,14 @@ export function LabRequestDetailPage({
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Generated Reports {reports.length > 0 ? `(${reports.length})` : ''}
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-gray-800">
+            Generated Reports {reports.length > 0 ? `(${reports.length})` : ''}
+          </h3>
+          {reports.length > 0 && (
+            <ExportSplitButton label="Export All" busy={exporting} onExport={handleExportAll} />
+          )}
+        </div>
         {loading ? (
           <p className="text-gray-500">Loading...</p>
         ) : reports.length === 0 ? (

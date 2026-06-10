@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { promisify } from 'util';
 import ExcelJS from 'exceljs';
+import * as libre from 'libreoffice-convert';
 import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
@@ -10,7 +12,7 @@ import { fillEntryFields, fillHeaderFields, fillStandardFields } from '../export
 
 interface ExportableReport {
   projectName?: string;
-  dateOfTest: string | Date;
+  dateOfTest?: string | Date;
   project?: { projectNumber?: string; projectName?: string };
   headerData?: Record<string, unknown>;
   entries?: Array<{
@@ -35,6 +37,8 @@ function readMaxEntries(def: Record<string, unknown>): number | undefined {
   const value = def.maxEntries ?? def.maxEntryRows;
   return value === undefined || value === null ? undefined : Number(value);
 }
+
+const convertAsync = promisify(libre.convert);
 
 export class ExportService {
   private exportTemplateRepository: Repository<ExportTemplate>;
@@ -93,6 +97,23 @@ export class ExportService {
 
     // Write workbook to output file
     await workbook.xlsx.writeFile(outputPath);
+  }
+
+  /**
+   * Converts a filled XLSX buffer to a PDF buffer using a headless LibreOffice
+   * instance (via libreoffice-convert). LibreOffice must be installed on the
+   * host running the backend.
+   */
+  async convertXlsxToPdf(xlsxBuffer: Buffer): Promise<Buffer> {
+    try {
+      return await convertAsync(xlsxBuffer, '.pdf', undefined);
+    } catch (error) {
+      throw new Error(
+        `PDF conversion failed - is LibreOffice installed and available on this server? (${
+          (error as Error).message
+        })`,
+      );
+    }
   }
 
   async getTemplateList(): Promise<string[]> {

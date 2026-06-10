@@ -48,7 +48,7 @@ async function seedDatabase(): Promise<void> {
     const report = await reportService.create({
       projectId: project.id,
       templateId: proctorTemplate.id,
-      dateOfTest: new Date('2024-01-15'),
+      dateOfTest: '2024-01-15',
       headerData: {
         dateDroppedOff: '2024-01-16',
         droppedOffBy: 'John Smith',

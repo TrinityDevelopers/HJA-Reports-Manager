@@ -56,8 +56,6 @@ export interface LabRequestBoring {
   number: string | number;
   label: string;
   samplePrefix: string;
-  startDepth?: number | null;
-  interval?: number | null;
   samples: LabRequestSample[];
 }
 

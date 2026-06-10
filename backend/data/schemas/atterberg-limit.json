@@ -1,6 +1,7 @@
 {
   "name": "atterberg-limit",
   "displayName": "Atterberg Limits (ASTM D4318)",
+  "abbreviation": "AL",
   "description": "Liquid and plastic limit determination data sheet",
   "version": "1.0.0",
   "labRequest": {

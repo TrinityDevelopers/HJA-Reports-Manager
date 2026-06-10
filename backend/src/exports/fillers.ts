@@ -31,16 +31,21 @@ export function setCellValue(
 export function fillStandardFields(
   worksheet: ExcelJS.Worksheet,
   standardFields: Record<string, string> | undefined,
-  report: { dateOfTest: string | Date; project?: { projectNumber?: string; projectName?: string } },
+  report: {
+    dateOfTest?: string | Date;
+    project?: { projectNumber?: string; projectName?: string };
+  },
 ): void {
   if (!standardFields) return;
 
   const dateOfTest =
     report.dateOfTest instanceof Date
       ? report.dateOfTest
-      : new Date(`${report.dateOfTest}T00:00:00`);
+      : report.dateOfTest
+        ? new Date(`${report.dateOfTest}T00:00:00`)
+        : undefined;
 
-  const standardFieldsMap: Record<string, string | number | Date> = {
+  const standardFieldsMap: Record<string, string | number | Date | undefined> = {
     projectName: report.project?.projectName || '',
     dateOfTest,
     projectNumber: report.project?.projectNumber || '',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, FileDown } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import EditableTable from '../EditableTable';
+import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
 import { apiClient } from '../../api/client';
 import type { Project, Report, ReportTemplate, FieldConfig } from '../../types';
 import { normalizeTemplateSchema } from '../../utils/formHelpers';
@@ -245,12 +246,12 @@ export function ReportDetailPage({
     return String(raw);
   };
 
-  const handleExportXLSX = async () => {
+  const handleExport = async (format: ExportFormat) => {
     try {
-      const downloadUrl = apiClient.exports.downloadXLS(report.id);
+      const downloadUrl = apiClient.exports.downloadReport(report.id, format);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `report-${report.template?.name || 'export'}.xlsx`;
+      link.download = `report-${report.template?.name || 'export'}.${format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -267,15 +268,7 @@ export function ReportDetailPage({
           <ArrowLeft size={20} className="mr-2" />
           {backLabel}
         </button>
-        {!isNewReport && (
-          <button
-            onClick={handleExportXLSX}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-          >
-            <FileDown size={20} />
-            Export XLSX
-          </button>
-        )}
+        {!isNewReport && <ExportSplitButton label="Export" onExport={handleExport} />}
       </div>
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">

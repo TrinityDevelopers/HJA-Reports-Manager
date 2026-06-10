@@ -1,6 +1,7 @@
 {
   "name": "modified-proctor",
   "displayName": "Modified Proctor (ASTM D1557)",
+  "abbreviation": "MP",
   "description": "Modified Proctor soil compaction test data sheet",
   "version": "1.0.0",
   "labRequest": {

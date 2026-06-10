@@ -28,8 +28,6 @@ export interface LabRequestBoring {
   /** Display label for the boring, e.g. "B-1". */
   label: string;
   samplePrefix: string;
-  startDepth?: number | null;
-  interval?: number | null;
   samples: LabRequestSample[];
 }
 

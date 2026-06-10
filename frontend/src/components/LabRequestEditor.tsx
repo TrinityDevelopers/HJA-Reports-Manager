@@ -20,21 +20,21 @@ function makeBoringLabel(prefix: string, number: string | number): string {
   return `${p}${n}`;
 }
 
-function generateSamples(
-  samplePrefix: string,
-  count: number,
-  startDepth: number,
-  interval: number,
-): LabRequestSample[] {
+function depthFromForSample(n: number): number {
+  return n <= 10 ? n - 1 : 9 + 5 * (n - 10);
+}
+
+function generateSamples(samplePrefix: string, count: number): LabRequestSample[] {
   const samples: LabRequestSample[] = [];
   for (let i = 0; i < count; i++) {
-    const from = round1(startDepth + i * interval);
-    const to = round1(startDepth + (i + 1) * interval);
+    const n = i + 1;
+    const from = depthFromForSample(n);
+    const to = from + 1;
     samples.push({
       id: crypto.randomUUID(),
-      label: `${samplePrefix}${i + 1}`,
-      depthFrom: formatDepthValue(from),
-      depthTo: formatDepthValue(to),
+      label: `${samplePrefix}${n}`,
+      depthFrom: formatDepthValue(round1(from)),
+      depthTo: formatDepthValue(round1(to)),
       testTemplateIds: [],
     });
   }
@@ -84,9 +84,7 @@ export default function LabRequestEditor({
     prefix: 'B',
     number: '1',
     samplePrefix: 'W',
-    sampleCount: '5',
-    startDepth: '0',
-    interval: '1',
+    sampleCount: '13',
   });
 
   const borings = formData.borings ?? [];
@@ -101,8 +99,6 @@ export default function LabRequestEditor({
 
   const handleAddBoring = () => {
     const count = parseInt(newBoring.sampleCount, 10);
-    const startDepth = parseFloat(newBoring.startDepth);
-    const interval = parseFloat(newBoring.interval);
     if (!newBoring.number.trim()) {
       alert('Please enter a boring number');
       return;
@@ -117,14 +113,7 @@ export default function LabRequestEditor({
       number: newBoring.number,
       label: makeBoringLabel(newBoring.prefix, newBoring.number),
       samplePrefix: newBoring.samplePrefix,
-      startDepth: Number.isFinite(startDepth) ? startDepth : 0,
-      interval: Number.isFinite(interval) ? interval : 1,
-      samples: generateSamples(
-        newBoring.samplePrefix,
-        count,
-        Number.isFinite(startDepth) ? startDepth : 0,
-        Number.isFinite(interval) ? interval : 1,
-      ),
+      samples: generateSamples(newBoring.samplePrefix, count),
     };
     setBorings([...borings, boring]);
     // Auto-increment boring number for convenience
@@ -223,7 +212,7 @@ export default function LabRequestEditor({
         <div className="border-t pt-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Add Boring</h3>
           <div className="panel mb-4 border-primary-lighter">
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <InputField
                 label="Boring Prefix"
                 value={newBoring.prefix}
@@ -244,20 +233,6 @@ export default function LabRequestEditor({
                 type="number"
                 value={newBoring.sampleCount}
                 onChange={(v) => setNewBoring({ ...newBoring, sampleCount: v })}
-              />
-              <InputField
-                label="Start Depth"
-                type="number"
-                step="0.1"
-                value={newBoring.startDepth}
-                onChange={(v) => setNewBoring({ ...newBoring, startDepth: v })}
-              />
-              <InputField
-                label="Interval"
-                type="number"
-                step="0.1"
-                value={newBoring.interval}
-                onChange={(v) => setNewBoring({ ...newBoring, interval: v })}
               />
             </div>
             <button onClick={handleAddBoring} className="button-base mt-4">

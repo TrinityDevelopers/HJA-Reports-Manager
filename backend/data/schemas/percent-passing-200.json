@@ -1,6 +1,7 @@
 {
   "name": "percent-passing-200",
   "displayName": "Percent Passing #200 Sieve (ASTM D1140)",
+  "abbreviation": "-200",
   "description": "Percent passing #200 sieve data sheet",
   "version": "1.0.0",
   "labRequest": {

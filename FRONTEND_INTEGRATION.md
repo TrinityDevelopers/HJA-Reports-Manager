@@ -82,8 +82,8 @@ await apiClient.reports.deleteEntry('entry-id');
 const templates = await apiClient.templates.getAll();
 const template = await apiClient.templates.getById('template-id');
 
-// Export
-const exportUrl = apiClient.exports.downloadXLS('report-id', 'export-template-id');
+// Export (format defaults to 'xlsx'; pass 'pdf' for a PDF rendered via LibreOffice)
+const exportUrl = apiClient.exports.downloadReport('report-id', 'pdf');
 // Use this URL for download: window.location.href = exportUrl;
 ```
 
@@ -272,16 +272,21 @@ function ReportForm({ template }) {
 }
 ```
 
-### Exporting to XLS
+### Exporting to XLSX or PDF
 
 ```typescript
-function ExportButton({ reportId, exportTemplateId }) {
-  const handleExport = async () => {
-    const url = apiClient.exports.downloadXLS(reportId, exportTemplateId);
+function ExportButton({ reportId }) {
+  const handleExport = async (format: 'xlsx' | 'pdf') => {
+    const url = apiClient.exports.downloadReport(reportId, format);
     window.location.href = url;
   };
 
-  return <button onClick={handleExport}>Download XLS</button>;
+  return (
+    <>
+      <button onClick={() => handleExport('xlsx')}>Download XLSX</button>
+      <button onClick={() => handleExport('pdf')}>Download PDF</button>
+    </>
+  );
 }
 ```
 

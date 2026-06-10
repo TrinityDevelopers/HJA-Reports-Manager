@@ -1,6 +1,7 @@
 {
   "name": "absorption-pressure-swell",
   "displayName": "Absorption-Pressure Swell Test (ASTM D 4546 Method B)",
+  "abbreviation": "APS",
   "description": "Absorption-pressure swell test data sheet",
   "version": "1.0.0",
   "labRequest": {
