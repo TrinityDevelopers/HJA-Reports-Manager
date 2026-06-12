@@ -64,6 +64,7 @@ export interface LabRequest {
   id: ID;
   projectId: ID;
   project?: Project;
+  name?: string;
   requestedBy?: string;
   technician?: string;
   dateOfTest?: string | Date;
@@ -78,6 +79,7 @@ export interface Report {
   projectId: ID;
   templateId: ID;
   labRequestId?: ID | null;
+  labRequest?: LabRequest | null;
   template?: ReportTemplate;
   project?: Project;
   projectName?: string;

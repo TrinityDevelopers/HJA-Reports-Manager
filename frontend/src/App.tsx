@@ -203,6 +203,7 @@ export default function HJAReportsManager() {
   const saveLabRequest = async (labRequest: LabRequest) => {
     const payload = {
       projectId: labRequest.projectId,
+      name: labRequest.name,
       requestedBy: labRequest.requestedBy,
       technician: labRequest.technician,
       dateOfTest: labRequest.dateOfTest,

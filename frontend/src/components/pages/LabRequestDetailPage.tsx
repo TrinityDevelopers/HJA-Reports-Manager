@@ -130,7 +130,10 @@ export function LabRequestDetailPage({
       </div>
 
       <h2 className="text-3xl font-bold text-gray-800 mb-4">
-        {project?.projectName || labRequest.project?.projectName || 'Lab Request'}
+        {labRequest.name?.trim() ||
+          project?.projectName ||
+          labRequest.project?.projectName ||
+          'Lab Request'}
       </h2>
 
       <div className="card-border border-gray-200 p-4 mb-6">

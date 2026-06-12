@@ -288,6 +288,14 @@ export function ReportDetailPage({
               <label className="block text-sm font-medium text-gray-700 mb-1">Project #</label>
               <p className="text-gray-800 font-semibold">{project?.projectNumber}</p>
             </div>
+            {report.labRequest && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lab Request</label>
+                <p className="text-gray-800 font-semibold">
+                  {report.labRequest.name?.trim() || 'Unnamed'}
+                </p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Test Date</label>
               {editingDateOfTest ? (

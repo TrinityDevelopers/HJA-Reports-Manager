@@ -46,6 +46,7 @@ function emptyLabRequest(): LabRequest {
   return {
     id: '',
     projectId: '',
+    name: '',
     requestedBy: '',
     technician: '',
     dateOfTest: toISODateOnly(new Date()),
@@ -166,6 +167,12 @@ export default function LabRequestEditor({
       </h2>
 
       <div className="flex flex-col gap-6">
+        <InputField
+          label="Name"
+          value={formData.name ?? ''}
+          onChange={(v) => setFormData({ ...formData, name: v })}
+        />
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Project<span className="text-red-500 ml-1">*</span>

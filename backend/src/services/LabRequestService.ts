@@ -35,7 +35,7 @@ export class LabRequestService {
 
   async create(data: Partial<LabRequest>): Promise<LabRequest> {
     const createData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['projectId', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
+      allowed: ['projectId', 'name', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value),
       },
@@ -68,7 +68,7 @@ export class LabRequestService {
 
   async update(id: string, data: Partial<LabRequest>): Promise<LabRequest | null> {
     const updateData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['projectId', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
+      allowed: ['projectId', 'name', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value),
       },
@@ -91,6 +91,7 @@ export class LabRequestService {
       .leftJoinAndSelect('report.entries', 'entries')
       .leftJoinAndSelect('report.template', 'template')
       .leftJoinAndSelect('report.project', 'project')
+      .leftJoinAndSelect('report.labRequest', 'labRequest')
       .where('report.labRequestId = :labRequestId', { labRequestId })
       .orderBy('report.createdAt', 'ASC')
       .addOrderBy('entries.entryOrder', 'ASC')

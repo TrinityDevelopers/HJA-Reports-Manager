@@ -60,9 +60,10 @@ export function LabRequestsPage({
                 <div className="flex justify-between items-start">
                   <button onClick={() => onSelect(lr)} className="flex-1 text-left">
                     <h4 className="font-semibold text-gray-800">
-                      {project?.projectName || 'Lab Request'}
+                      {lr.name?.trim() || project?.projectName || 'Lab Request'}
                     </h4>
                     <div className="subtext mt-1 flex flex-wrap gap-x-4">
+                      {project?.projectName && <span>Project: {project.projectName}</span>}
                       {lr.requestedBy?.trim() && <span>Requested By: {lr.requestedBy}</span>}
                       {lr.technician?.trim() && <span>Technician: {lr.technician}</span>}
                       {date && <span>Date: {date.toLocaleDateString()}</span>}

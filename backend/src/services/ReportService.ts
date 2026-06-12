@@ -38,6 +38,7 @@ export class ReportService {
       .leftJoinAndSelect('report.entries', 'entries')
       .leftJoinAndSelect('report.template', 'template')
       .leftJoinAndSelect('report.project', 'project')
+      .leftJoinAndSelect('report.labRequest', 'labRequest')
       .orderBy('entries.entryOrder', 'ASC')
       .getMany();
   }
@@ -48,6 +49,7 @@ export class ReportService {
       .leftJoinAndSelect('report.entries', 'entries')
       .leftJoinAndSelect('report.template', 'template')
       .leftJoinAndSelect('report.project', 'project')
+      .leftJoinAndSelect('report.labRequest', 'labRequest')
       .where('report.id = :id', { id })
       .orderBy('entries.entryOrder', 'ASC')
       .getOne();

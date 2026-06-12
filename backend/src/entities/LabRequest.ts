@@ -44,6 +44,9 @@ export class LabRequest {
   project!: Project;
 
   @Column({ type: 'varchar', nullable: true })
+  name?: string;
+
+  @Column({ type: 'varchar', nullable: true })
   requestedBy?: string;
 
   @Column({ type: 'varchar', nullable: true })

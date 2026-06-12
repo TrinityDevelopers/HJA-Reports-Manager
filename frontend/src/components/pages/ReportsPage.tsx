@@ -95,7 +95,12 @@ export function ReportsPage({
                           {project?.projectName || 'Unknown Project'}
                         </h4>
                         <div className="subtext mt-1">
-                          <p>Tests: {report.entries?.length || 0}</p>
+                          <p>
+                            {report.labRequest && (
+                              <>Lab Request: {report.labRequest.name?.trim() || 'Unnamed'} | </>
+                            )}
+                            Tests: {report.entries?.length || 0}
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -180,8 +185,11 @@ export function ReportsPage({
                       </h4>
                       <div className="subtext mt-1">
                         <p>
-                          Project: {project?.projectName || 'Unknown'} | Tests:{' '}
-                          {report.entries?.length || 0}
+                          Project: {project?.projectName || 'Unknown'} |{' '}
+                          {report.labRequest && (
+                            <>Lab Request: {report.labRequest.name?.trim() || 'Unnamed'} | </>
+                          )}
+                          Tests: {report.entries?.length || 0}
                         </p>
                       </div>
                     </div>
