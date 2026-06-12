@@ -34,9 +34,9 @@ export function ReportsPage({
           <ArrowLeft size={20} className="mr-2" />
           Back to Report Types
         </button>
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">{selectedTemplate.displayName}</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">{selectedTemplate.fullName}</h2>
         <p className="text-gray-600 mb-6">
-          Select a project to begin a new {selectedTemplate.displayName}
+          Select a project to begin a new {selectedTemplate.displayName} report
         </p>
 
         {projects.length === 0 ? (
@@ -176,11 +176,11 @@ export function ReportsPage({
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800">
-                        {project?.projectName || 'Unknown Project'}
+                        {template?.displayName || 'Unknown Report Type'}
                       </h4>
                       <div className="subtext mt-1">
                         <p>
-                          Type: {template?.displayName || 'Unknown'} | Tests:{' '}
+                          Project: {project?.projectName || 'Unknown'} | Tests:{' '}
                           {report.entries?.length || 0}
                         </p>
                       </div>

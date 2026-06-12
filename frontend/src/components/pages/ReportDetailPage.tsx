@@ -272,7 +272,7 @@ export function ReportDetailPage({
       </div>
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">
-          {report.template?.displayName || 'Report Details'}
+          {report.template?.fullName || report.template?.displayName || 'Report Details'}
         </h2>
 
         {/* Standard Fields (Read-only summary and editable date) */}

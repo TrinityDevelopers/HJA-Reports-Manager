@@ -1,6 +1,7 @@
 {
   "name": "resistivity",
-  "displayName": "Resistivity (ASTM G 187)",
+  "displayName": "Resistivity",
+  "fullName": "Resistivity (ASTM G 187)",
   "abbreviation": "RES",
   "description": "Soil resistivity test data sheet",
   "version": "1.0.0",

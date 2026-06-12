@@ -25,6 +25,7 @@ export interface ReportTemplate {
   id: ID;
   name: string;
   displayName: string;
+  fullName: string;
   description?: string;
   schema: Record<string, unknown>;
   version: string;

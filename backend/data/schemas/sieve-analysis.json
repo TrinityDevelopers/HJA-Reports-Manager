@@ -1,6 +1,7 @@
 {
   "name": "sieve-analysis",
-  "displayName": "Grain Size Analysis (ASTM D422)",
+  "displayName": "Grain Size Analysis",
+  "fullName": "Grain Size Analysis (ASTM D422)",
   "abbreviation": "GSA",
   "description": "Grain size analysis (sieve analysis) data sheet",
   "version": "1.0.0",

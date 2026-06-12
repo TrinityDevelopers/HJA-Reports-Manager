@@ -1,6 +1,7 @@
 {
   "name": "moisture-contents",
-  "displayName": "Moisture Contents (ASTM D 2216)",
+  "displayName": "Moisture Contents",
+  "fullName": "Moisture Contents (ASTM D 2216)",
   "abbreviation": "MC",
   "description": "Moisture content test data sheet",
   "version": "1.0.0",

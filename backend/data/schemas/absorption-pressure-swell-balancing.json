@@ -1,8 +1,9 @@
 {
   "name": "absorption-pressure-swell-balancing",
-  "displayName": "Absorption-Pressure Swell (Balancing) (ASTM D 4546 Method B)",
+  "displayName": "Absorption-Pressure Swell (Balancing)",
+  "fullName": "Absorption-Pressure Swell (Balancing) (ASTM D 4546 Method B)",
   "abbreviation": "APSB",
-  "description": "Absorption-pressure swell balancing loads test data sheet",
+  "description": "Absorption-pressure swell balancing test data sheet",
   "version": "1.0.0",
   "labRequest": {
     "mode": "per-sample",

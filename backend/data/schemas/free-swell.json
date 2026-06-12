@@ -1,6 +1,7 @@
 {
   "name": "free-swell",
-  "displayName": "Free Swell Test (ASTM D 4546 Method B)",
+  "displayName": "Free Swell",
+  "fullName": "Free Swell (ASTM D 4546 Method B)",
   "abbreviation": "FS",
   "description": "Free swell test data sheet",
   "version": "1.0.0",

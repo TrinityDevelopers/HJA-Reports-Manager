@@ -37,6 +37,7 @@ export class TemplateService extends BaseCrudService<ReportTemplate> {
       findExisting: async (key) => await this.findByName(key),
       updateExisting: async (existing, _key, schema) => {
         existing.displayName = schema.displayName as string;
+        existing.fullName = schema.fullName as string;
         existing.description = schema.description as string;
         existing.schema = schema as Record<string, unknown>;
         existing.version = schema.version as string;
@@ -46,6 +47,7 @@ export class TemplateService extends BaseCrudService<ReportTemplate> {
         await this.create({
           name: key,
           displayName: schema.displayName as string,
+          fullName: schema.fullName as string,
           description: schema.description as string,
           schema: schema,
           version: schema.version as string,

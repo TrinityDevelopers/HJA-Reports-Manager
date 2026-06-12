@@ -17,6 +17,9 @@ export class ReportTemplate {
   @Column({ type: 'varchar' })
   displayName!: string;
 
+  @Column({ type: 'varchar' })
+  fullName!: string;
+
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
