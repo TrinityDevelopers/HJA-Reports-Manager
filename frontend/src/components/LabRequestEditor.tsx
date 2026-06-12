@@ -11,6 +11,7 @@ import type {
 import { InputField, DepthInput } from './ui';
 import { toISODateOnly, parseDateLike } from '../utils/dateAndNormalize.ts';
 import { formatDepthValue } from '../utils/depth';
+import { templateAbbreviation } from '../utils/templates';
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
@@ -79,12 +80,20 @@ export default function LabRequestEditor({
     ? (parseDateLike(formData.dateOfTest) ?? new Date())
     : new Date();
 
-  // New-boring form state
-  const [newBoring, setNewBoring] = useState({
-    prefix: 'B',
-    number: '1',
-    samplePrefix: 'W',
-    sampleCount: '13',
+  // New-boring form state, prefilled from the last existing boring (if any).
+  const [newBoring, setNewBoring] = useState(() => {
+    const last = formData.borings?.at(-1);
+    const lastNumber = last ? parseInt(String(last.number), 10) : NaN;
+    return {
+      prefix: last?.prefix ?? 'B',
+      number: last
+        ? Number.isFinite(lastNumber)
+          ? String(lastNumber + 1)
+          : String(last.number)
+        : '1',
+      samplePrefix: last?.samplePrefix ?? 'W',
+      sampleCount: '13',
+    };
   });
 
   const borings = formData.borings ?? [];
@@ -268,6 +277,16 @@ export default function LabRequestEditor({
   );
 }
 
+/**
+ * NavButton-like hover treatment for the table action buttons. The padding is
+ * cancelled out by negative margins (and the fixed widths include it via
+ * border-box), so the text sits exactly where it would without padding and the
+ * header/row alignment is unaffected; only the hover background gains a
+ * button-shaped area around the label.
+ */
+const actionButtonClass =
+  'flex items-center gap-1 text-sm whitespace-nowrap px-2 py-1 -mx-2 -my-1 rounded-lg transition-all hover:bg-primary-lighter';
+
 function BoringEditor({
   boring,
   templates,
@@ -307,45 +326,61 @@ function BoringEditor({
     onChange({ ...boring, samples: boring.samples.filter((s) => s.id !== sampleId) });
   };
 
-  const toggleSampleTest = (sample: LabRequestSample, templateId: ID) => {
-    const has = sample.testTemplateIds.includes(templateId);
-    const testTemplateIds = has
-      ? sample.testTemplateIds.filter((t) => t !== templateId)
-      : [...sample.testTemplateIds, templateId];
-    updateSample(sample.id, (s) => ({ ...s, testTemplateIds }));
-  };
+  // Sample id targets a single sample; 'all' targets every sample in the boring.
+  const [modalTarget, setModalTarget] = useState<ID | 'all' | null>(null);
 
-  const allSamplesHaveTest = (templateId: ID): boolean =>
-    boring.samples.length > 0 &&
-    boring.samples.every((s) => s.testTemplateIds.includes(templateId));
+  const modalSample =
+    modalTarget && modalTarget !== 'all'
+      ? boring.samples.find((s) => s.id === modalTarget)
+      : undefined;
 
-  const toggleColumn = (templateId: ID) => {
-    const enableAll = !allSamplesHaveTest(templateId);
-    onChange({
-      ...boring,
-      samples: boring.samples.map((s) => {
-        const has = s.testTemplateIds.includes(templateId);
-        if (enableAll && !has) {
-          return { ...s, testTemplateIds: [...s.testTemplateIds, templateId] };
-        }
-        if (!enableAll && has) {
-          return { ...s, testTemplateIds: s.testTemplateIds.filter((t) => t !== templateId) };
-        }
-        return s;
-      }),
-    });
+  // Tests currently applied to every sample in the boring; these show as
+  // pre-selected in the all-samples modal, and unchecking one removes it
+  // from all samples.
+  const testsOnAllSamples = templates
+    .map((t) => t.id)
+    .filter(
+      (id) =>
+        boring.samples.length > 0 && boring.samples.every((s) => s.testTemplateIds.includes(id)),
+    );
+
+  const handleModalConfirm = (selectedIds: ID[]) => {
+    if (modalTarget === 'all') {
+      // Add the chosen tests to every sample, and remove tests that were on
+      // all samples but have been unchecked. Other per-sample tests are kept.
+      const removedIds = testsOnAllSamples.filter((id) => !selectedIds.includes(id));
+      onChange({
+        ...boring,
+        samples: boring.samples.map((s) => ({
+          ...s,
+          testTemplateIds: Array.from(new Set([...s.testTemplateIds, ...selectedIds])).filter(
+            (id) => !removedIds.includes(id),
+          ),
+        })),
+      });
+    } else if (modalSample) {
+      updateSample(modalSample.id, (s) => ({ ...s, testTemplateIds: selectedIds }));
+    }
+    setModalTarget(null);
   };
 
   return (
     <div className="card-border border-primary-light">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-gray-800">Boring {boring.label}</h3>
-        <button
-          onClick={onRemove}
-          className="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm"
-        >
-          <Trash2 size={16} /> Remove Boring
-        </button>
+        {/* Same fixed slot widths and right padding as the row action cells so
+            the boring-level buttons align with the per-sample ones. */}
+        <div className="flex items-center gap-3 pr-3">
+          <button
+            onClick={() => setModalTarget('all')}
+            className={`text-primary ${actionButtonClass}`}
+          >
+            <Plus size={16} /> Add Tests
+          </button>
+          <button onClick={onRemove} className={`text-red-600 ${actionButtonClass}`}>
+            <Trash2 size={16} /> Remove Boring
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -355,22 +390,11 @@ function BoringEditor({
               <th className="table-head">Sample</th>
               <th className="table-head">From</th>
               <th className="table-head">To</th>
-              {templates.map((t) => (
-                <th key={t.id} className="table-head whitespace-nowrap">
-                  <div className="flex flex-col items-center gap-1">
-                    <span title={t.displayName} className="max-w-24 truncate">
-                      {t.displayName}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={allSamplesHaveTest(t.id)}
-                      onChange={() => toggleColumn(t.id)}
-                      title={`Toggle ${t.displayName} for all samples`}
-                    />
-                  </div>
-                </th>
-              ))}
-              <th className="table-head">Actions</th>
+              <th className="table-head">Tests</th>
+              {/* w-px shrinks the column to its content (the fixed-width button
+                  group), so the left-aligned header sits directly above the
+                  leftmost action button. */}
+              <th className="table-head w-px">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -398,23 +422,30 @@ function BoringEditor({
                     onChange={(next) => updateSample(sample.id, (s) => ({ ...s, depthTo: next }))}
                   />
                 </td>
-                {templates.map((t) => (
-                  <td key={t.id} className="table-cell text-center">
-                    <input
-                      type="checkbox"
-                      checked={sample.testTemplateIds.includes(t.id)}
-                      onChange={() => toggleSampleTest(sample, t.id)}
-                    />
-                  </td>
-                ))}
                 <td className="table-cell">
-                  <button
-                    onClick={() => removeSample(sample.id)}
-                    className="text-red-600 hover:text-red-800"
-                    aria-label={`delete-sample-${sample.id}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {sample.testTemplateIds.length === 0
+                    ? '-'
+                    : sample.testTemplateIds
+                        .map((id) => templateAbbreviation(templates, id))
+                        .join(', ')}
+                </td>
+                <td className="table-cell">
+                  <div className="flex items-center gap-3 justify-end">
+                    <button
+                      onClick={() => setModalTarget(sample.id)}
+                      className={`text-primary ${actionButtonClass}`}
+                      aria-label={`add-tests-${sample.id}`}
+                    >
+                      <Plus size={16} /> Add Tests
+                    </button>
+                    <button
+                      onClick={() => removeSample(sample.id)}
+                      className={`text-red-600 ${actionButtonClass}`}
+                      aria-label={`delete-sample-${sample.id}`}
+                    >
+                      <Trash2 size={16} /> Remove Sample
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -426,6 +457,107 @@ function BoringEditor({
         <Plus size={16} className="inline mr-1" />
         Add Sample
       </button>
+
+      {modalTarget !== null && (
+        <TestSelectorModal
+          templates={templates}
+          title={
+            modalTarget === 'all'
+              ? `Add Tests - All Samples (Boring ${boring.label})`
+              : `Select Tests - Sample ${modalSample?.label ?? ''}`
+          }
+          initialSelectedIds={modalSample ? modalSample.testTemplateIds : testsOnAllSamples}
+          onConfirm={handleModalConfirm}
+          onClose={() => setModalTarget(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function TestSelectorModal({
+  templates,
+  title,
+  initialSelectedIds,
+  onConfirm,
+  onClose,
+}: {
+  templates: ReportTemplate[];
+  title: string;
+  initialSelectedIds: ID[];
+  onConfirm: (selectedIds: ID[]) => void;
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<ID>>(new Set(initialSelectedIds));
+
+  const toggle = (templateId: ID) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(templateId)) {
+        next.delete(templateId);
+      } else {
+        next.add(templateId);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 flex flex-col max-h-[80vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center border-b px-6 py-4">
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+          <button
+            onClick={() =>
+              setSelected(
+                new Set(selected.size === templates.length ? [] : templates.map((t) => t.id)),
+              )
+            }
+            className="text-sm text-primary hover:underline"
+          >
+            {selected.size === templates.length ? 'Clear all' : 'Select all'}
+          </button>
+        </div>
+        <div className="overflow-y-auto px-6 py-4 flex flex-col gap-2">
+          {templates.length === 0 ? (
+            <p className="text-gray-500 text-sm">No tests available.</p>
+          ) : (
+            templates.map((t) => {
+              const abbr = templateAbbreviation([t], t.id);
+              return (
+                <label
+                  key={t.id}
+                  className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-primary-lighter cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.has(t.id)}
+                    onChange={() => toggle(t.id)}
+                  />
+                  <span className="text-sm text-gray-800">
+                    {t.displayName}
+                    {abbr !== t.displayName && <span className="text-gray-500 ml-1">({abbr})</span>}
+                  </span>
+                </label>
+              );
+            })
+          )}
+        </div>
+        <div className="flex justify-end gap-3 border-t px-6 py-4">
+          <button onClick={onClose} className="button-secondary border-primary text-primary">
+            Cancel
+          </button>
+          <button onClick={() => onConfirm([...selected])} className="button-base">
+            Apply
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

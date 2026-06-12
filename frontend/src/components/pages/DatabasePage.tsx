@@ -1,5 +1,7 @@
-﻿import type { Report, Project } from '../../types';
+﻿import { FileDown } from 'lucide-react';
+import type { Report, Project } from '../../types';
 import EditableTable from '../EditableTable';
+import { toISODateOnly } from '../../utils/dateAndNormalize.ts';
 
 function StatCard({ title, value }: { title: string; value: number | string }) {
   return (
@@ -15,9 +17,33 @@ export function DatabasePage({ reports, projects }: { reports: Report[]; project
     (sum: number, r: Report) => sum + (r.entries?.length || 0),
     0,
   );
+
+  const exportJSON = () => {
+    const data = { projects, reports };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hja-reports-${toISODateOnly(new Date())}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="card">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">Database Overview</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Database Overview</h2>
+        <button
+          onClick={exportJSON}
+          disabled={reports.length === 0}
+          className="button-base flex items-center gap-2"
+          title={reports.length === 0 ? 'No data to export. Create some reports first.' : undefined}
+        >
+          <FileDown className="w-4 h-4" />
+          Export JSON
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatCard title="Total Projects" value={projects.length} />
         <StatCard title="Total Reports" value={reports.length} />

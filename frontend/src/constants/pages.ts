@@ -3,7 +3,6 @@ export const PAGES = {
   REPORTS: 'reports',
   PROJECTS: 'projects',
   DATABASE: 'database',
-  EXPORT: 'export',
   SETTINGS: 'settings',
 } as const;
 

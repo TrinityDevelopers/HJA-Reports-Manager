@@ -5,6 +5,7 @@ import { apiClient } from '../../api/client';
 import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
 import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
+import { templateAbbreviation } from '../../utils/templates';
 
 export function LabRequestDetailPage({
   labRequest,
@@ -28,12 +29,6 @@ export function LabRequestDetailPage({
 
   const templateName = (templateId: string): string =>
     templates.find((t) => t.id === templateId)?.displayName || 'Unknown Test';
-
-  const templateAbbreviation = (templateId: string): string => {
-    const t = templates.find((t) => t.id === templateId);
-    const abbr = t?.schema?.abbreviation;
-    return (typeof abbr === 'string' && abbr) || t?.displayName || 'Unknown Test';
-  };
 
   const loadReports = async () => {
     setLoading(true);
@@ -194,7 +189,7 @@ export function LabRequestDetailPage({
                             {sample.testTemplateIds.length === 0
                               ? '-'
                               : sample.testTemplateIds
-                                  .map((id) => templateAbbreviation(id))
+                                  .map((id) => templateAbbreviation(templates, id))
                                   .join(', ')}
                           </td>
                         </tr>

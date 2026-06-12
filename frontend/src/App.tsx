@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import ProjectEditor from './components/ProjectEditor';
 import ProjectsList from './components/ProjectsList';
 import { DatabasePage } from './components/pages/DatabasePage';
-import { ExportPage } from './components/pages/ExportPage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ReportsPage } from './components/pages/ReportsPage';
 import { ReportDetailPage } from './components/pages/ReportDetailPage';
@@ -14,8 +13,7 @@ import { useCRUD, useFormState, useLocalStorage, useFontLoader } from './hooks';
 import { apiClient } from './api/client';
 import type { LabRequest, Project, Report, ReportTemplate, SettingsState } from './types';
 import { PAGES, type PageType } from './constants/pages';
-import { FileDown, Database, Settings, FileText, MapPin, FlaskConical } from 'lucide-react';
-import { toISODateOnly } from './utils/dateAndNormalize.ts';
+import { Database, Settings, FileText, MapPin, FlaskConical } from 'lucide-react';
 
 export default function HJAReportsManager() {
   // Font loading via hook (loads CSS and applies family when ready)
@@ -33,7 +31,7 @@ export default function HJAReportsManager() {
   }, [fontLoaded]);
 
   // Page navigation state
-  const [currentPage, setCurrentPage] = useState<PageType>(PAGES.REPORTS);
+  const [currentPage, setCurrentPage] = useState<PageType>(PAGES.LAB_REQUESTS);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isNewReport, setIsNewReport] = useState(false);
   const [showAddProject, setShowAddProject] = useState(false);
@@ -250,19 +248,6 @@ export default function HJAReportsManager() {
     setCurrentPage(PAGES.REPORTS);
   };
 
-  const exportData = (format: 'json' | string) => {
-    if (format === 'json') {
-      const data = { projects, reports };
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `hja-reports-${toISODateOnly(new Date())}.json`;
-      a.click();
-    }
-  };
-
   return (
     <div
       className="min-h-screen bg-primary-gradient"
@@ -306,12 +291,6 @@ export default function HJAReportsManager() {
                 label="Database"
                 active={currentPage === PAGES.DATABASE}
                 onClick={() => setCurrentPage(PAGES.DATABASE)}
-              />
-              <NavButton
-                icon={<FileDown />}
-                label="Export"
-                active={currentPage === PAGES.EXPORT}
-                onClick={() => setCurrentPage(PAGES.EXPORT)}
               />
               <NavButton
                 icon={<Settings />}
@@ -518,9 +497,6 @@ export default function HJAReportsManager() {
             />
           )}
         {currentPage === PAGES.DATABASE && <DatabasePage reports={reports} projects={projects} />}
-        {currentPage === PAGES.EXPORT && (
-          <ExportPage exportData={exportData} reportCount={reports.length} />
-        )}
         {currentPage === PAGES.SETTINGS && (
           <SettingsPage settings={settings} setSettings={setSettings} />
         )}
