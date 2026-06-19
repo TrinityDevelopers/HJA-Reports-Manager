@@ -1,0 +1,236 @@
+{
+  "name": "unconfined-compression-rock",
+  "displayName": "Unconfined Compression (Rock)",
+  "fullName": "Unconfined Compression Test on Rock (ASTM D 7012)",
+  "abbreviation": "Qu(Rock)",
+  "description": "Unconfined compression test on rock data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Equipment",
+      "fields": [
+        {
+          "id": "loadFrameNumber",
+          "label": "Load Frame",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "caliperNumber",
+          "label": "Caliper No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "loadCellNumber",
+          "label": "Load Cell No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "lvdtNumber",
+          "label": "LVDT No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "strainRate",
+          "label": "Strain Rate (in/min)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Samples",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleDate",
+          "label": "Sample Date",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "heightH1",
+          "label": "Height h1 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightH2",
+          "label": "Height h2 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightH3",
+          "label": "Height h3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightAvg",
+          "label": "Height avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD1",
+          "label": "Diameter d1 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD2",
+          "label": "Diameter d2 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD3",
+          "label": "Diameter d3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterAvg",
+          "label": "Diameter avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfSample",
+          "label": "Weight of Sample (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightTare",
+          "label": "Wet Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTare",
+          "label": "Dry Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tareWeight",
+          "label": "Tare Weight (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tarePanNumber",
+          "label": "Tare Pan No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "failureType",
+          "label": "Failure Type",
+          "type": "select",
+          "options": ["1 - Bulge", "2 - Conical", "3 - Shear", "4 - Splitting"],
+          "required": false
+        },
+        {
+          "id": "trueLoad",
+          "label": "True Load (lbs)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "peakStress",
+          "label": "Peak Stress (psi)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "failureStrain",
+          "label": "Failure Strain (%)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "comments",
+          "label": "Comments",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dataFile",
+          "label": "Data File",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "dryWeightsBy",
+          "label": "Dry Weights By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

@@ -3,10 +3,12 @@ import { LabRequest, LabRequestBoring, LabRequestSample } from '../entities/LabR
 import { Report } from '../entities/Report';
 import { ReportEntry } from '../entities/ReportEntry';
 import { ReportTemplate } from '../entities/ReportTemplate';
+import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { pickAndCoerce } from '../utils/pickAndCoerce';
 import { coerceDateOnly } from '../utils/dateOnly';
 import { formatDepthRange } from '../utils/depth';
+import { chunkArray } from '../utils/chunkArray';
 
 /** Per-template lab request rule embedded in the schema JSON. */
 interface LabRequestRule {
@@ -25,12 +27,14 @@ export class LabRequestService {
   private reportRepository: Repository<Report>;
   private entryRepository: Repository<ReportEntry>;
   private templateRepository: Repository<ReportTemplate>;
+  private exportTemplateRepository: Repository<ExportTemplate>;
 
   constructor() {
     this.labRequestRepository = AppDataSource.getRepository(LabRequest);
     this.reportRepository = AppDataSource.getRepository(Report);
     this.entryRepository = AppDataSource.getRepository(ReportEntry);
     this.templateRepository = AppDataSource.getRepository(ReportTemplate);
+    this.exportTemplateRepository = AppDataSource.getRepository(ExportTemplate);
   }
 
   async create(data: Partial<LabRequest>): Promise<LabRequest> {
@@ -149,12 +153,23 @@ export class LabRequestService {
 
     const borings = Array.isArray(labRequest.borings) ? labRequest.borings : [];
     const templateCache = new Map<string, ReportTemplate | null>();
+    const exportTemplateCache = new Map<string, ExportTemplate | null>();
 
     const getTemplate = async (templateId: string): Promise<ReportTemplate | null> => {
       if (templateCache.has(templateId)) return templateCache.get(templateId) ?? null;
       const template = await this.templateRepository.findOne({ where: { id: templateId } });
       templateCache.set(templateId, template ?? null);
       return template ?? null;
+    };
+
+    const getExportTemplate = async (templateName: string): Promise<ExportTemplate | null> => {
+      if (exportTemplateCache.has(templateName))
+        return exportTemplateCache.get(templateName) ?? null;
+      const exportTemplate = await this.exportTemplateRepository.findOne({
+        where: { templateId: templateName },
+      });
+      exportTemplateCache.set(templateName, exportTemplate ?? null);
+      return exportTemplate ?? null;
     };
 
     // Group work by template so per-boring templates can collect all samples of a boring.
@@ -180,27 +195,42 @@ export class LabRequestService {
         if (!rule) continue;
 
         if (rule.mode === 'per-boring') {
-          // One report for this boring + template; each sample becomes an entry row.
+          // One or more reports for this boring + template; each sample becomes an entry row.
           const sectionId = this.firstEntrySectionId(schema) ?? null;
-          const report = this.reportRepository.create({
-            projectId: labRequest.projectId,
-            templateId,
-            labRequestId: id,
-            dateOfTest: labRequest.dateOfTest,
-            headerData: {},
-          });
-          const savedReport = await this.reportRepository.save(report);
+          const exportTemplate = await getExportTemplate(template.name);
+          const maxEntries = exportTemplate?.maxEntries;
+          const sampleChunks =
+            maxEntries && maxEntries > 0
+              ? chunkArray(templateSamples, maxEntries)
+              : [templateSamples];
 
-          let order = 1;
-          for (const sample of templateSamples) {
-            const entry = this.entryRepository.create({
-              reportId: savedReport.id,
-              data: this.mappedValues(rule, boring, sample),
-              entryOrder: order,
-              sectionId,
+          for (let chunkIndex = 0; chunkIndex < sampleChunks.length; chunkIndex += 1) {
+            const chunk = sampleChunks[chunkIndex];
+            const headerData: Record<string, unknown> =
+              sampleChunks.length > 1
+                ? { sheetPage: chunkIndex + 1, sheetPageOf: sampleChunks.length }
+                : {};
+
+            const report = this.reportRepository.create({
+              projectId: labRequest.projectId,
+              templateId,
+              labRequestId: id,
+              dateOfTest: labRequest.dateOfTest,
+              headerData,
             });
-            await this.entryRepository.save(entry);
-            order += 1;
+            const savedReport = await this.reportRepository.save(report);
+
+            let order = 1;
+            for (const sample of chunk) {
+              const entry = this.entryRepository.create({
+                reportId: savedReport.id,
+                data: this.mappedValues(rule, boring, sample),
+                entryOrder: order,
+                sectionId,
+              });
+              await this.entryRepository.save(entry);
+              order += 1;
+            }
           }
         } else {
           // per-sample: one report per (boring, sample, template).

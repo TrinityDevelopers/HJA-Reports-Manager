@@ -68,4 +68,11 @@ describe('cellMapping', () => {
     expect(numberToColumn(4)).toBe('D');
     expect(numberToColumn(columnToNumber('J'))).toBe('J');
   });
+
+  it('maps Qu(Rock) 14-row entry blocks to rows 19, 33, and 47', () => {
+    const ranges = parseFieldMapping('E19-60');
+    expect(getTargetCell(ranges, 0, 14)).toBe('E19');
+    expect(getTargetCell(ranges, 1, 14)).toBe('E33');
+    expect(getTargetCell(ranges, 2, 14)).toBe('E47');
+  });
 });

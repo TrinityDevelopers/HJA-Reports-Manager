@@ -106,6 +106,7 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `absorption-pressure-swell-balancing.json` | Absorption balancing | 1 header, 1 entry |
 | `free-swell.json` | ASTM D 4546 free swell | 7 header, 1 entry |
 | `resistivity.json` | ASTM G187 resistivity | 4 header (no entry table) |
+| `unconfined-compression-rock.json` | ASTM D 7012 unconfined compression on rock | 2 header, 1 entry |
 
 ### Adding a New Report Type
 
@@ -253,6 +254,7 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 | `absorption-pressure-swell-balancing.json` | XLSX | row | 1 | varies |
 | `free-swell.json` | XLSX | row | 2 | 28 |
 | `resistivity.json` | XLSX | row | 1 | varies |
+| `unconfined-compression-rock.json` | XLSX | row | 14 rows | 3 |
 
 ### Adding a New Export Template
 
