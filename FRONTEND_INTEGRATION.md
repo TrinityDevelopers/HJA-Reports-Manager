@@ -24,7 +24,7 @@ npm install
 Create `.env` in the root directory:
 
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ### 3. Start Both Servers

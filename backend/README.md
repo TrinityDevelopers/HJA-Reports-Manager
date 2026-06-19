@@ -32,9 +32,24 @@ DB_DATABASE=hja_reports
 PORT=5000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
+
+# Optional: set DB_SYNCHRONIZE=false to disable automatic table creation
 ```
 
 ### Create Database
+
+You can create the application database manually or with the bootstrap migration.
+
+**Option A — migration script (recommended for deployment):**
+
+```bash
+cd backend
+npm run migration:run
+```
+
+This connects to your database server and creates `DB_DATABASE` (default `hja_reports`) if it does not exist. It does **not** copy data from another environment.
+
+**Option B — manual SQL:**
 
 **MySQL:**
 ```sql
@@ -46,7 +61,17 @@ CREATE DATABASE hja_reports CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE hja_reports;
 ```
 
-The backend automatically creates tables and seeds templates on first run.
+### Schema and Templates
+
+On startup the backend:
+
+1. Connects to `DB_DATABASE`
+2. Creates or updates tables from TypeORM entities when they do not match the current schema (`DB_SYNCHRONIZE` is enabled by default)
+3. Seeds report and export templates from files in `backend/data/`
+
+Set `DB_SYNCHRONIZE=false` only if you manage schema changes manually.
+
+**Note:** Template seeding syncs configuration from JSON/XLSX files in the repo. It is not a dump of local dev data.
 
 ---
 
@@ -265,8 +290,7 @@ npx vitest watch
 # Seed sample data
 npm run seed
 
-# TypeORM migrations
-npm run migration:generate -- -n MigrationName
+# Database bootstrap (creates DB_DATABASE if missing)
 npm run migration:run
 npm run migration:revert
 ```
@@ -298,14 +322,75 @@ npm run migration:revert
 
 ## 🔄 Startup Process
 
-When the backend starts (`npm run dev`):
+When the backend starts (`npm run dev` or `npm start`):
 
-1. **Database Connection** - Connects to MySQL/PostgreSQL
-2. **Schema Creation** - TypeORM creates all tables if they don't exist
-3. **Template Seeding** - Loads report templates from JSON schemas
-4. **Export Templates** - Registers default export templates
-5. **Server Start** - Express listens on configured port
-6. **Ready** - API ready for requests
+1. **Database connection** — Connects to MySQL/PostgreSQL using `DB_*` settings
+2. **Schema sync** — TypeORM creates or updates tables from entity definitions (`DB_SYNCHRONIZE` defaults to enabled)
+3. **Template seeding** — Loads report templates from JSON schemas in `backend/data/schemas/`
+4. **Export templates** — Registers export templates from `backend/data/template_defs/`
+5. **Server start** — Express listens on the configured port
+6. **Ready** — API accepts requests
+
+For a fresh environment, run `npm run migration:run` once before the first start if the database itself has not been created yet.
+
+---
+
+## 🚀 Production Deployment
+
+### Build and start
+
+```bash
+npm run build
+npm run migration:run:prod   # first deploy only, or when DB_DATABASE is new
+npm start
+```
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `NODE_ENV` | Set to `production` in hosted environments |
+| `DB_TYPE` | `mysql` or `postgres` |
+| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | Database connection |
+| `DB_SYNCHRONIZE` | Set to `false` to disable automatic table creation (default: enabled) |
+| `PORT` | HTTP port (platforms such as Railway often inject this) |
+| `CORS_ORIGIN` | Frontend origin URL, e.g. `https://your-app.up.railway.app` |
+
+### Railway (Docker)
+
+Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice for PDF export and runs the database bootstrap migration before starting the API.
+
+**Backend service (Railway)**
+
+- Root directory: `backend`
+- Builder: Dockerfile
+- No custom start command needed (entrypoint runs migration + `node dist/index.js`)
+- Set `NODE_ENV=production`, all `DB_*` variables, `PORT` (Railway injects this), and `CORS_ORIGIN` to your frontend URL
+- Use a Railway MySQL plugin or a separate MySQL service; set `DB_HOST` to that service hostname (not `localhost`)
+
+**Frontend service (Railway)**
+
+- Root directory: `frontend`
+- Builder: Dockerfile
+- Build arg / env at build time: `VITE_API_URL=https://<backend-public-host>/api`
+- Set `CORS_ORIGIN` on the backend to the frontend public URL
+
+**Local full stack with Docker Compose**
+
+From the repo root:
+
+```bash
+cp .env.docker.example .env
+docker compose up --build
+```
+
+- Frontend: http://localhost:8080
+- Backend API: http://localhost:5000
+- MySQL: internal to the compose network (`mysql:3306`)
+
+XLSX export works with Node alone. PDF export (`?format=pdf`) requires LibreOffice, which is installed in the backend image.
+
+See the [main README](../README.md#-deployment) for a full deployment overview.
 
 ---
 
@@ -313,21 +398,3 @@ When the backend starts (`npm run dev`):
 
 - **[Backend Data Configuration](./data/README.md)** - Schema definitions, template setu
 - **[Main README](../README.md)** - Project overview and quick start
-
----
-
-## 🚀 Production Deployment
-
-```bash
-# Build
-npm run build
-
-# Start
-npm start
-```
-
-Environment variables to configure:
-- `NODE_ENV=production`
-- `DB_*` - Production database credentials
-- `PORT` - Listening port
-- `CORS_ORIGIN` - Frontend origin URL

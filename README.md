@@ -82,29 +82,37 @@ This will automatically install dependencies in both the `frontend` and `backend
 ```bash
 cp backend/.env.example backend/.env
 # Edit backend/.env with your database credentials
+cd backend
+npm run migration:run   # creates hja_reports if it does not exist
 ```
 
 Backend runs on `http://localhost:5000`
 
-The backend will automatically:
-- Create all database tables
-- Seed default report templates
-- Register export templates
+The backend will automatically on each start:
+
+- Create or update database tables from entity definitions
+- Seed report templates from JSON schemas in the repo
+- Register export templates from configuration files
 - Start the REST API server
+
+Local dev data is not migrated to other environments. Use `npm run seed` in `backend/` if you want sample rows locally.
 
 ### 4. Start Development
 
 **Run frontend only:**
+
 ```bash
 npm run frontend:dev
 ```
 
 **Run backend only:**
+
 ```bash
 npm run backend:dev
 ```
 
 **Run both (in separate terminals):**
+
 ```bash
 # Terminal 1
 npm run backend:dev
@@ -337,12 +345,14 @@ npm run seed          # Seed sample data
 
 ## 📋 Environment Configuration
 
-### Frontend (.env)
+### Frontend (`.env` in `frontend/`)
+
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
-### Backend (.env)
+### Backend (`.env` in `backend/`)
+
 ```env
 # Database
 DB_TYPE=mysql
@@ -357,6 +367,62 @@ PORT=5000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
 ```
+
+See [backend/.env.example](./backend/.env.example) for all options including `DB_SYNCHRONIZE`.
+
+---
+
+## 🚢 Deployment
+
+This app has three runtime pieces: a Vite/React frontend, an Express backend, and MySQL or PostgreSQL. A hosted test deployment typically keeps all services in one platform (for example Railway) or splits frontend and backend across two services.
+
+### First-time database setup
+
+1. Configure `DB_*` variables for your database server.
+2. Run the bootstrap migration once to create the application database:
+
+   ```bash
+   cd backend
+   npm run migration:run        # development
+   npm run migration:run:prod   # after npm run build
+   ```
+
+3. Start the backend. Tables are created or updated automatically from TypeORM entities on startup (unless `DB_SYNCHRONIZE=false`).
+
+The migration creates **only** the empty `hja_reports` database (or whatever `DB_DATABASE` is set to). It does not copy data from your local machine. Template definitions are reloaded from files in `backend/data/` when the server starts.
+
+### Railway (Docker)
+
+Use three Railway services (or two if you use Railway's managed MySQL instead of the compose MySQL image):
+
+| Service | Root directory | Dockerfile | Notes |
+|---------|----------------|------------|-------|
+| Backend | `backend` | `backend/Dockerfile` | LibreOffice included; entrypoint runs DB bootstrap migration |
+| Frontend | `frontend` | `frontend/Dockerfile` | Set build arg `VITE_API_URL` to the public backend URL |
+| MySQL | — | Railway MySQL plugin | Point backend `DB_HOST` at the plugin hostname |
+
+**Backend env:** `NODE_ENV=production`, `DB_*`, `CORS_ORIGIN` (frontend URL), and `PORT` (Railway sets this).
+
+**Frontend build arg:** `VITE_API_URL=https://<your-backend-host>/api`
+
+### Docker Compose (local test)
+
+Run the full stack locally with MySQL, backend, and frontend:
+
+```bash
+cp .env.docker.example .env
+docker compose up --build
+```
+
+| URL | Service |
+|-----|---------|
+| http://localhost:8080 | Frontend |
+| http://localhost:5000 | Backend API |
+| http://localhost:5000/health | Health check |
+
+The backend image waits for MySQL, runs `migration:run:prod`, syncs tables on startup, and seeds templates from `backend/data/`. No local dev data is copied into the container.
+
+More detail: [Backend README — Production Deployment](./backend/README.md#-production-deployment).
 
 ---
 

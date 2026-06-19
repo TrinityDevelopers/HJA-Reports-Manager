@@ -16,7 +16,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE || 'hja_reports',
-  synchronize: process.env.NODE_ENV === 'development',
+  synchronize: process.env.DB_SYNCHRONIZE !== 'false',
   logging: process.env.NODE_ENV === 'development',
   entities: [
     Project,
@@ -28,6 +28,5 @@ export const AppDataSource = new DataSource({
     Settings,
     LabRequest,
   ],
-  migrations: ['src/database/migrations/**/*.ts'],
   subscribers: ['src/database/subscribers/**/*.ts'],
 });
