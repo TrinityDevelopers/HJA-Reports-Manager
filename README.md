@@ -393,6 +393,8 @@ The migration creates **only** the empty `hja_reports` database (or whatever `DB
 
 ### Railway (Docker)
 
+**Important:** Do not deploy from the repo root — set each service’s root directory (`/backend`, `/frontend`). Full instructions: **[RAILWAY.md](./RAILWAY.md)**.
+
 Use three Railway services (or two if you use Railway's managed MySQL instead of the compose MySQL image):
 
 | Service | Root directory | Dockerfile | Notes |
@@ -440,6 +442,7 @@ More detail: [Backend README — Production Deployment](./backend/README.md#-pro
 
 ## 📚 Additional Documentation
 
+- **[RAILWAY.md](./RAILWAY.md)** - Railway deployment (monorepo root directories, env vars)
 - **[Backend README](./backend/README.md)** - API docs, entity schemas, service details
 - **[Backend Data Configuration](./backend/data/README.md)** - Schema definitions, template setup
 - **[Frontend Integration](./FRONTEND_INTEGRATION.md)** - React hooks, API client, form utilities

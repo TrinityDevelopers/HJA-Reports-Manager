@@ -358,6 +358,8 @@ npm start
 
 ### Railway (Docker)
 
+**Important:** Railway must use root directory `/backend`, not the repo root. See **[RAILWAY.md](../RAILWAY.md)** for step-by-step setup (fixes the Railpack “No start command detected” error).
+
 Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice for PDF export and runs the database bootstrap migration before starting the API.
 
 **Backend service (Railway)**
