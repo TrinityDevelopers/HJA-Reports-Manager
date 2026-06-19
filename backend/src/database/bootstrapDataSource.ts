@@ -23,5 +23,6 @@ export function createBootstrapDataSource(): DataSource {
     database: type === 'postgres' ? 'postgres' : 'mysql',
     migrations: [CreateHjaReportsDatabase1718812800000],
     migrationsTableName: 'typeorm_migrations_bootstrap',
+    migrationsTransactionMode: 'each',
   });
 }

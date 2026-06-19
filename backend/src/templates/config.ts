@@ -1,9 +1,5 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { loadJsonDirSync } from '../utils/jsonDir';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const TEMPLATE_DEFS_DIR = path.join(__dirname, '../../data/template_defs');
 

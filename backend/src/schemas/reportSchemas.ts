@@ -1,9 +1,5 @@
-import { fileURLToPath } from 'url';
 import path from 'path';
 import { loadJsonDirSync } from '../utils/jsonDir';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const SCHEMAS_DIR = path.join(__dirname, '../../data/schemas');
 
