@@ -1,7 +1,7 @@
 import path from 'path';
 import { loadJsonDirSync } from '../utils/jsonDir';
 
-const SCHEMAS_DIR = path.join(__dirname, '../../data/schemas');
+const SCHEMAS_DIR = path.join(process.cwd(), 'data', 'schemas');
 
 /**
  * Automatically load all report schemas from JSON files in backend/data/schemas

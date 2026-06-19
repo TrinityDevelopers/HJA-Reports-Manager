@@ -1,7 +1,7 @@
 import path from 'path';
 import { loadJsonDirSync } from '../utils/jsonDir';
 
-const TEMPLATE_DEFS_DIR = path.join(__dirname, '../../data/template_defs');
+const TEMPLATE_DEFS_DIR = path.join(process.cwd(), 'data', 'template_defs');
 
 /**
  * Automatically load all export template configurations from JSON files in backend/data/template_defs
@@ -14,7 +14,7 @@ export const EXPORT_TEMPLATES: Record<string, unknown> = Object.fromEntries(
 /**
  * Template directory path where XLSX files are stored
  */
-export const TEMPLATES_DIR = path.join(__dirname, '../../data/templates');
+export const TEMPLATES_DIR = path.join(process.cwd(), 'data', 'templates');
 
 /**
  * Export template setup (see also backend/data/README.md):
