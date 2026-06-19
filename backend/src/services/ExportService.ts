@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { seedFromDefinitions } from '../utils/seedFromDefinitions';
 import type { FieldMapping } from '../exports/fillers';
 import { fillEntryFields, fillHeaderFields, fillStandardFields } from '../exports/fillers';
+import { captureSheetPrintSetup, fixPrintAreasInXlsx } from '../exports/printAreaFix';
 
 interface ExportableReport {
   projectName?: string;
@@ -95,8 +96,10 @@ export class ExportService {
       entryLayout: exportTemplate.entryLayout ?? 'row',
     });
 
-    // Write workbook to output file
+    const sheetPrintSetup = captureSheetPrintSetup(workbook);
+
     await workbook.xlsx.writeFile(outputPath);
+    await fixPrintAreasInXlsx(outputPath, sheetPrintSetup);
   }
 
   /**

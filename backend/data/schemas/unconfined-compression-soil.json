@@ -1,0 +1,180 @@
+{
+  "name": "unconfined-compression-soil",
+  "displayName": "Unconfined Compression (Soil)",
+  "fullName": "Unconfined Compression Test (Soil) (ASTM D 2166)",
+  "abbreviation": "Qu(Soil)",
+  "description": "Unconfined compression test on soil data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "entry",
+      "title": "Samples",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "height",
+          "label": "Height (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameter",
+          "label": "Diameter (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfSample",
+          "label": "Weight of Sample (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightTare",
+          "label": "Wet Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTare",
+          "label": "Dry Weight + Tare (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tarePanNumber",
+          "label": "Tare Pan No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "tareWeight",
+          "label": "Tare Weight (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "comments",
+          "label": "Comments",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "caliperNumber",
+          "label": "Caliper No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "strainDialNumber",
+          "label": "Strain Dial No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "loadFrameNumber",
+          "label": "Load Frame",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "loadCellNumber",
+          "label": "Load Cell No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "provingRingNumber",
+          "label": "Proving Ring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "peakStress",
+          "label": "Peak Stress (psi)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "peakStrain",
+          "label": "Peak Strain (%)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "brokenOutside",
+          "label": "Broken Outside?",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "peakLoad",
+          "label": "Peak Load (lbs)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "dryWeights",
+          "label": "Dry Weights",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

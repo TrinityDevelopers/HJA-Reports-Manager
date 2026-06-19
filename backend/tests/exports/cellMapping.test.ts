@@ -75,4 +75,10 @@ describe('cellMapping', () => {
     expect(getTargetCell(ranges, 1, 14)).toBe('E33');
     expect(getTargetCell(ranges, 2, 14)).toBe('E47');
   });
+
+  it('maps Qu(Soil) 20-row entry blocks to rows 11 and 31', () => {
+    const ranges = parseFieldMapping('E11-50');
+    expect(getTargetCell(ranges, 0, 20)).toBe('E11');
+    expect(getTargetCell(ranges, 1, 20)).toBe('E31');
+  });
 });

@@ -107,6 +107,7 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `free-swell.json` | ASTM D 4546 free swell | 7 header, 1 entry |
 | `resistivity.json` | ASTM G187 resistivity | 4 header (no entry table) |
 | `unconfined-compression-rock.json` | ASTM D 7012 unconfined compression on rock | 2 header, 1 entry |
+| `unconfined-compression-soil.json` | ASTM D 2166 unconfined compression on soil | 1 entry, 1 header (sign-off) |
 
 ### Adding a New Report Type
 
@@ -255,6 +256,7 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 | `free-swell.json` | XLSX | row | 2 | 28 |
 | `resistivity.json` | XLSX | row | 1 | varies |
 | `unconfined-compression-rock.json` | XLSX | row | 14 rows | 3 |
+| `unconfined-compression-soil.json` | XLSX | row | 20 rows | 2 |
 
 ### Adding a New Export Template
 
