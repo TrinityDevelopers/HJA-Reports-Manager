@@ -15,11 +15,19 @@ RUN npm run build
 
 FROM node:20-bookworm-slim AS runtime
 
+# Accept MS Core Fonts EULA so LibreOffice can use Arial (templates use Arial throughout)
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    fontconfig \
+    debconf-utils \
+  && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
+  && apt-get install -y --no-install-recommends \
+    ttf-mscorefonts-installer \
     libreoffice \
     libreoffice-calc \
     fonts-liberation \
+  && fc-cache -f -v \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

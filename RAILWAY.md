@@ -143,9 +143,11 @@ See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-mon
 - `CORS_ORIGIN` on the backend must exactly match the frontend origin.
 - `VITE_API_URL` must point at the public backend URL and include the `/api` path.
 
-### PDF export fails
+### PDF export fails or formatting differs from Windows
 
-LibreOffice is installed in the backend Docker image for PDF generation. XLSX export does not require LibreOffice. Check deploy logs for LibreOffice-related errors if PDF export fails.
+LibreOffice is installed in the backend Docker image for PDF generation. XLSX export does not require LibreOffice. The image includes Microsoft Core Fonts (`ttf-mscorefonts-installer`) so Arial renders correctly during PDF conversion.
+
+Check deploy logs for LibreOffice-related errors if PDF export fails. To verify fonts in a running container: `fc-list | grep -i arial`.
 
 ## Local parity
 
