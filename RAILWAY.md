@@ -1,39 +1,60 @@
 # Deploying to Railway
 
-This repo is a monorepo. Railway must **not** build from the repository root — that root `package.json` has no `start` script, which causes the Railpack error:
+This repository is a monorepo with separate `backend` and `frontend` applications. Deploy them as **independent Railway services**, each with its own root directory and Dockerfile.
+
+Do **not** build from the repository root. The root `package.json` has no production `start` script, which causes Railpack to fail with:
 
 > No start command detected
 
-Deploy **separate services** for the backend and frontend, each with its own root directory and Dockerfile.
-
 ## Architecture
 
-| Service | Root directory | Config file | Dockerfile |
-|---------|----------------|-------------|------------|
-| MySQL | (Railway template) | — | — |
-| Backend | `/backend` | `/backend/railway.toml` | `backend/Dockerfile` |
-| Frontend | `/frontend` | `/frontend/railway.toml` | `frontend/Dockerfile` |
+| Component | Railway service | Root directory | Config file | Dockerfile |
+|-----------|-----------------|----------------|-------------|------------|
+| Database | Managed MySQL (or PostgreSQL) | — | — | — |
+| API | Backend | `backend` | `backend/railway.toml` | `backend/Dockerfile` |
+| UI | Frontend | `frontend` | `frontend/railway.toml` | `frontend/Dockerfile` |
 
-## 1. Fix the backend service (do this first)
+Each service’s `railway.toml` sets `builder = "DOCKERFILE"` so Railway uses the Dockerfile instead of Railpack.
 
-Open your **backend** GitHub-connected service in Railway.
+## Prerequisites
 
-### Settings → Source
+- A Railway project connected to this GitHub repository
+- A managed database service in the same project (MySQL 8+ is the default in docs and Docker Compose; PostgreSQL is also supported via `DB_TYPE=postgres`)
+
+## 1. Database service
+
+Add a managed database to the project (for example, Railway’s MySQL template).
+
+Note the service name shown on the Railway canvas — you will reference it when wiring backend environment variables (examples below use `MySQL`).
+
+The backend container runs a bootstrap migration on startup that creates the application database if it does not exist. Set `DB_DATABASE` to the name you want (default in examples: `hja_reports`). The platform’s default database name (often `railway`) is only used if you set `DB_DATABASE` to that value.
+
+## 2. Backend service
+
+Create a service from the same repository (or configure an existing one) with these settings.
+
+### Source
 
 | Setting | Value |
 |---------|-------|
 | **Root Directory** | `backend` |
-| **Config-as-code file** | `/backend/railway.toml` |
+| **Config-as-code file** | `backend/railway.toml` |
 
-Root Directory tells Railway to build from `backend/` (where the Dockerfile and `start` script live). The config file forces the **Dockerfile** builder instead of Railpack.
+Root Directory ensures Railway builds from `backend/`, where the Dockerfile and npm `start` script live.
 
-### Settings → Networking
+### Networking
 
-Click **Generate Domain** so the API gets a public URL (needed for the frontend later).
+Generate a public domain for the API. You will need this URL when configuring the frontend.
 
-### Variables
+Verify after deploy:
 
-Add these on the **backend** service. Replace `MySQL` with your MySQL service name if it differs (check the canvas label).
+- `https://<backend-domain>/health` → `{"status":"ok"}`
+
+### Environment variables
+
+Set these on the backend service. Use Railway’s **Variable Reference** UI (`{ }` or `${{`) to link database credentials from the database service — do not hard-code hostnames or passwords.
+
+Replace `MySQL` in the references below with your database service name if it differs.
 
 ```env
 NODE_ENV=production
@@ -45,81 +66,94 @@ DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 DB_DATABASE=hja_reports
 ```
 
-Use the **Variable Reference** UI (click `{ }` or type `${{`) to pick variables from the MySQL service — do not paste literal hostnames.
+For PostgreSQL, set `DB_TYPE=postgres` and use the corresponding variable names from your database plugin.
 
-`DB_DATABASE=hja_reports` is intentional: the container entrypoint runs a bootstrap migration that creates this database if it is missing. Railway’s default MySQL database name (`railway`) is not used unless you set `DB_DATABASE=railway`.
-
-Set `CORS_ORIGIN` after the frontend has a domain:
+Set `CORS_ORIGIN` after the frontend service has a public domain:
 
 ```env
 CORS_ORIGIN=https://${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
 ```
 
-Or use the full URL with `https://` prefix manually.
+Replace `Frontend` with your frontend service name. The value must be the full origin (scheme + host, no trailing path).
+
+Railway injects `PORT` automatically; the backend listens on that port.
 
 ### Deploy
 
-Redeploy the backend service. The build log should show **Docker** (not Railpack). On success:
+Redeploy the backend. Build logs should show **Docker**, not Railpack. The entrypoint waits for the database, runs the bootstrap migration, then starts the API.
 
-- `https://<backend-domain>/health` → `{"status":"ok"}`
+## 3. Frontend service
 
-## 2. Add the frontend service
+Create a second service from the same repository.
 
-1. **+ Create** → **Empty Service** (or **GitHub Repo** → same repo).
-2. **Settings → Source**
-   - Root Directory: `frontend`
-   - Config-as-code file: `/frontend/railway.toml`
-3. **Variables** (build-time — redeploy after changing):
+### Source
 
-   ```env
-   VITE_API_URL=https://${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api
-   ```
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | `frontend` |
+| **Config-as-code file** | `frontend/railway.toml` |
 
-   Replace `Backend` with your backend service name. The URL must include `https://` and end with `/api`.
+### Environment variables
 
-4. **Generate Domain** for the frontend.
-5. Update backend `CORS_ORIGIN` to the frontend public URL and redeploy backend.
-6. Deploy frontend.
+`VITE_API_URL` is embedded at **build time**. Redeploy the frontend after changing it.
 
-Open the frontend domain in a browser and verify API calls in DevTools.
+```env
+VITE_API_URL=https://${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api
+```
 
-## 3. If you only imported the repo once
+Replace `Backend` with your backend service name. The URL must include `https://` and end with `/api`.
 
-Railway may have created a single service pointing at `/`. Either:
+### Networking
 
-- **Recommended:** Configure that service as the backend (root `backend`, config `/backend/railway.toml`), then add a second service for the frontend, **or**
-- Delete the misconfigured service and create two empty services connected to the same repo (see [Railway monorepo guide](https://docs.railway.com/guides/deploying-a-monorepo)).
+Generate a public domain for the frontend.
+
+### CORS
+
+Update the backend `CORS_ORIGIN` to the frontend’s public URL and redeploy the backend.
+
+### Verify
+
+Open the frontend URL in a browser and confirm API requests succeed in the network tab of developer tools.
+
+## Monorepo layout
+
+If Railway created a single service pointing at the repository root, either:
+
+- Reconfigure it as the backend (`Root Directory`: `backend`, config: `backend/railway.toml`) and add a separate frontend service, or
+- Remove the misconfigured service and create two services from the same repo, each with the correct root directory.
+
+See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-monorepo) for platform-specific details.
 
 ## Troubleshooting
 
 ### Railpack / “No start command detected”
 
-- Root Directory is still `/` (repo root). Set it to `backend` or `frontend`.
-- Config file not set — add `/backend/railway.toml` with `builder = "DOCKERFILE"`.
+- **Root Directory** is still `/` (repo root). Set it to `backend` or `frontend`.
+- **Config-as-code file** is missing. Add `backend/railway.toml` or `frontend/railway.toml` with `builder = "DOCKERFILE"`.
 
-### Backend build uses Docker but crashes on DB
+### Backend builds with Docker but fails on database connection
 
-- Confirm MySQL variables use `${{MySQL.MYSQLHOST}}` syntax with the correct service name.
-- Check deploy logs for “Waiting for database” / “Migration attempt” messages from `docker-entrypoint.sh`.
-- Ensure MySQL service is running in the same Railway project.
+- Confirm `DB_*` variables use `${{ServiceName.VAR}}` syntax with the correct database service name.
+- Check deploy logs for “Waiting for database” and “Migration attempt” messages from `docker-entrypoint.sh`.
+- Ensure the database service is running in the same Railway project.
 
 ### Frontend loads but API calls fail
 
-- `VITE_API_URL` is baked in at **build** time — change the variable, then **redeploy** frontend.
-- `CORS_ORIGIN` on the backend must exactly match the frontend origin (scheme + host, no trailing path).
-- Backend domain must be public and include `/api` in `VITE_API_URL`.
+- `VITE_API_URL` is baked in at build time — update the variable, then redeploy the frontend.
+- `CORS_ORIGIN` on the backend must exactly match the frontend origin.
+- `VITE_API_URL` must point at the public backend URL and include the `/api` path.
 
 ### PDF export fails
 
-LibreOffice is installed in the backend Docker image. If PDF still fails, check deploy logs for LibreOffice errors; XLSX export does not require LibreOffice.
+LibreOffice is installed in the backend Docker image for PDF generation. XLSX export does not require LibreOffice. Check deploy logs for LibreOffice-related errors if PDF export fails.
 
 ## Local parity
 
-To run the same stack locally:
+To run the same stack locally with Docker Compose:
 
 ```bash
 cp .env.docker.example .env
 docker compose up --build
 ```
 
-See [README.md](./README.md#-deployment) for more context.
+See [README.md](./README.md#-deployment) for deployment overview and [backend/README.md](./backend/README.md#-production-deployment) for backend production details.
