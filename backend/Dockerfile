@@ -15,14 +15,17 @@ RUN npm run build
 
 FROM node:20-bookworm-slim AS runtime
 
-# Accept MS Core Fonts EULA so LibreOffice can use Arial (templates use Arial throughout)
-RUN apt-get update \
+# Accept MS Core Fonts EULA so LibreOffice can use Arial (templates use Arial throughout).
+# ttf-mscorefonts-installer is in Debian contrib, which slim images omit by default.
+RUN sed -i '/^Components:/ {/\bcontrib\b/! s/ main$/ main contrib/}' /etc/apt/sources.list.d/debian.sources \
+  && apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
     fontconfig \
     debconf-utils \
+    wget \
   && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
-  && apt-get install -y --no-install-recommends \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ttf-mscorefonts-installer \
     libreoffice \
     libreoffice-calc \
