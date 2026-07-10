@@ -24,7 +24,8 @@ export interface TemplateRowHeight {
   rowXml: string;
 }
 
-const ROW_ELEMENT_RE = /<row\b([^>]*?)>([\s\S]*?)<\/row>/g;
+/** Match self-closing <row .../> or paired <row ...>...</row> without swallowing the next row. */
+const ROW_ELEMENT_RE = /<row\b([^>]*?)\/>|<row\b([^>]*?)>([\s\S]*?)<\/row>/g;
 /** Match a <row> opening tag by its r="N" attribute (\\b after the quote is unreliable). */
 const ROW_OPENING_RE = (rowNum: number) => new RegExp(`<row\\b[^>]*\\br="${rowNum}"[^>]*>`);
 
@@ -99,18 +100,20 @@ export function extractTemplateRowHeights(worksheetXml: string): Map<number, Tem
   const rowRe = new RegExp(ROW_ELEMENT_RE.source, 'g');
 
   while ((match = rowRe.exec(worksheetXml)) !== null) {
-    const attrs = match[1];
+    const attrs = match[1] ?? match[2] ?? '';
     const rowNum = parseInt(attrs.match(/\br="(\d+)"/)?.[1] ?? '0', 10);
     const ht = attrs.match(/\bht="([^"]+)"/)?.[1];
     if (!rowNum || !ht) continue;
     if (!/customHeight="(?:1|true)"/i.test(attrs)) continue;
 
+    const isSelfClosing = match[1] !== undefined;
     heights.set(rowNum, {
       ht,
       customHeight: true,
-      openingTag:
-        match[0].match(/^<row\b[^>]*>/)?.[0] ??
-        `<row r="${rowNum}" ht="${ht}" customHeight="true">`,
+      openingTag: isSelfClosing
+        ? match[0]
+        : (match[0].match(/^<row\b[^>]*>/)?.[0] ??
+          `<row r="${rowNum}" ht="${ht}" customHeight="true">`),
       rowXml: match[0],
     });
   }
@@ -125,9 +128,10 @@ function replaceRowOpeningTag(excelOpening: string, templateOpening: string): st
   }
 
   // ExcelJS uses self-closing tags for empty rows; keep that shape to avoid unclosed <row>.
+  // Template openings may already be self-closing (`/>`); strip that before rebuilding.
   const attrs = templateOpening
     .replace(/^<row\b/, '')
-    .replace(/>$/, '')
+    .replace(/\/?>$/, '')
     .trim();
   return attrs ? `<row ${attrs}/>` : '<row/>';
 }

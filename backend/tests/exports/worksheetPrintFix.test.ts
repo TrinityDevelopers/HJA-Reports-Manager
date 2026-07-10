@@ -86,6 +86,53 @@ describe('worksheetPrintFix', () => {
     expect(patched).toContain('customHeight="true"');
     expect(patched).toMatch(/<row\b[^>]*\/>/);
     expect(patched).not.toMatch(/<row\b[^>]*>[^<]*<\/row>/);
+    expect(patched).not.toContain('//>');
+  });
+
+  it('does not double-slash when template row opening is already self-closing', () => {
+    const templateOpening =
+      '<row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/>';
+    const excelJsXml =
+      '<worksheet><sheetData><row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/></sheetData></worksheet>';
+    const patched = patchWorksheetRowHeights(
+      excelJsXml,
+      new Map([
+        [
+          5,
+          {
+            ht: '3.75',
+            customHeight: true,
+            openingTag: templateOpening,
+            rowXml: templateOpening,
+          },
+        ],
+      ]),
+    );
+
+    expect(patched).toContain(
+      '<row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/>',
+    );
+    expect(patched).not.toContain('//>');
+  });
+
+  it('extracts self-closing customHeight rows without swallowing the next row', () => {
+    const templateXml =
+      '<worksheet><sheetData>' +
+      '<row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/>' +
+      '<row r="6" ht="15.75" customHeight="1" spans="1:12" x14ac:dyDescent="0.25"><c r="A6"/></row>' +
+      '</sheetData></worksheet>';
+    const heights = extractTemplateRowHeights(templateXml);
+
+    expect(heights.get(5)?.openingTag).toBe(
+      '<row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/>',
+    );
+    expect(heights.get(5)?.rowXml).toBe(
+      '<row r="5" spans="1:12" ht="3.75" customHeight="1" x14ac:dyDescent="0.25"/>',
+    );
+    expect(heights.get(6)?.ht).toBe('15.75');
+    expect(heights.get(6)?.openingTag).toBe(
+      '<row r="6" ht="15.75" customHeight="1" spans="1:12" x14ac:dyDescent="0.25">',
+    );
   });
 
   it('restores the template row opening tag on an existing row', () => {

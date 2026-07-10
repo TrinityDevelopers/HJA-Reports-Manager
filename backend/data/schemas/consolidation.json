@@ -1,0 +1,432 @@
+{
+  "name": "consolidation",
+  "displayName": "Consolidation",
+  "fullName": "Consolidation Test - Time-Dial Data (ASTM D 2435)",
+  "abbreviation": "CONS",
+  "description": "Consolidation test time-dial data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Sample",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "consolidometerNumber",
+          "label": "Consolidometer No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Time-Dial Readings",
+      "fields": [
+        {
+          "id": "date0Sec",
+          "label": "Date (0 sec.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time0Sec",
+          "label": "Time (0 sec.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading0Sec",
+          "label": "Dial Reading (0 sec.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load0Sec",
+          "label": "Load (0 sec.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date6Sec",
+          "label": "Date (6 sec.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time6Sec",
+          "label": "Time (6 sec.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading6Sec",
+          "label": "Dial Reading (6 sec.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load6Sec",
+          "label": "Load (6 sec.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date15Sec",
+          "label": "Date (15 sec.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time15Sec",
+          "label": "Time (15 sec.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading15Sec",
+          "label": "Dial Reading (15 sec.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load15Sec",
+          "label": "Load (15 sec.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date30Sec",
+          "label": "Date (30 sec.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time30Sec",
+          "label": "Time (30 sec.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading30Sec",
+          "label": "Dial Reading (30 sec.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load30Sec",
+          "label": "Load (30 sec.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date1Min",
+          "label": "Date (1 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time1Min",
+          "label": "Time (1 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading1Min",
+          "label": "Dial Reading (1 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load1Min",
+          "label": "Load (1 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date2Min",
+          "label": "Date (2 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time2Min",
+          "label": "Time (2 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading2Min",
+          "label": "Dial Reading (2 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load2Min",
+          "label": "Load (2 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date4Min",
+          "label": "Date (4 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time4Min",
+          "label": "Time (4 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading4Min",
+          "label": "Dial Reading (4 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load4Min",
+          "label": "Load (4 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date8Min",
+          "label": "Date (8 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time8Min",
+          "label": "Time (8 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading8Min",
+          "label": "Dial Reading (8 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load8Min",
+          "label": "Load (8 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date15Min",
+          "label": "Date (15 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time15Min",
+          "label": "Time (15 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading15Min",
+          "label": "Dial Reading (15 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load15Min",
+          "label": "Load (15 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date30Min",
+          "label": "Date (30 min.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time30Min",
+          "label": "Time (30 min.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading30Min",
+          "label": "Dial Reading (30 min.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load30Min",
+          "label": "Load (30 min.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date1Hr",
+          "label": "Date (1 hr.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time1Hr",
+          "label": "Time (1 hr.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading1Hr",
+          "label": "Dial Reading (1 hr.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load1Hr",
+          "label": "Load (1 hr.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date2Hr",
+          "label": "Date (2 hr.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time2Hr",
+          "label": "Time (2 hr.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading2Hr",
+          "label": "Dial Reading (2 hr.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load2Hr",
+          "label": "Load (2 hr.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date4Hr",
+          "label": "Date (4 hr.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time4Hr",
+          "label": "Time (4 hr.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading4Hr",
+          "label": "Dial Reading (4 hr.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load4Hr",
+          "label": "Load (4 hr.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date8Hr",
+          "label": "Date (8 hr.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time8Hr",
+          "label": "Time (8 hr.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading8Hr",
+          "label": "Dial Reading (8 hr.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load8Hr",
+          "label": "Load (8 hr.) (g)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "date24Hr",
+          "label": "Date (24 hr.)",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "time24Hr",
+          "label": "Time (24 hr.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dialReading24Hr",
+          "label": "Dial Reading (24 hr.) (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "load24Hr",
+          "label": "Load (24 hr.) (g)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
