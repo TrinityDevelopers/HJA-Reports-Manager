@@ -24,4 +24,5 @@ Standard lint/test/build/run commands and full setup details are in `README.md`;
 - Run both dev servers together with `npm run dev:both`, or separately (`npm run backend:dev`, `npm run frontend:dev`). Frontend defaults `VITE_API_URL` to `http://localhost:5000/api`.
 - Lint (`npm run lint`) and tests (`npm run test`, i.e. backend Vitest) run from the repo root. The backend `package.json` has **no** `lint` script despite some docs referencing one — lint is configured only at the root.
 - Backend tests do not require a running MySQL server (they run in-memory / against fixtures).
-- LibreOffice is only needed for optional PDF export; XLSX export and everything else work without it.
+- PDF export (`ExportService.convertXlsxToPdf`, used by `GET /api/export/report/:reportId/export?format=pdf`) shells out to a headless LibreOffice via `libreoffice-convert`. LibreOffice Calc plus the Arial (ttf-mscorefonts) and Liberation fonts are installed in the VM snapshot, so PDF export works out of the box — no extra setup needed. XLSX export and everything else also work without LibreOffice.
+- The backend must run with a writable `HOME` (default `/home/ubuntu` is fine); LibreOffice needs it for its user profile. A harmless `failed to launch javaldx - java may not function correctly` warning may appear during conversion and can be ignored.
