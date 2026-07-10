@@ -2,7 +2,7 @@
   "templateId": "unconfined-compression-rock",
   "name": "unconfined_compression_rock",
   "displayName": "Unconfined Compression Test on Rock (ASTM D 7012)",
-  "filePath": "unconfined-compression-rock.xlsx",
+  "filePath": "unconfined_compression_rock.xlsx",
   "format": "xlsx",
   "maxEntries": 3,
   "rowsPerEntry": 14,

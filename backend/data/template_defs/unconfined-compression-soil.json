@@ -2,7 +2,7 @@
   "templateId": "unconfined-compression-soil",
   "name": "unconfined_compression_soil",
   "displayName": "Unconfined Compression Test (Soil) (ASTM D 2166)",
-  "filePath": "unconfined-compression-soil.xlsx",
+  "filePath": "unconfined_compression_soil.xlsx",
   "format": "xlsx",
   "maxEntries": 2,
   "rowsPerEntry": 20,

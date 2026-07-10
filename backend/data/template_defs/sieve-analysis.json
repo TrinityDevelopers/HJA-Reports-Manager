@@ -2,7 +2,7 @@
   "templateId": "sieve-analysis",
   "name": "sieve_analysis",
   "displayName": "Grain Size Analysis (ASTM D422)",
-  "filePath": "sieve-analysis.xlsx",
+  "filePath": "sieve_analysis.xlsx",
   "format": "xlsx",
   "maxEntries": 17,
   "standardFields": {

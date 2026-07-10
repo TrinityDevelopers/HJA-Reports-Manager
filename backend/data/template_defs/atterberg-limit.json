@@ -2,7 +2,7 @@
   "templateId": "atterberg-limit",
   "name": "atterberg_limit",
   "displayName": "Atterberg Limits (ASTM D4318)",
-  "filePath": "atterberg-limit.xlsx",
+  "filePath": "atterberg_limit.xlsx",
   "format": "xlsx",
   "entryLayout": "column",
   "colsPerEntry": 1,

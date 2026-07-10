@@ -2,7 +2,7 @@
   "templateId": "free-swell",
   "name": "free_swell",
   "displayName": "Free Swell Test (ASTM D 4546 Method B)",
-  "filePath": "free_swell_test.xlsx",
+  "filePath": "free_swell.xlsx",
   "format": "xlsx",
   "maxEntries": 28,
   "standardFields": {

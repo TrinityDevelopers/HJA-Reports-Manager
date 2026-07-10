@@ -71,7 +71,7 @@ describe('printAreaFix integration', () => {
     process.cwd(),
     'data',
     'templates',
-    'unconfined-compression-soil.xlsx',
+    'unconfined_compression_soil.xlsx',
   );
   let tempDir: string;
   let outputPath: string;

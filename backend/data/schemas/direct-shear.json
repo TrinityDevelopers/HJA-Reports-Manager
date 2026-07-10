@@ -1,0 +1,277 @@
+{
+  "name": "direct-shear",
+  "displayName": "Direct Shear",
+  "fullName": "Direct Shear Test (ASTM D 3080)",
+  "abbreviation": "DS",
+  "description": "Direct shear test data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Sample",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleDate",
+          "label": "Sample Date",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Equipment",
+      "fields": [
+        {
+          "id": "shearLoadCellNumber",
+          "label": "Shear Load Cell No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "normalLoadCellNumber",
+          "label": "Normal Load Cell No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "consolLvdtNumber",
+          "label": "Consol. LVDT No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Stages",
+      "fields": [
+        {
+          "id": "preparedBy",
+          "label": "Prepared By",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "preparedByDate",
+          "label": "Date",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "heightH1",
+          "label": "Height h1 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightH2",
+          "label": "Height h2 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightH3",
+          "label": "Height h3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightH4",
+          "label": "Height h4 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightAvg",
+          "label": "Height avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD1",
+          "label": "Diameter d1 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD2",
+          "label": "Diameter d2 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD3",
+          "label": "Diameter d3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterAvg",
+          "label": "Diameter avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "trimmingRingNumber",
+          "label": "Trimming Ring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "weightOfTrimmingRing",
+          "label": "Weight of Trimming Ring (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfTrimmingRingSample",
+          "label": "Weight of Trimming Ring + Sample (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfSample",
+          "label": "Weight of Sample (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightTareBefore",
+          "label": "Wet Weight + Tare (Before) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightTareAfter",
+          "label": "Wet Weight + Tare (After) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTareBefore",
+          "label": "Dry Weight + Tare (Before) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTareAfter",
+          "label": "Dry Weight + Tare (After) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tarePanNumberBefore",
+          "label": "Tare Pan No. (Before)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "tarePanNumberAfter",
+          "label": "Tare Pan No. (After)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "tareWeightBefore",
+          "label": "Tare Weight (Before) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tareWeightAfter",
+          "label": "Tare Weight (After) (gm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "normalLoadLbs",
+          "label": "Normal Load (lbs)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "normalLoadPsf",
+          "label": "Normal Load (psf)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dataFile",
+          "label": "Data File",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "consolidationInitialReading",
+          "label": "Consolidation Initial Reading",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "consolidationFinalReading",
+          "label": "Consolidation Final Reading",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "caliperNumber",
+          "label": "Caliper No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "machineNumber",
+          "label": "Machine No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
