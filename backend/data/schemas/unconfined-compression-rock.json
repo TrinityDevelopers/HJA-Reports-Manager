@@ -1,7 +1,7 @@
 {
   "name": "unconfined-compression-rock",
   "displayName": "Unconfined Compression (Rock)",
-  "fullName": "Unconfined Compression Test on Rock (ASTM D 7012)",
+  "fullName": "Unconfined Compression Test on Rock (ASTM D 7012) (Peak Only)",
   "abbreviation": "Qu(Rock)",
   "description": "Unconfined compression test on rock data sheet",
   "version": "1.0.0",

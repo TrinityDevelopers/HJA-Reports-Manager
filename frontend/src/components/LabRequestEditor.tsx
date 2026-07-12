@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type {
   ID,
@@ -294,6 +294,32 @@ export default function LabRequestEditor({
 const actionButtonClass =
   'flex items-center gap-1 text-sm whitespace-nowrap px-2 py-1 -mx-2 -my-1 rounded-lg transition-all hover:bg-primary-lighter';
 
+function SampleInsertGap({
+  index,
+  onInsert,
+}: {
+  index: number;
+  onInsert: (index: number) => void;
+}) {
+  return (
+    <tr className="group/insert h-0">
+      <td colSpan={5} className="relative p-0! h-0 border-0">
+        {/* Tall hover hit area centered on the row divider / edge. */}
+        <div className="absolute inset-x-0 -top-3 z-10 h-6">
+          <button
+            type="button"
+            onClick={() => onInsert(index)}
+            className="absolute left-0 top-1/2 flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow transition-opacity group-hover/insert:opacity-100 focus-visible:opacity-100"
+            aria-label={`insert-sample-at-${index}`}
+          >
+            <Plus size={12} strokeWidth={3} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function BoringEditor({
   boring,
   templates,
@@ -312,20 +338,20 @@ function BoringEditor({
     });
   };
 
-  const addSample = () => {
-    const index = boring.samples.length + 1;
+  const insertSampleAt = (index: number) => {
+    const renumbered = boring.samples.map((s, i) =>
+      i >= index ? { ...s, label: `${boring.samplePrefix}${i + 2}` } : s,
+    );
+    const newSample: LabRequestSample = {
+      id: crypto.randomUUID(),
+      label: `${boring.samplePrefix}${index + 1}`,
+      depthFrom: null,
+      depthTo: null,
+      testTemplateIds: [],
+    };
     onChange({
       ...boring,
-      samples: [
-        ...boring.samples,
-        {
-          id: crypto.randomUUID(),
-          label: `${boring.samplePrefix}${index}`,
-          depthFrom: null,
-          depthTo: null,
-          testTemplateIds: [],
-        },
-      ],
+      samples: [...renumbered.slice(0, index), newSample, ...renumbered.slice(index)],
     });
   };
 
@@ -390,7 +416,7 @@ function BoringEditor({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div>
         <table className="w-full text-sm">
           <thead className="bg-primary-light">
             <tr>
@@ -404,66 +430,67 @@ function BoringEditor({
               <th className="table-head w-px">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {boring.samples.map((sample) => (
-              <tr key={sample.id} className="table-row-hover">
-                <td className="table-cell">
-                  <input
-                    type="text"
-                    value={sample.label}
-                    onChange={(e) =>
-                      updateSample(sample.id, (s) => ({ ...s, label: e.target.value }))
-                    }
-                    className="input py-1 w-20"
-                  />
-                </td>
-                <td className="table-cell">
-                  <DepthInput
-                    value={sample.depthFrom}
-                    onChange={(next) => updateSample(sample.id, (s) => ({ ...s, depthFrom: next }))}
-                  />
-                </td>
-                <td className="table-cell">
-                  <DepthInput
-                    value={sample.depthTo}
-                    onChange={(next) => updateSample(sample.id, (s) => ({ ...s, depthTo: next }))}
-                  />
-                </td>
-                <td className="table-cell">
-                  {sample.testTemplateIds.length === 0
-                    ? '-'
-                    : sample.testTemplateIds
-                        .map((id) => templateAbbreviation(templates, id))
-                        .join(', ')}
-                </td>
-                <td className="table-cell">
-                  <div className="flex items-center gap-3 justify-end">
-                    <button
-                      onClick={() => setModalTarget(sample.id)}
-                      className={`text-primary ${actionButtonClass}`}
-                      aria-label={`add-tests-${sample.id}`}
-                    >
-                      <Plus size={16} /> Add Tests
-                    </button>
-                    <button
-                      onClick={() => removeSample(sample.id)}
-                      className={`text-red-600 ${actionButtonClass}`}
-                      aria-label={`delete-sample-${sample.id}`}
-                    >
-                      <Trash2 size={16} /> Remove Sample
-                    </button>
-                  </div>
-                </td>
-              </tr>
+          <tbody>
+            <SampleInsertGap index={0} onInsert={insertSampleAt} />
+            {boring.samples.map((sample, index) => (
+              <Fragment key={sample.id}>
+                <tr className="table-row-hover border-b border-gray-200">
+                  <td className="table-cell">
+                    <input
+                      type="text"
+                      value={sample.label}
+                      onChange={(e) =>
+                        updateSample(sample.id, (s) => ({ ...s, label: e.target.value }))
+                      }
+                      className="input py-1 w-20"
+                    />
+                  </td>
+                  <td className="table-cell">
+                    <DepthInput
+                      value={sample.depthFrom}
+                      onChange={(next) =>
+                        updateSample(sample.id, (s) => ({ ...s, depthFrom: next }))
+                      }
+                    />
+                  </td>
+                  <td className="table-cell">
+                    <DepthInput
+                      value={sample.depthTo}
+                      onChange={(next) => updateSample(sample.id, (s) => ({ ...s, depthTo: next }))}
+                    />
+                  </td>
+                  <td className="table-cell">
+                    {sample.testTemplateIds.length === 0
+                      ? '-'
+                      : sample.testTemplateIds
+                          .map((id) => templateAbbreviation(templates, id))
+                          .join(', ')}
+                  </td>
+                  <td className="table-cell">
+                    <div className="flex items-center gap-3 justify-end">
+                      <button
+                        onClick={() => setModalTarget(sample.id)}
+                        className={`text-primary ${actionButtonClass}`}
+                        aria-label={`add-tests-${sample.id}`}
+                      >
+                        <Plus size={16} /> Add Tests
+                      </button>
+                      <button
+                        onClick={() => removeSample(sample.id)}
+                        className={`text-red-600 ${actionButtonClass}`}
+                        aria-label={`delete-sample-${sample.id}`}
+                      >
+                        <Trash2 size={16} /> Remove Sample
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <SampleInsertGap index={index + 1} onInsert={insertSampleAt} />
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
-
-      <button onClick={addSample} className="button-secondary border-primary text-primary mt-4">
-        <Plus size={16} className="inline mr-1" />
-        Add Sample
-      </button>
 
       {modalTarget !== null && (
         <TestSelectorModal

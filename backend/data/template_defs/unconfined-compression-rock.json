@@ -1,7 +1,7 @@
 {
   "templateId": "unconfined-compression-rock",
   "name": "unconfined_compression_rock",
-  "displayName": "Unconfined Compression Test on Rock (ASTM D 7012)",
+  "displayName": "Unconfined Compression Test on Rock (ASTM D 7012) (Peak Only)",
   "filePath": "unconfined_compression_rock.xlsx",
   "format": "xlsx",
   "maxEntries": 3,
