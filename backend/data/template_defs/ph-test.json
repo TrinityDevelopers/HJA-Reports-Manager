@@ -1,0 +1,29 @@
+{
+  "templateId": "ph-test",
+  "name": "ph_test",
+  "displayName": "pH Test (ASTM D 4972 Method A)",
+  "filePath": "ph_test.xlsx",
+  "format": "xlsx",
+  "maxEntries": 10,
+  "rowsPerEntry": 3,
+  "standardFields": {
+    "projectName": "B7",
+    "projectNumber": "F7",
+    "dateOfTest": "H7"
+  },
+  "fieldMapping": {
+    "header_phMeter": "B8",
+    "header_testedBy[name]": "C43",
+    "header_testedBy[date]": "F43",
+    "header_checkedBy[name]": "C45",
+    "header_checkedBy[date]": "F45",
+    "entry_boringNumber_row": "A12-41",
+    "entry_depth_row": "B12-41",
+    "entry_materialDescription_row": "C12-41",
+    "entry_jarNumber_row": "E12-41",
+    "entry_temperatureH2O_row": "G12-41",
+    "entry_phH2O_row": "I12-41",
+    "entry_temperatureCaCl_row": "G13-42",
+    "entry_phCaCl_row": "I13-42"
+  }
+}

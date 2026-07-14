@@ -1,0 +1,102 @@
+{
+  "name": "ph-test",
+  "displayName": "pH Test",
+  "fullName": "pH Test (ASTM D 4972 Method A)",
+  "abbreviation": "pH",
+  "description": "pH test data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "phMeter",
+          "label": "pH Meter",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Entries",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth (ft)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "jarNumber",
+          "label": "Jar Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "temperatureH2O",
+          "label": "Temperature H2O (°C)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "phH2O",
+          "label": "pH H2O",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "temperatureCaCl",
+          "label": "Temperature CaCl (°C)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "phCaCl",
+          "label": "pH CaCl",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
