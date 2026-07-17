@@ -1,0 +1,40 @@
+{
+  "templateId": "ph-lime-series",
+  "name": "ph_lime_series",
+  "displayName": "pH Lime Series (ASTM D 6276)",
+  "filePath": "ph_lime_series.xlsx",
+  "format": "xlsx",
+  "maxEntries": 11,
+  "rowsPerEntry": 1,
+  "standardFields": {
+    "projectName": "F7",
+    "projectNumber": "N7",
+    "dateOfTest": "R7"
+  },
+  "fieldMapping": {
+    "header_boringNumber": "F10",
+    "header_depth": "J10",
+    "header_sampleNumber": "N10",
+    "header_testNumber": "S10",
+    "header_materialDescription": "J11",
+    "header_manufactureDateOfLime": "J12",
+    "header_distilledJarNumber": "M34",
+    "header_distilledPh": "O34",
+    "header_distilledTestTemperature": "Q34",
+    "header_rawPassing200": "I37",
+    "header_rawLiquidLimit": "L37",
+    "header_rawPlasticityLimit": "R37",
+    "header_withLimePercentAdded": "I38",
+    "header_withLimeLiquidLimit": "L38",
+    "header_withLimePlasticityLimit": "R38",
+    "header_testedBy[name]": "H40",
+    "header_testedBy[date]": "L40",
+    "header_dryWeightsBy[name]": "H41",
+    "header_dryWeightsBy[date]": "L41",
+    "header_checkedBy[name]": "H42",
+    "header_checkedBy[date]": "L42",
+    "entry_jarNumber_row": "M22-32",
+    "entry_ph_row": "O22-32",
+    "entry_testTemperature_row": "Q22-32"
+  }
+}

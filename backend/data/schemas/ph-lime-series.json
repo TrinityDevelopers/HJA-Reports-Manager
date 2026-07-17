@@ -1,0 +1,175 @@
+{
+  "name": "ph-lime-series",
+  "displayName": "pH Lime Series",
+  "fullName": "pH Lime Series (ASTM D 6276)",
+  "abbreviation": "pH-LS",
+  "description": "pH lime series data sheet for soil-lime proportion",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "testNumber",
+          "label": "Test No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "manufactureDateOfLime",
+          "label": "Manufacture Date of Lime",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "pH Test Results",
+      "fields": [
+        {
+          "id": "jarNumber",
+          "label": "Jar Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ph",
+          "label": "pH",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "testTemperature",
+          "label": "Test Temperature (°C)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Distilled Water with Lime",
+      "fields": [
+        {
+          "id": "distilledJarNumber",
+          "label": "Jar Number (Distilled Water + 2.00 gm Lime)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "distilledPh",
+          "label": "pH (Distilled Water + 2.00 gm Lime)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "distilledTestTemperature",
+          "label": "Test Temperature (°C) (Distilled Water + 2.00 gm Lime)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Atterberg Limits",
+      "fields": [
+        {
+          "id": "rawPassing200",
+          "label": "Raw -#200 Sieve",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "rawLiquidLimit",
+          "label": "Raw Liquid Limit",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "rawPlasticityLimit",
+          "label": "Raw Plasticity Limit",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "withLimePercentAdded",
+          "label": "With Lime % Added",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "withLimeLiquidLimit",
+          "label": "With Lime Liquid Limit",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "withLimePlasticityLimit",
+          "label": "With Lime Plasticity Limit",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "dryWeightsBy",
+          "label": "Dry Weights",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
