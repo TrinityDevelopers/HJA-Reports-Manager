@@ -1,0 +1,96 @@
+{
+  "name": "dry-unit-weights",
+  "displayName": "Dry Unit Weights",
+  "fullName": "Summary of Dry Unit Weights (ASTM D 7263)",
+  "abbreviation": "DUW",
+  "description": "Dry unit weight test data sheet",
+  "version": "1.0.0",
+  "labRequest": {
+    "mode": "per-boring",
+    "map": {
+      "boring": "boringNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "entry",
+      "title": "Entries",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth (ft.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleHeight",
+          "label": "Sample Height (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "sampleDiameter",
+          "label": "Sample Diameter (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightSample",
+          "label": "Wet Weight Sample",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "wetWeightTare",
+          "label": "Wet Weight + Tare",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dryWeightTare",
+          "label": "Dry Weight + Tare",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tareWeight",
+          "label": "Tare Weight",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "reducedBy",
+          "label": "Reduced By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
