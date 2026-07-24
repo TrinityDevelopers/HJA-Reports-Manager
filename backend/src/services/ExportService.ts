@@ -42,9 +42,16 @@ function readMaxEntries(def: Record<string, unknown>): number | undefined {
 
 const convertAsync = promisify(libre.convert);
 
+type CloudmersiveConvertDocumentApi = InstanceType<
+  typeof CloudmersiveConvertApiClient.ConvertDocumentApi
+>;
+
 export class ExportService {
   private exportTemplateRepository: Repository<ExportTemplate>;
   private templatesDir: string;
+  /** Lazily created once per service instance; recreating it counts against API quota. */
+  private cloudmersiveApi: CloudmersiveConvertDocumentApi | null = null;
+  private cloudmersiveApiKey: string | null = null;
 
   constructor() {
     try {
@@ -138,10 +145,20 @@ export class ExportService {
     return await this.convertViaLibreOffice(xlsxBuffer);
   }
 
-  private async convertViaCloudmersive(xlsxBuffer: Buffer, apiKey: string): Promise<Buffer> {
+  private getCloudmersiveApi(apiKey: string): CloudmersiveConvertDocumentApi {
+    if (this.cloudmersiveApi && this.cloudmersiveApiKey === apiKey) {
+      return this.cloudmersiveApi;
+    }
+
     const defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
     defaultClient.authentications['Apikey'].apiKey = apiKey;
-    const api = new CloudmersiveConvertApiClient.ConvertDocumentApi();
+    this.cloudmersiveApi = new CloudmersiveConvertApiClient.ConvertDocumentApi();
+    this.cloudmersiveApiKey = apiKey;
+    return this.cloudmersiveApi;
+  }
+
+  private async convertViaCloudmersive(xlsxBuffer: Buffer, apiKey: string): Promise<Buffer> {
+    const api = this.getCloudmersiveApi(apiKey);
 
     return await new Promise<Buffer>((resolve, reject) => {
       api.convertDocumentXlsxToPdf(xlsxBuffer, (error: Error | null, data: unknown) => {

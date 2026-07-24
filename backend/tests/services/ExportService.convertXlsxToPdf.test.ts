@@ -1,32 +1,35 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { convertMock, convertDocumentXlsxToPdfMock } = vi.hoisted(() => ({
-  convertMock: vi.fn(),
-  convertDocumentXlsxToPdfMock: vi.fn(),
-}));
+const { convertMock, convertDocumentXlsxToPdfMock, ConvertDocumentApiMock } = vi.hoisted(() => {
+  const convertDocumentXlsxToPdfMock = vi.fn();
+  const ConvertDocumentApiMock = vi.fn(function ConvertDocumentApi(this: {
+    convertDocumentXlsxToPdf: typeof convertDocumentXlsxToPdfMock;
+  }) {
+    this.convertDocumentXlsxToPdf = convertDocumentXlsxToPdfMock;
+  });
+  return {
+    convertMock: vi.fn(),
+    convertDocumentXlsxToPdfMock,
+    ConvertDocumentApiMock,
+  };
+});
 
 vi.mock('libreoffice-convert', () => ({
   convert: convertMock,
 }));
 
-vi.mock('cloudmersive-convert-api-client', () => {
-  class ConvertDocumentApi {
-    convertDocumentXlsxToPdf = convertDocumentXlsxToPdfMock;
-  }
-
-  return {
-    default: {
-      ApiClient: {
-        instance: {
-          authentications: {
-            Apikey: { apiKey: '' },
-          },
+vi.mock('cloudmersive-convert-api-client', () => ({
+  default: {
+    ApiClient: {
+      instance: {
+        authentications: {
+          Apikey: { apiKey: '' },
         },
       },
-      ConvertDocumentApi,
     },
-  };
-});
+    ConvertDocumentApi: ConvertDocumentApiMock,
+  },
+}));
 
 vi.mock('../../src/database/connection', () => ({
   AppDataSource: {
@@ -46,6 +49,7 @@ describe('ExportService.convertXlsxToPdf', () => {
   beforeEach(() => {
     convertMock.mockReset();
     convertDocumentXlsxToPdfMock.mockReset();
+    ConvertDocumentApiMock.mockClear();
     delete process.env.CLOUDMERSIVE_API_KEY;
     service = new ExportService();
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -66,6 +70,7 @@ describe('ExportService.convertXlsxToPdf', () => {
     expect(result).toEqual(pdfFromLibre);
     expect(convertMock).toHaveBeenCalledOnce();
     expect(convertDocumentXlsxToPdfMock).not.toHaveBeenCalled();
+    expect(ConvertDocumentApiMock).not.toHaveBeenCalled();
   });
 
   it('uses LibreOffice only when CLOUDMERSIVE_API_KEY is blank', async () => {
@@ -79,6 +84,7 @@ describe('ExportService.convertXlsxToPdf', () => {
     expect(result).toEqual(pdfFromLibre);
     expect(convertMock).toHaveBeenCalledOnce();
     expect(convertDocumentXlsxToPdfMock).not.toHaveBeenCalled();
+    expect(ConvertDocumentApiMock).not.toHaveBeenCalled();
   });
 
   it('uses Cloudmersive when the API key is set and the call succeeds', async () => {
@@ -90,9 +96,23 @@ describe('ExportService.convertXlsxToPdf', () => {
     const result = await service.convertXlsxToPdf(xlsxBuffer);
 
     expect(result).toEqual(pdfFromCloudmersive);
+    expect(ConvertDocumentApiMock).toHaveBeenCalledOnce();
     expect(convertDocumentXlsxToPdfMock).toHaveBeenCalledOnce();
     expect(convertDocumentXlsxToPdfMock).toHaveBeenCalledWith(xlsxBuffer, expect.any(Function));
     expect(convertMock).not.toHaveBeenCalled();
+  });
+
+  it('reuses the same Cloudmersive API instance across conversions', async () => {
+    process.env.CLOUDMERSIVE_API_KEY = 'test-api-key';
+    convertDocumentXlsxToPdfMock.mockImplementation((_buf, callback) => {
+      callback(null, pdfFromCloudmersive);
+    });
+
+    await service.convertXlsxToPdf(xlsxBuffer);
+    await service.convertXlsxToPdf(xlsxBuffer);
+
+    expect(ConvertDocumentApiMock).toHaveBeenCalledOnce();
+    expect(convertDocumentXlsxToPdfMock).toHaveBeenCalledTimes(2);
   });
 
   it('falls back to LibreOffice when Cloudmersive fails', async () => {
