@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import { promisify } from 'util';
 import ExcelJS from 'exceljs';
 import * as libre from 'libreoffice-convert';
+import CloudmersiveConvertApiClient from 'cloudmersive-convert-api-client';
 import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
@@ -106,11 +107,66 @@ export class ExportService {
   }
 
   /**
-   * Converts a filled XLSX buffer to a PDF buffer using a headless LibreOffice
-   * instance (via libreoffice-convert). LibreOffice must be installed on the
-   * host running the backend.
+   * Converts a filled XLSX buffer to a PDF buffer.
+   * Prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set; falls back to
+   * LibreOffice (via libreoffice-convert) if the key is missing or the API call fails.
    */
   async convertXlsxToPdf(xlsxBuffer: Buffer): Promise<Buffer> {
+    const apiKey = process.env.CLOUDMERSIVE_API_KEY?.trim();
+
+    if (apiKey) {
+      try {
+        return await this.convertViaCloudmersive(xlsxBuffer, apiKey);
+      } catch (error) {
+        console.warn(
+          `Cloudmersive PDF conversion failed; falling back to LibreOffice. (${
+            (error as Error).message
+          })`,
+        );
+        try {
+          return await this.convertViaLibreOffice(xlsxBuffer);
+        } catch (libreError) {
+          throw new Error(
+            `PDF conversion failed via Cloudmersive and LibreOffice. Cloudmersive: ${
+              (error as Error).message
+            }; LibreOffice: ${(libreError as Error).message}`,
+          );
+        }
+      }
+    }
+
+    return await this.convertViaLibreOffice(xlsxBuffer);
+  }
+
+  private async convertViaCloudmersive(xlsxBuffer: Buffer, apiKey: string): Promise<Buffer> {
+    const defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
+    defaultClient.authentications['Apikey'].apiKey = apiKey;
+    const api = new CloudmersiveConvertApiClient.ConvertDocumentApi();
+
+    return await new Promise<Buffer>((resolve, reject) => {
+      api.convertDocumentXlsxToPdf(xlsxBuffer, (error: Error | null, data: unknown) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (Buffer.isBuffer(data)) {
+          resolve(data);
+          return;
+        }
+        if (data instanceof Uint8Array) {
+          resolve(Buffer.from(data));
+          return;
+        }
+        if (typeof data === 'string') {
+          resolve(Buffer.from(data, 'binary'));
+          return;
+        }
+        reject(new Error('Cloudmersive returned empty or unrecognized PDF data'));
+      });
+    });
+  }
+
+  private async convertViaLibreOffice(xlsxBuffer: Buffer): Promise<Buffer> {
     try {
       return await convertAsync(xlsxBuffer, '.pdf', undefined);
     } catch (error) {

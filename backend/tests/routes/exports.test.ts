@@ -11,8 +11,8 @@ describe('Exports Routes', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    const module = await import('../../src/routes/exports');
-    exportsRouter = module.default;
+    const module = await import('../../src/routes/exports.js');
+    exportsRouter = module.default as unknown as Router;
 
     app = express();
     app.use(express.json());

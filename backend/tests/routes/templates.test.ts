@@ -11,8 +11,8 @@ describe('Templates Routes', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    const module = await import('../../src/routes/templates');
-    templatesRouter = module.default;
+    const module = await import('../../src/routes/templates.js');
+    templatesRouter = module.default as unknown as Router;
 
     app = express();
     app.use(express.json());

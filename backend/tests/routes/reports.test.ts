@@ -14,8 +14,8 @@ describe('Reports Routes', () => {
     vi.resetModules();
 
     // Import after reset to get fresh module
-    const module = await import('../../src/routes/reports');
-    reportsRouter = module.default;
+    const module = await import('../../src/routes/reports.js');
+    reportsRouter = module.default as unknown as Router;
 
     app = express();
     app.use(express.json());

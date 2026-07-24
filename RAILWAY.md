@@ -64,6 +64,8 @@ DB_PORT=${{MySQL.MYSQLPORT}}
 DB_USERNAME=${{MySQL.MYSQLUSER}}
 DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 DB_DATABASE=hja_reports
+# Optional: prefer Cloudmersive for XLSX→PDF (falls back to LibreOffice if unset or API fails)
+# CLOUDMERSIVE_API_KEY=your-key-here
 ```
 
 For PostgreSQL, set `DB_TYPE=postgres` and use the corresponding variable names from your database plugin.
@@ -145,9 +147,9 @@ See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-mon
 
 ### PDF export fails or formatting differs from Windows
 
-LibreOffice is installed in the backend Docker image for PDF generation. XLSX export does not require LibreOffice. The image includes Microsoft Core Fonts (`ttf-mscorefonts-installer`) so Arial renders correctly during PDF conversion.
+PDF export prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set on the backend service, and falls back to LibreOffice (installed in the backend Docker image) if the key is missing or the API call fails. XLSX export does not require either. The image includes Microsoft Core Fonts (`ttf-mscorefonts-installer`) so Arial renders correctly during LibreOffice PDF conversion.
 
-Check deploy logs for LibreOffice-related errors if PDF export fails. To verify fonts in a running container: `fc-list | grep -i arial`.
+Check deploy logs for Cloudmersive fallback warnings or LibreOffice-related errors if PDF export fails. To verify fonts in a running container: `fc-list | grep -i arial`.
 
 ## Local parity
 
