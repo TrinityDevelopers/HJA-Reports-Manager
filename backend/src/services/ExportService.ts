@@ -99,6 +99,12 @@ export class ExportService {
     const templatesDir = options.templatesDir ?? this.templatesDir;
     const templatePath = path.join(templatesDir, exportTemplate.filePath);
 
+    try {
+      await fs.access(templatePath);
+    } catch {
+      throw new Error(`Export template file not found: ${templatePath}`);
+    }
+
     // Load template workbook
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(templatePath);

@@ -203,6 +203,7 @@ router.get('/report/:reportId/export', async (req: Request, res: Response) => {
     const xlsxPath = await fillReportXlsx(report, exportTemplate);
     await sendExportDownload(res, xlsxPath, reportExportBaseName(report), format);
   } catch (error) {
+    console.error('Failed to export report:', error);
     res.status(500).json({ error: (error as Error).message });
   }
 });
@@ -219,6 +220,7 @@ router.get('/lab-request/:labRequestId/export', async (req: Request, res: Respon
     const xlsxPath = await fillLabRequestSummaryXlsx(labRequest);
     await sendExportDownload(res, xlsxPath, labRequestSummaryBaseName(labRequest), format);
   } catch (error) {
+    console.error('Failed to export lab request summary:', error);
     res.status(500).json({ error: (error as Error).message });
   }
 });
@@ -260,6 +262,7 @@ router.get('/lab-request/:labRequestId/export-all', async (req: Request, res: Re
     const merged = await mergePdfBuffers(pdfBuffers);
     await sendPdfBuffer(res, merged, labRequestMergedBaseName(labRequest));
   } catch (error) {
+    console.error('Failed to export merged lab request PDF:', error);
     await Promise.allSettled(tempFiles.map((filePath) => unlinkQuiet(filePath)));
     if (!res.headersSent) {
       res.status(500).json({ error: (error as Error).message });

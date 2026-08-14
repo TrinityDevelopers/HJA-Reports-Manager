@@ -9,3 +9,4 @@ coverage/
 tests/output/
 *.xlsx
 !data/templates/*.xlsx
+!data/lab_request/*.xlsx

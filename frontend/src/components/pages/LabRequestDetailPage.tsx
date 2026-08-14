@@ -86,7 +86,9 @@ export function LabRequestDetailPage({
       );
     } catch (error) {
       console.error('Failed to export lab request summary:', error);
-      alert('Failed to export lab request summary');
+      alert(
+        `Failed to export lab request summary${error instanceof Error ? `: ${error.message}` : ''}`,
+      );
     } finally {
       setExporting(false);
     }
@@ -119,7 +121,7 @@ export function LabRequestDetailPage({
       }
     } catch (error) {
       console.error('Failed to export reports:', error);
-      alert('Failed to export reports');
+      alert(`Failed to export reports${error instanceof Error ? `: ${error.message}` : ''}`);
     } finally {
       setExporting(false);
     }
@@ -137,7 +139,7 @@ export function LabRequestDetailPage({
       );
     } catch (error) {
       console.error('Failed to export merged PDF:', error);
-      alert('Failed to export merged PDF');
+      alert(`Failed to export merged PDF${error instanceof Error ? `: ${error.message}` : ''}`);
     } finally {
       setExporting(false);
     }

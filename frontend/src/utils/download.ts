@@ -2,7 +2,12 @@
 export async function downloadFromUrl(url: string, filename: string): Promise<void> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Export failed (${response.status})`);
+    const payload = await response.json().catch(() => null);
+    const detail =
+      payload && typeof payload === 'object' && 'error' in payload
+        ? String((payload as { error?: unknown }).error ?? '')
+        : '';
+    throw new Error(detail || `Export failed (${response.status})`);
   }
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
