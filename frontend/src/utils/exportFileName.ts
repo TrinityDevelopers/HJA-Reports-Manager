@@ -49,6 +49,13 @@ export function labRequestSummaryBaseName(
   return `${labRequestBaseName(labRequest)}-summary`;
 }
 
+/** Download base name (no extension) for a merged lab-request PDF packet. */
+export function labRequestMergedBaseName(
+  labRequest: LabRequestNameSource | null | undefined,
+): string {
+  return `${labRequestBaseName(labRequest)}-all`;
+}
+
 function labRequestRule(schema: Record<string, unknown> | null | undefined): LabRequestRule | null {
   if (!schema || typeof schema !== 'object') return null;
   const rule = schema.labRequest;

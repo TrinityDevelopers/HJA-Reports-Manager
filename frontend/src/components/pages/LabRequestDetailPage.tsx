@@ -7,7 +7,11 @@ import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
 import { templateAbbreviation } from '../../utils/templates';
 import { downloadFromUrl } from '../../utils/download';
-import { labRequestSummaryBaseName, reportExportBaseName } from '../../utils/exportFileName';
+import {
+  labRequestMergedBaseName,
+  labRequestSummaryBaseName,
+  reportExportBaseName,
+} from '../../utils/exportFileName';
 
 export function LabRequestDetailPage({
   labRequest,
@@ -116,6 +120,24 @@ export function LabRequestDetailPage({
     } catch (error) {
       console.error('Failed to export reports:', error);
       alert('Failed to export reports');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportAllMerged = async () => {
+    setExporting(true);
+    try {
+      await downloadFromUrl(
+        apiClient.exports.downloadLabRequestAllMerged(labRequest.id),
+        `${labRequestMergedBaseName({
+          name: labRequest.name,
+          project: labRequest.project ?? project,
+        })}.pdf`,
+      );
+    } catch (error) {
+      console.error('Failed to export merged PDF:', error);
+      alert('Failed to export merged PDF');
     } finally {
       setExporting(false);
     }
@@ -243,7 +265,18 @@ export function LabRequestDetailPage({
               onExport={handleExportSummary}
             />
             {reports.length > 0 && (
-              <ExportSplitButton label="Export All" busy={exporting} onExport={handleExportAll} />
+              <ExportSplitButton
+                label="Export All"
+                busy={exporting}
+                onExport={handleExportAll}
+                pdfMenuLabel="Export All as PDF (Individual)"
+                extraMenuItems={[
+                  {
+                    label: 'Export All as PDF (Merged)',
+                    onSelect: handleExportAllMerged,
+                  },
+                ]}
+              />
             )}
           </div>
         </div>

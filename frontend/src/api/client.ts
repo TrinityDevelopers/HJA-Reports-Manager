@@ -70,6 +70,8 @@ export const apiClient = {
       `${API_BASE_URL}/export/report/${reportId}/export?format=${format}`,
     downloadLabRequest: (labRequestId: string, format: 'xlsx' | 'pdf' = 'xlsx') =>
       `${API_BASE_URL}/export/lab-request/${labRequestId}/export?format=${format}`,
+    downloadLabRequestAllMerged: (labRequestId: string) =>
+      `${API_BASE_URL}/export/lab-request/${labRequestId}/export-all?format=pdf`,
   },
 
   // Settings

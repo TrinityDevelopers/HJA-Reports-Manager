@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { labRequestSummaryBaseName, reportExportBaseName } from '../../src/exports/exportFileName';
+import {
+  labRequestMergedBaseName,
+  labRequestSummaryBaseName,
+  reportExportBaseName,
+} from '../../src/exports/exportFileName';
 
 const LAB_REQUEST_NAME = '12345G Lab Request';
 
@@ -44,6 +48,28 @@ describe('labRequestSummaryBaseName', () => {
   it('strips characters illegal in Windows filenames', () => {
     expect(labRequestSummaryBaseName({ name: '12345G: Lab Request?' })).toBe(
       '12345G Lab Request-summary',
+    );
+  });
+});
+
+describe('labRequestMergedBaseName', () => {
+  it('appends -all to the lab request name', () => {
+    expect(labRequestMergedBaseName({ name: LAB_REQUEST_NAME })).toBe('12345G Lab Request-all');
+  });
+
+  it('falls back to the project name when the lab request has no name', () => {
+    expect(labRequestMergedBaseName({ name: '  ', project: { projectName: 'Site A' } })).toBe(
+      'Site A-all',
+    );
+  });
+
+  it('falls back to Lab Request when name and project are missing', () => {
+    expect(labRequestMergedBaseName({})).toBe('Lab Request-all');
+  });
+
+  it('strips characters illegal in Windows filenames', () => {
+    expect(labRequestMergedBaseName({ name: '12345G: Lab Request?' })).toBe(
+      '12345G Lab Request-all',
     );
   });
 });

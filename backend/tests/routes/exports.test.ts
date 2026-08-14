@@ -2,8 +2,20 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import request from 'supertest';
 import express, { Express, Router } from 'express';
 
+const { labRequestFindById, labRequestFindReports } = vi.hoisted(() => ({
+  labRequestFindById: vi.fn(),
+  labRequestFindReports: vi.fn(),
+}));
+
 // Mock database connection
 vi.mock('../../src/database/connection');
+
+vi.mock('../../src/services/LabRequestService', () => ({
+  LabRequestService: class LabRequestService {
+    findById = labRequestFindById;
+    findReports = labRequestFindReports;
+  },
+}));
 
 describe('Exports Routes', () => {
   let app: Express;
@@ -11,6 +23,11 @@ describe('Exports Routes', () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    labRequestFindById.mockReset();
+    labRequestFindReports.mockReset();
+    labRequestFindById.mockResolvedValue(null);
+    labRequestFindReports.mockResolvedValue([]);
+
     const module = await import('../../src/routes/exports.js');
     exportsRouter = module.default as unknown as Router;
 
@@ -60,6 +77,32 @@ describe('Exports Routes', () => {
     it('should handle invalid template file requests', async () => {
       const response = await request(app).get('/exports/template-file/invalid');
       expect([404, 500]).toContain(response.status);
+    });
+
+    it('should respond to GET /lab-request/:labRequestId/export-all', async () => {
+      const response = await request(app).get('/exports/lab-request/test-id/export-all');
+      expect([200, 400, 404, 500]).toContain(response.status);
+    });
+  });
+
+  describe('GET /lab-request/:labRequestId/export-all', () => {
+    it('returns 404 when the lab request does not exist', async () => {
+      labRequestFindById.mockResolvedValue(null);
+
+      const response = await request(app).get('/exports/lab-request/missing/export-all');
+
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({ error: 'Lab request not found' });
+    });
+
+    it('returns 400 when the lab request has no generated reports', async () => {
+      labRequestFindById.mockResolvedValue({ id: 'test-id', name: 'Test Lab Request' });
+      labRequestFindReports.mockResolvedValue([]);
+
+      const response = await request(app).get('/exports/lab-request/test-id/export-all');
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'Lab request has no generated reports' });
     });
   });
 

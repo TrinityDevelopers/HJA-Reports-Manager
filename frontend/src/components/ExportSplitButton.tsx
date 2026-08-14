@@ -3,6 +3,11 @@ import { ChevronDown, FileDown } from 'lucide-react';
 
 export type ExportFormat = 'xlsx' | 'pdf';
 
+export type ExportExtraMenuItem = {
+  label: string;
+  onSelect: () => void;
+};
+
 /**
  * Split button for exporting a report. The primary action downloads XLSX
  * (the default), and the caret opens a dropdown to pick a format explicitly
@@ -13,11 +18,15 @@ export function ExportSplitButton({
   busy = false,
   disabled = false,
   onExport,
+  pdfMenuLabel = 'Export as PDF',
+  extraMenuItems = [],
 }: {
   label?: string;
   busy?: boolean;
   disabled?: boolean;
   onExport: (format: ExportFormat) => void;
+  pdfMenuLabel?: string;
+  extraMenuItems?: ExportExtraMenuItem[];
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +43,7 @@ export function ExportSplitButton({
   }, [open]);
 
   const isDisabled = disabled || busy;
+  const wideMenu = extraMenuItems.length > 0 || pdfMenuLabel !== 'Export as PDF';
 
   const handleSelect = (format: ExportFormat) => {
     setOpen(false);
@@ -71,7 +81,9 @@ export function ExportSplitButton({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1 z-10 w-44 rounded border border-gray-200 bg-white shadow-lg overflow-hidden"
+          className={`absolute right-0 top-full mt-1 z-10 rounded border border-gray-200 bg-white shadow-lg overflow-hidden ${
+            wideMenu ? 'min-w-56 w-max' : 'w-44'
+          }`}
         >
           <button
             type="button"
@@ -89,8 +101,23 @@ export function ExportSplitButton({
             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
           >
             <FileDown size={16} />
-            Export as PDF
+            {pdfMenuLabel}
           </button>
+          {extraMenuItems.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                item.onSelect();
+              }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+            >
+              <FileDown size={16} />
+              {item.label}
+            </button>
+          ))}
         </div>
       )}
     </div>
