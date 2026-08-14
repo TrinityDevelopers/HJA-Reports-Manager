@@ -44,6 +44,14 @@ export class ExportTemplate {
   @Column({ type: 'varchar', nullable: true })
   entryLayout?: 'row' | 'column';
 
+  @Column({ type: 'json', nullable: true })
+  dynamicEntryRows?: {
+    enabled?: boolean;
+    topRow: number;
+    middleRow: number;
+    bottomRow: number;
+  } | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

@@ -39,9 +39,18 @@ export class LabRequestService {
 
   async create(data: Partial<LabRequest>): Promise<LabRequest> {
     const createData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['projectId', 'name', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
+      allowed: [
+        'projectId',
+        'name',
+        'requestedBy',
+        'technician',
+        'dateOfTest',
+        'dateDue',
+        'borings',
+      ],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value),
+        dateDue: (value) => coerceDateOnly(value) ?? null,
       },
     });
     const labRequest = this.labRequestRepository.create(
@@ -72,9 +81,18 @@ export class LabRequestService {
 
   async update(id: string, data: Partial<LabRequest>): Promise<LabRequest | null> {
     const updateData = pickAndCoerce<Record<string, unknown>>(data as Record<string, unknown>, {
-      allowed: ['projectId', 'name', 'requestedBy', 'technician', 'dateOfTest', 'borings'],
+      allowed: [
+        'projectId',
+        'name',
+        'requestedBy',
+        'technician',
+        'dateOfTest',
+        'dateDue',
+        'borings',
+      ],
       coerce: {
         dateOfTest: (value) => coerceDateOnly(value),
+        dateDue: (value) => coerceDateOnly(value) ?? null,
       },
     });
     if (Object.keys(updateData).length > 0) {

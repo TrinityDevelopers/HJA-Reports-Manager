@@ -1,0 +1,30 @@
+{
+  "kind": "lab-request-summary",
+  "templateId": "lab-request-summary",
+  "name": "lab_request_summary",
+  "displayName": "Lab Request Summary",
+  "filePath": "lab_request_summary.xlsx",
+  "format": "xlsx",
+  "maxEntries": 3,
+  "rowsPerEntry": 1,
+  "dynamicEntryRows": {
+    "enabled": true,
+    "topRow": 11,
+    "middleRow": 12,
+    "bottomRow": 13
+  },
+  "standardFields": {
+    "projectName": "B6",
+    "projectNumber": "B8",
+    "dateOfTest": "D8"
+  },
+  "fieldMapping": {
+    "header_requestedBy": "G6",
+    "header_technician": "F7",
+    "header_dateDue": "F8",
+    "entry_boringNumber_row": "A11-13",
+    "entry_sampleNumber_row": "B11-13",
+    "entry_depth_row": "C11-13",
+    "entry_testsAndFeatures_row": "D11-13"
+  }
+}

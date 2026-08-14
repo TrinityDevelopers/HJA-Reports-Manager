@@ -1,0 +1,64 @@
+{
+  "kind": "lab-request-summary",
+  "name": "lab-request-summary",
+  "displayName": "Lab Request Summary",
+  "fullName": "Request for Laboratory Test",
+  "description": "Summary of a lab request: project header and boring, sample, and test list",
+  "version": "1.0.0",
+  "sections": [
+    {
+      "type": "header",
+      "title": "Lab Request",
+      "fields": [
+        {
+          "id": "requestedBy",
+          "label": "Requested By",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "technician",
+          "label": "Technician",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "dateDue",
+          "label": "Date Due",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Samples",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth (ft.)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "testsAndFeatures",
+          "label": "Test and Features",
+          "type": "text",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

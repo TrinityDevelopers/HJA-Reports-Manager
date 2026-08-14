@@ -20,6 +20,7 @@ import {
 } from '../../utils/reportEntryMapping';
 import type { NormalizedEntrySection } from '../../utils/formHelpers';
 import { FieldInput } from '../forms/FieldInput';
+import { reportExportBaseName } from '../../utils/exportFileName';
 
 export function ReportDetailPage({
   report,
@@ -251,7 +252,11 @@ export function ReportDetailPage({
       const downloadUrl = apiClient.exports.downloadReport(report.id, format);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `report-${report.template?.name || 'export'}.${format}`;
+      link.download = `${reportExportBaseName({
+        ...report,
+        template: report.template ?? template,
+        project: report.project ?? project,
+      })}.${format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

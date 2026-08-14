@@ -307,9 +307,13 @@ export async function fixLibreOfficeExportInXlsx(
   options: {
     sheetPrintSetup: SheetPrintSetup[];
     templatePath: string;
+    restoreTemplateWorksheetXml?: boolean;
   },
 ): Promise<void> {
   await fixPrintAreasInXlsx(xlsxPath, options.sheetPrintSetup);
+  if (options.restoreTemplateWorksheetXml === false) {
+    return;
+  }
   await restoreWorksheetXmlFromTemplate(xlsxPath, options.templatePath);
 }
 

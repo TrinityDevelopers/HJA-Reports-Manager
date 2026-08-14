@@ -6,6 +6,8 @@ import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
 import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
 import { templateAbbreviation } from '../../utils/templates';
+import { downloadFromUrl } from '../../utils/download';
+import { labRequestSummaryBaseName, reportExportBaseName } from '../../utils/exportFileName';
 
 export function LabRequestDetailPage({
   labRequest,
@@ -68,31 +70,47 @@ export function LabRequestDetailPage({
     }
   };
 
+  const summaryFileName = (format: ExportFormat) =>
+    `${labRequestSummaryBaseName({ name: labRequest.name, project: labRequest.project ?? project })}.${format}`;
+
+  const handleExportSummary = async (format: ExportFormat) => {
+    setExporting(true);
+    try {
+      await downloadFromUrl(
+        apiClient.exports.downloadLabRequest(labRequest.id, format),
+        summaryFileName(format),
+      );
+    } catch (error) {
+      console.error('Failed to export lab request summary:', error);
+      alert('Failed to export lab request summary');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleExportAll = async (format: ExportFormat) => {
     setExporting(true);
     try {
-      // Download each report sequentially: fetch the file as a blob and wait
-      // for the conversion to finish before requesting the next one. This keeps
-      // only one request in flight at a time, which matters for PDF since the
-      // LibreOffice conversion is slow and the browser blocks multiple
-      // simultaneous automatic downloads.
+      // Download each file sequentially: fetch as a blob and wait for conversion
+      // to finish before requesting the next one. This keeps only one request in
+      // flight at a time, which matters for PDF since LibreOffice conversion is
+      // slow and the browser blocks multiple simultaneous automatic downloads.
+      await downloadFromUrl(
+        apiClient.exports.downloadLabRequest(labRequest.id, format),
+        summaryFileName(format),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       for (const report of reports) {
-        const downloadUrl = apiClient.exports.downloadReport(report.id, format);
-        const response = await fetch(downloadUrl);
-        if (!response.ok) {
-          throw new Error(`Export failed (${response.status})`);
-        }
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const name = report.template?.name || report.template?.displayName || 'export';
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.download = `report-${name}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(objectUrl);
-        // Brief pause so the browser finalizes each download before the next.
+        const baseName = reportExportBaseName({
+          ...report,
+          labRequest: report.labRequest ?? labRequest,
+          project: report.project ?? project,
+        });
+        await downloadFromUrl(
+          apiClient.exports.downloadReport(report.id, format),
+          `${baseName}.${format}`,
+        );
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
     } catch (error) {
@@ -104,6 +122,7 @@ export function LabRequestDetailPage({
   };
 
   const date = parseDateLike(labRequest.dateOfTest);
+  const dateDue = parseDateLike(labRequest.dateDue);
   const borings = labRequest.borings ?? [];
 
   return (
@@ -155,6 +174,12 @@ export function LabRequestDetailPage({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date of Test</label>
             <p className="text-gray-800 font-semibold">{date ? date.toLocaleDateString() : '-'}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Due</label>
+            <p className="text-gray-800 font-semibold">
+              {dateDue ? dateDue.toLocaleDateString() : '-'}
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Borings</label>
@@ -211,9 +236,16 @@ export function LabRequestDetailPage({
           <h3 className="text-xl font-semibold text-gray-800">
             Generated Reports {reports.length > 0 ? `(${reports.length})` : ''}
           </h3>
-          {reports.length > 0 && (
-            <ExportSplitButton label="Export All" busy={exporting} onExport={handleExportAll} />
-          )}
+          <div className="flex gap-2">
+            <ExportSplitButton
+              label="Export Summary"
+              busy={exporting}
+              onExport={handleExportSummary}
+            />
+            {reports.length > 0 && (
+              <ExportSplitButton label="Export All" busy={exporting} onExport={handleExportAll} />
+            )}
+          </div>
         </div>
         {loading ? (
           <p className="text-gray-500">Loading...</p>

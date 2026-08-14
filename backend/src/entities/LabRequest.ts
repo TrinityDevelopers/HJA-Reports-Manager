@@ -56,6 +56,9 @@ export class LabRequest {
   @Column({ type: 'date', nullable: true })
   dateOfTest?: string;
 
+  @Column({ type: 'date', nullable: true })
+  dateDue?: string | null;
+
   @Column({ type: 'json', nullable: true })
   borings?: LabRequestBoring[];
 

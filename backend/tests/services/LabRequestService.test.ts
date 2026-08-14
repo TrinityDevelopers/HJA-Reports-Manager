@@ -391,3 +391,66 @@ describe('LabRequestService.generate', () => {
     expect(savedReports[1].headerData).toEqual({ sampleNumber: 'S-2' });
   });
 });
+
+describe('LabRequestService create/update dateDue', () => {
+  it('persists dateDue on create and coerces it to YYYY-MM-DD', async () => {
+    const saved: Array<Record<string, unknown>> = [];
+
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return {
+          create: vi.fn((data) => data),
+          save: vi.fn(async (row) => {
+            saved.push(row);
+            return { id: 'lr-1', ...row };
+          }),
+        } as never;
+      }
+      return {} as never;
+    });
+
+    const service = new LabRequestService();
+    await service.create({
+      projectId: 'project-1',
+      dateOfTest: '2026-08-14',
+      dateDue: '2026-08-20T12:00:00.000Z',
+      extra: 'ignored',
+    } as never);
+
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({
+      projectId: 'project-1',
+      dateOfTest: '2026-08-14',
+      dateDue: '2026-08-20',
+    });
+    expect(saved[0]).not.toHaveProperty('extra');
+  });
+
+  it('allows clearing dateDue on update', async () => {
+    const updates: Array<Record<string, unknown>> = [];
+
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return {
+          update: vi.fn(async (_id: string, data: Record<string, unknown>) => {
+            updates.push(data);
+          }),
+          findOne: vi.fn().mockResolvedValue({
+            id: 'lr-1',
+            projectId: 'project-1',
+            dateDue: null,
+          }),
+        } as never;
+      }
+      return {} as never;
+    });
+
+    const service = new LabRequestService();
+    const updated = await service.update('lr-1', { dateDue: '' });
+
+    expect(updates[0]).toEqual({ dateDue: null });
+    expect(updated?.dateDue).toBeNull();
+  });
+});

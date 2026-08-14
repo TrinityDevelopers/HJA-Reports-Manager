@@ -3,10 +3,48 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ExportService } from '../services/ExportService';
 import { ReportService } from '../services/ReportService';
+import { LabRequestService } from '../services/LabRequestService';
+import { TemplateService } from '../services/TemplateService';
+import { labRequestToExportableReport } from '../exports/labRequestExport';
+import { labRequestSummaryBaseName, reportExportBaseName } from '../exports/exportFileName';
+import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
 
 const router: Router = express.Router();
 const exportService = new ExportService();
 const reportService = new ReportService();
+const labRequestService = new LabRequestService();
+const templateService = new TemplateService();
+
+async function sendExportDownload(
+  res: Response,
+  xlsxPath: string,
+  downloadBaseName: string,
+  format: 'xlsx' | 'pdf',
+): Promise<void> {
+  if (format === 'pdf') {
+    const pdfPath = xlsxPath.replace(/\.xlsx$/, '.pdf');
+    const xlsxBuffer = await fs.readFile(xlsxPath);
+    const pdfBuffer = await exportService.convertXlsxToPdf(xlsxBuffer);
+    await fs.writeFile(pdfPath, pdfBuffer);
+
+    const cleanup = async () => {
+      await Promise.allSettled([fs.unlink(xlsxPath), fs.unlink(pdfPath)]);
+    };
+
+    res.download(pdfPath, `${downloadBaseName}.pdf`, async () => {
+      await cleanup();
+    });
+    return;
+  }
+
+  res.download(xlsxPath, `${downloadBaseName}.xlsx`, async () => {
+    try {
+      await fs.unlink(xlsxPath);
+    } catch {
+      // ignore cleanup errors
+    }
+  });
+}
 
 router.get('/templates', async (req: Request, res: Response) => {
   try {
@@ -86,29 +124,44 @@ router.get('/report/:reportId/export', async (req: Request, res: Response) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await exportService.exportReport(report, exportTemplate as any, xlsxPath);
 
-    if (format === 'pdf') {
-      const pdfPath = xlsxPath.replace(/\.xlsx$/, '.pdf');
-      const xlsxBuffer = await fs.readFile(xlsxPath);
-      const pdfBuffer = await exportService.convertXlsxToPdf(xlsxBuffer);
-      await fs.writeFile(pdfPath, pdfBuffer);
+    await sendExportDownload(res, xlsxPath, reportExportBaseName(report), format);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
 
-      const cleanup = async () => {
-        await Promise.allSettled([fs.unlink(xlsxPath), fs.unlink(pdfPath)]);
-      };
-
-      res.download(pdfPath, `report_${report.template.name}.pdf`, async () => {
-        await cleanup();
-      });
+router.get('/lab-request/:labRequestId/export', async (req: Request, res: Response) => {
+  try {
+    const labRequest = await labRequestService.findById(req.params.labRequestId);
+    if (!labRequest) {
+      res.status(404).json({ error: 'Lab request not found' });
       return;
     }
 
-    res.download(xlsxPath, `report_${report.template.name}.xlsx`, async () => {
-      try {
-        await fs.unlink(xlsxPath);
-      } catch {
-        // ignore cleanup errors
-      }
-    });
+    const templates = await templateService.findAll();
+    const exportable = labRequestToExportableReport(labRequest, templates);
+    const templateDef = LAB_REQUEST_SUMMARY_TEMPLATE_DEF;
+    const format = req.query.format === 'pdf' ? 'pdf' : 'xlsx';
+
+    const xlsxPath = path.join(process.cwd(), 'temp', `lab-request-summary_${Date.now()}.xlsx`);
+
+    await fs.mkdir(path.dirname(xlsxPath), { recursive: true });
+
+    await exportService.exportReport(
+      exportable,
+      {
+        filePath: templateDef.filePath,
+        standardFields: templateDef.standardFields,
+        fieldMapping: templateDef.fieldMapping,
+        maxEntries: templateDef.maxEntries,
+        rowsPerEntry: templateDef.rowsPerEntry ?? 1,
+        dynamicEntryRows: templateDef.dynamicEntryRows,
+      },
+      xlsxPath,
+      { templatesDir: LAB_REQUEST_DIR },
+    );
+
+    await sendExportDownload(res, xlsxPath, labRequestSummaryBaseName(labRequest), format);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

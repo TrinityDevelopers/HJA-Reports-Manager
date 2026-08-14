@@ -80,6 +80,7 @@ export default function LabRequestEditor({
   const dateValue = formData.dateOfTest
     ? (parseDateLike(formData.dateOfTest) ?? new Date())
     : new Date();
+  const dateDueValue = formData.dateDue ? parseDateLike(formData.dateDue) : null;
 
   // New-boring form state, prefilled from the last existing boring (if any).
   const [newBoring, setNewBoring] = useState(() => {
@@ -150,6 +151,7 @@ export default function LabRequestEditor({
     onSave({
       ...formData,
       dateOfTest: toISODateOnly(dateValue),
+      dateDue: dateDueValue ? toISODateOnly(dateDueValue) : null,
     });
   };
 
@@ -203,7 +205,7 @@ export default function LabRequestEditor({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <InputField
             label="Requested By"
             value={formData.requestedBy ?? ''}
@@ -220,6 +222,15 @@ export default function LabRequestEditor({
               type="date"
               value={toISODateOnly(dateValue)}
               onChange={(e) => setFormData({ ...formData, dateOfTest: e.target.value })}
+              className="input focus-ring-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date Due</label>
+            <input
+              type="date"
+              value={dateDueValue ? toISODateOnly(dateDueValue) : ''}
+              onChange={(e) => setFormData({ ...formData, dateDue: e.target.value || null })}
               className="input focus-ring-primary"
             />
           </div>

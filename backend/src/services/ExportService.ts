@@ -10,9 +10,15 @@ import { Repository } from 'typeorm';
 import { seedFromDefinitions } from '../utils/seedFromDefinitions';
 import type { FieldMapping } from '../exports/fillers';
 import { fillEntryFields, fillHeaderFields, fillStandardFields } from '../exports/fillers';
+import {
+  expandDynamicEntryRows,
+  extendEntryMappingRanges,
+  extraDynamicEntryRows,
+  type DynamicEntryRowsConfig,
+} from '../exports/dynamicEntryRows';
 import { captureSheetPrintSetup, fixLibreOfficeExportInXlsx } from '../exports/worksheetPrintFix';
 
-interface ExportableReport {
+export interface ExportableReport {
   projectName?: string;
   dateOfTest?: string | Date;
   project?: { projectNumber?: string; projectName?: string };
@@ -24,7 +30,7 @@ interface ExportableReport {
   }>;
 }
 
-interface ExportableTemplate {
+export interface ExportableTemplate {
   filePath: string;
   standardFields?: Record<string, string>;
   fieldMapping?: FieldMapping;
@@ -32,7 +38,12 @@ interface ExportableTemplate {
   rowsPerEntry?: number;
   colsPerEntry?: number;
   entryLayout?: 'row' | 'column';
+  dynamicEntryRows?: DynamicEntryRowsConfig;
 }
+
+export type ExportReportOptions = {
+  templatesDir?: string;
+};
 
 /** Reads `maxEntries` from template def JSON; accepts legacy `maxEntryRows`. */
 function readMaxEntries(def: Record<string, unknown>): number | undefined {
@@ -83,8 +94,10 @@ export class ExportService {
     report: ExportableReport,
     exportTemplate: ExportableTemplate,
     outputPath: string,
+    options: ExportReportOptions = {},
   ): Promise<void> {
-    const templatePath = path.join(this.templatesDir, exportTemplate.filePath);
+    const templatesDir = options.templatesDir ?? this.templatesDir;
+    const templatePath = path.join(templatesDir, exportTemplate.filePath);
 
     // Load template workbook
     const workbook = new ExcelJS.Workbook();
@@ -95,12 +108,26 @@ export class ExportService {
       throw new Error('Template workbook has no worksheets');
     }
 
+    let fieldMapping = exportTemplate.fieldMapping ? { ...exportTemplate.fieldMapping } : undefined;
+    let maxEntries = exportTemplate.maxEntries;
+    const dynamic = exportTemplate.dynamicEntryRows;
+    const extra =
+      dynamic?.enabled === true ? extraDynamicEntryRows(dynamic, report.entries?.length ?? 0) : 0;
+
+    if (extra > 0 && dynamic) {
+      expandDynamicEntryRows(worksheet, dynamic, extra);
+      if (fieldMapping) {
+        fieldMapping = extendEntryMappingRanges(fieldMapping, extra);
+      }
+      maxEntries = Math.max(maxEntries ?? 0, report.entries?.length ?? 0);
+    }
+
     fillStandardFields(worksheet, exportTemplate.standardFields, report);
-    fillHeaderFields(worksheet, exportTemplate.fieldMapping, report.headerData);
-    fillEntryFields(worksheet, exportTemplate.fieldMapping, report.entries, {
+    fillHeaderFields(worksheet, fieldMapping, report.headerData);
+    fillEntryFields(worksheet, fieldMapping, report.entries, {
       rowsPerEntry: exportTemplate.rowsPerEntry ?? 1,
       colsPerEntry: exportTemplate.colsPerEntry ?? 1,
-      maxEntries: exportTemplate.maxEntries,
+      maxEntries,
       entryLayout: exportTemplate.entryLayout ?? 'row',
     });
 
@@ -110,6 +137,7 @@ export class ExportService {
     await fixLibreOfficeExportInXlsx(outputPath, {
       sheetPrintSetup,
       templatePath,
+      restoreTemplateWorksheetXml: extra === 0,
     });
   }
 
@@ -234,6 +262,9 @@ export class ExportService {
           existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
           existing.colsPerEntry = def.colsPerEntry as number | undefined;
           existing.entryLayout = def.entryLayout as 'row' | 'column' | undefined;
+          existing.dynamicEntryRows = def.dynamicEntryRows as
+            | ExportTemplate['dynamicEntryRows']
+            | undefined;
           await this.exportTemplateRepository.save(existing);
         },
         createNew: async (_key, def) => {
@@ -249,6 +280,9 @@ export class ExportService {
             rowsPerEntry: def.rowsPerEntry as number | undefined,
             colsPerEntry: def.colsPerEntry as number | undefined,
             entryLayout: def.entryLayout as 'row' | 'column' | undefined,
+            dynamicEntryRows: def.dynamicEntryRows as
+              | ExportTemplate['dynamicEntryRows']
+              | undefined,
           });
         },
         logLabel: (_key, def) => String(def.displayName ?? _key),

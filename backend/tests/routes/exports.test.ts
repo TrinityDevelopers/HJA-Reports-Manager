@@ -52,6 +52,11 @@ describe('Exports Routes', () => {
       expect([200, 404, 500]).toContain(response.status);
     });
 
+    it('should respond to GET /lab-request/:labRequestId/export', async () => {
+      const response = await request(app).get('/exports/lab-request/test-id/export');
+      expect([200, 404, 500]).toContain(response.status);
+    });
+
     it('should handle invalid template file requests', async () => {
       const response = await request(app).get('/exports/template-file/invalid');
       expect([404, 500]).toContain(response.status);

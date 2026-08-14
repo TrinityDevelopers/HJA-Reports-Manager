@@ -68,6 +68,7 @@ export interface LabRequest {
   requestedBy?: string;
   technician?: string;
   dateOfTest?: string | Date;
+  dateDue?: string | Date | null;
   borings?: LabRequestBoring[];
   reports?: Report[];
   createdAt: Date;

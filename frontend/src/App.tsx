@@ -207,6 +207,7 @@ export default function HJAReportsManager() {
       requestedBy: labRequest.requestedBy,
       technician: labRequest.technician,
       dateOfTest: labRequest.dateOfTest,
+      dateDue: labRequest.dateDue ?? null,
       borings: labRequest.borings,
     };
     try {

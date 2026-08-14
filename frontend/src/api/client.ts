@@ -68,6 +68,8 @@ export const apiClient = {
       request('/export/register-template', { method: 'POST', body: JSON.stringify(data) }),
     downloadReport: (reportId: string, format: 'xlsx' | 'pdf' = 'xlsx') =>
       `${API_BASE_URL}/export/report/${reportId}/export?format=${format}`,
+    downloadLabRequest: (labRequestId: string, format: 'xlsx' | 'pdf' = 'xlsx') =>
+      `${API_BASE_URL}/export/lab-request/${labRequestId}/export?format=${format}`,
   },
 
   // Settings
