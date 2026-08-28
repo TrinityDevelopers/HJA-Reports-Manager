@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import EditableTable from '../EditableTable';
 import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
+import { BackLink } from '../BackLink';
+import { DynamicFieldForm } from '../forms/DynamicFieldForm';
 import { apiClient } from '../../api/client';
 import type { Project, Report, ReportTemplate, FieldConfig } from '../../types';
-import { normalizeTemplateSchema } from '../../utils/formHelpers';
+import {
+  normalizeTemplateSchema,
+  formatFieldValue,
+  type FieldDefinition,
+} from '../../utils/formHelpers';
 import {
   fromISODateOnly,
   normalizeForApi,
@@ -19,13 +25,8 @@ import {
   type EntryRow,
 } from '../../utils/reportEntryMapping';
 import type { NormalizedEntrySection } from '../../utils/formHelpers';
-import { FieldInput } from '../forms/FieldInput';
-import {
-  getSchemaExportTemplateIds,
-  reportExportAllBaseName,
-  reportExportBaseName,
-} from '@hja/shared';
-import { downloadFromUrl } from '../../utils/download';
+import { getSchemaExportTemplateIds } from '@hja/shared';
+import { exportReportMergedPdf, exportReportTemplates } from '../../utils/exportActions';
 
 export function ReportDetailPage({
   report,
@@ -225,64 +226,9 @@ export function ReportDetailPage({
     });
   };
 
-  const formatHeaderFieldValue = (field: FieldConfig): string => {
-    const raw = headerData[field.id];
-    if (raw === null || raw === undefined || raw === '') return '-';
-
-    const formatDate = (v: unknown): string => {
-      const d = parseDateLike(v);
-      if (!d) return '-';
-      return d.toLocaleDateString();
-    };
-
-    if (field.type === 'date') return formatDate(raw);
-
-    if (field.type === 'nameAndDate') {
-      if (!raw || typeof raw !== 'object') return '-';
-      const obj = raw as Record<string, unknown>;
-      const name = typeof obj.name === 'string' ? obj.name.trim() : '';
-      const date = typeof obj.date === 'string' ? formatDate(obj.date) : '-';
-
-      if (name && date !== '-') return `${name} — ${date}`;
-      if (name) return name;
-      if (date !== '-') return date;
-      return '-';
-    }
-
-    return String(raw);
-  };
-
   const handleExport = async (format: ExportFormat) => {
-    const exportContext = {
-      ...report,
-      template: report.template ?? template,
-      project: report.project ?? project,
-    };
-    const exportTemplateIds = getSchemaExportTemplateIds(
-      (report.template ?? template)?.schema,
-      (report.template ?? template)?.name ?? '',
-    );
-
     try {
-      if (exportTemplateIds.length <= 1) {
-        const exportTemplateId = exportTemplateIds[0];
-        const downloadUrl = apiClient.exports.downloadReport(report.id, format, exportTemplateId);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${reportExportBaseName(exportContext, exportTemplateId)}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        return;
-      }
-
-      for (const exportTemplateId of exportTemplateIds) {
-        await downloadFromUrl(
-          apiClient.exports.downloadReport(report.id, format, exportTemplateId),
-          `${reportExportBaseName(exportContext, exportTemplateId)}.${format}`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
+      await exportReportTemplates(report, format, { template, project });
     } catch (error) {
       console.error('Failed to export report:', error);
       alert(`Failed to export report${error instanceof Error ? `: ${error.message}` : ''}`);
@@ -290,17 +236,8 @@ export function ReportDetailPage({
   };
 
   const handleExportAllMerged = async () => {
-    const exportContext = {
-      ...report,
-      template: report.template ?? template,
-      project: report.project ?? project,
-    };
-
     try {
-      await downloadFromUrl(
-        apiClient.exports.downloadReportAllMerged(report.id),
-        `${reportExportAllBaseName(exportContext)}.pdf`,
-      );
+      await exportReportMergedPdf(report, { template, project });
     } catch (error) {
       console.error('Failed to export merged PDF:', error);
       alert(`Failed to export merged PDF${error instanceof Error ? `: ${error.message}` : ''}`);
@@ -316,10 +253,7 @@ export function ReportDetailPage({
   return (
     <div className="card">
       <div className="flex justify-between items-center mb-6">
-        <button onClick={onBack} className="flex items-center text-gray-600 hover:text-gray-800">
-          <ArrowLeft size={20} className="mr-2" />
-          {backLabel}
-        </button>
+        <BackLink label={backLabel} onClick={onBack} />
         {!isNewReport && (
           <ExportSplitButton
             label={hasMultipleExportTemplates ? 'Export All' : 'Export'}
@@ -444,7 +378,7 @@ export function ReportDetailPage({
               )}
               {showAddEntrySection === block.key ? (
                 <div className="card-border mt-4 border-primary-light">
-                  <AddEntryForm
+                  <AddEntryFormWrapper
                     fields={entryFieldsFor(block)}
                     onSave={(entry) => addEntry(block.id, entry)}
                     onCancel={() => setShowAddEntrySection(null)}
@@ -491,7 +425,7 @@ export function ReportDetailPage({
 
             {isEditing ? (
               <div className="card-border mb-6 border-primary-light">
-                <SectionForm
+                <DynamicFieldForm
                   title={`Edit ${block.title}`}
                   fields={block.fields}
                   initialData={sectionInitialData}
@@ -515,7 +449,9 @@ export function ReportDetailPage({
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           {field.label}
                         </label>
-                        <p className="text-gray-800">{formatHeaderFieldValue(field)}</p>
+                        <p className="text-gray-800">
+                          {formatFieldValue(field as FieldDefinition, headerData[field.id]) || '-'}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -529,149 +465,22 @@ export function ReportDetailPage({
   );
 }
 
-function SectionForm({
-  title,
-  fields,
-  initialData,
-  onSave,
-  onCancel,
-  saveLabel,
-}: {
-  title: string;
-  fields: FieldConfig[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialData: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (data: any) => void;
-  onCancel: () => void;
-  saveLabel: string;
-}) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [formData, setFormData] = useState<any>(initialData || {});
-
-  const handleSubmit = () => {
-    const requiredFields = fields.filter((f) => f.required);
-    const missingFields = requiredFields.some((f) => !formData[f.id]);
-
-    if (missingFields) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    onSave(formData);
-  };
-
-  return (
-    <>
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">{title}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {fields.map((field) => (
-          <div
-            key={field.id}
-            className={field.type === 'text' || field.type === 'number' ? '' : 'md:col-span-2'}
-          >
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            <FieldInput
-              field={field}
-              mode="form"
-              value={
-                field.type === 'date' && formData[field.id]
-                  ? formData[field.id] instanceof Date
-                    ? toISODateOnly(formData[field.id])
-                    : formData[field.id]
-                  : formData[field.id]
-              }
-              onChange={(next) => {
-                if (field.type === 'date') {
-                  setFormData({
-                    ...formData,
-                    [field.id]:
-                      typeof next === 'string' && next ? fromISODateOnly(next) : new Date(),
-                  });
-                } else {
-                  setFormData({ ...formData, [field.id]: next });
-                }
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4 mt-4">
-        <button onClick={handleSubmit} className="button-base">
-          {saveLabel}
-        </button>
-        <button onClick={onCancel} className="button-secondary border-primary text-primary">
-          Cancel
-        </button>
-      </div>
-    </>
-  );
-}
-
-function AddEntryForm({
+function AddEntryFormWrapper({
   fields,
   onSave,
   onCancel,
 }: {
   fields: FieldConfig[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (e: any) => void;
+  onSave: (entry: Record<string, unknown>) => void;
   onCancel: () => void;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [formData, setFormData] = useState<any>(
-    fields.reduce(
-      (acc, field) => {
-        acc[field.id] = '';
-        return acc;
-      },
-      {} as Record<string, string>,
-    ),
-  );
-
-  const handleSubmit = () => {
-    const requiredFields = fields.filter((f) => f.required);
-    const missingFields = requiredFields.some((f) => !formData[f.id]);
-
-    if (missingFields) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    onSave(formData);
-  };
-
   return (
-    <>
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">New Test Entry</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {fields.map((field) => (
-          <div
-            key={field.id}
-            className={field.type === 'text' || field.type === 'number' ? '' : 'md:col-span-2'}
-          >
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            <FieldInput
-              field={field}
-              mode="form"
-              value={formData[field.id]}
-              onChange={(next) => setFormData({ ...formData, [field.id]: next })}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4 mt-4">
-        <button onClick={handleSubmit} className="button-base">
-          Save Entry
-        </button>
-        <button onClick={onCancel} className="button-secondary border-primary text-primary">
-          Cancel
-        </button>
-      </div>
-    </>
+    <DynamicFieldForm
+      title="New Test Entry"
+      fields={fields}
+      onSave={onSave}
+      onCancel={onCancel}
+      saveLabel="Save Entry"
+    />
   );
 }

@@ -1,7 +1,7 @@
 {
   "name": "hja-reports-manager-backend",
   "version": "1.0.0",
-  "description": "Backend for HJA Reports Manager with database and XLS export",
+  "description": "Backend for HJA Reports Manager with database and XLSX export",
   "main": "dist/src/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -12,6 +12,7 @@
     "migration:revert": "tsx src/database/revertMigrations.ts",
     "migration:revert:prod": "node dist/src/database/revertMigrations.js",
     "seed": "tsx src/database/seed.ts",
+    "validate:templates": "tsx scripts/validateTemplates.ts",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },

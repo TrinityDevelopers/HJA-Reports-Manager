@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, FileText, ArrowLeft } from 'lucide-react';
+import { Plus, Edit2, Trash2, FileText } from 'lucide-react';
 import type { ID, Project, Report, ReportTemplate } from '../../types';
+import { BackLink } from '../BackLink';
+import { EntityListCard } from '../EntityListCard';
 
 export function ReportsPage({
   projects,
@@ -27,13 +29,7 @@ export function ReportsPage({
 
     return (
       <div className="card">
-        <button
-          onClick={() => setSelectedTemplate(null)}
-          className="flex items-center text-gray-600 hover:text-gray-800 mb-6"
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          Back to Report Types
-        </button>
+        <BackLink label="Back to Report Types" onClick={() => setSelectedTemplate(null)} />
         <h2 className="text-3xl font-bold text-gray-800 mb-6">{selectedTemplate.fullName}</h2>
         <p className="text-gray-600 mb-6">
           Select a project to begin a new {selectedTemplate.displayName} report
@@ -53,18 +49,13 @@ export function ReportsPage({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((project: Project) => (
-              <button
+              <EntityListCard
                 key={project.id}
+                title={project.projectName}
+                subtitle={<p className="mb-1">Project #: {project.projectNumber}</p>}
+                meta={<p>{project.locations?.length || 0} Location(s)</p>}
                 onClick={() => onSelectProject(project, selectedTemplate)}
-                className="card-border text-left hover:shadow-lg transition-all border-primary-light"
-              >
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{project.projectName}</h3>
-                <p className="subtext mb-1">Project #: {project.projectNumber}</p>
-                <div className="flex flex-col subtext gap-1 mt-2">
-                  <p>{project.locations?.length || 0} Location(s)</p>
-                  <p>{project.locations?.length || 0} Location(s)</p>
-                </div>
-              </button>
+              />
             ))}
             <button
               onClick={onAddProject}

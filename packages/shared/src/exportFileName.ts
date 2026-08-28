@@ -1,14 +1,12 @@
 /** Characters illegal in Windows filenames. */
 const ILLEGAL_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 
+import { getSchemaExportTemplateIds } from './exportTemplateIds';
+import { readLabRequestRuleForExport } from './labRequestSchema';
+
 export type LabRequestNameSource = {
   name?: string | null;
   project?: { projectName?: string | null } | null;
-};
-
-type LabRequestRule = {
-  mode?: string;
-  map?: Partial<Record<'boring' | 'sample' | string, string>>;
 };
 
 export type ReportExportNameSource = {
@@ -54,13 +52,6 @@ export function labRequestMergedBaseName(
   labRequest: LabRequestNameSource | null | undefined,
 ): string {
   return `${labRequestBaseName(labRequest)}-all`;
-}
-
-function labRequestRule(schema: Record<string, unknown> | null | undefined): LabRequestRule | null {
-  if (!schema || typeof schema !== 'object') return null;
-  const rule = schema.labRequest;
-  if (!rule || typeof rule !== 'object') return null;
-  return rule as LabRequestRule;
 }
 
 function sortedEntries(
@@ -116,19 +107,7 @@ export function reportExportBaseName(
   exportTemplateId?: string,
 ): string {
   const reportTypeName = report.template?.name?.trim() || 'export';
-  const templateIds =
-    report.template?.schema && typeof report.template.schema === 'object'
-      ? (() => {
-          const raw = (report.template.schema as Record<string, unknown>).templates;
-          if (Array.isArray(raw)) {
-            const ids = raw.filter(
-              (item): item is string => typeof item === 'string' && item.trim() !== '',
-            );
-            if (ids.length > 0) return ids;
-          }
-          return [reportTypeName];
-        })()
-      : [reportTypeName];
+  const templateIds = getSchemaExportTemplateIds(report.template?.schema, reportTypeName);
 
   const typeSegment =
     exportTemplateId &&
@@ -145,7 +124,7 @@ export function reportExportBaseName(
     name: report.labRequest.name,
     project: report.labRequest.project ?? report.project,
   });
-  const rule = labRequestRule(report.template?.schema);
+  const rule = readLabRequestRuleForExport(report.template?.schema);
   const mode = rule?.mode;
   const boringKey = rule?.map?.boring;
   const sampleKey = rule?.map?.sample;

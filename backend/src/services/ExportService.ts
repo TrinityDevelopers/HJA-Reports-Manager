@@ -45,11 +45,7 @@ export type ExportReportOptions = {
   templatesDir?: string;
 };
 
-/** Reads `maxEntries` from template def JSON; accepts legacy `maxEntryRows`. */
-function readMaxEntries(def: Record<string, unknown>): number | undefined {
-  const value = def.maxEntries ?? def.maxEntryRows;
-  return value === undefined || value === null ? undefined : Number(value);
-}
+import { applyTemplateDefToEntity, templateDefToCreatePayload } from '../schemas/templateDefMapper';
 
 const DEFAULT_CLOUDMERSIVE_CONCURRENCY = 4;
 
@@ -304,38 +300,11 @@ export class ExportService {
         defs,
         findExisting: async (key) => await this.findExportTemplate(key),
         updateExisting: async (existing, _key, def) => {
-          existing.name = def.name as string;
-          existing.displayName = def.displayName as string;
-          existing.filePath = def.filePath as string;
-          existing.format = def.format as 'xlsx';
-          existing.fieldMapping = def.fieldMapping as Record<string, unknown>;
-          existing.standardFields = def.standardFields as Record<string, unknown>;
-          existing.maxEntries = readMaxEntries(def);
-          existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
-          existing.colsPerEntry = def.colsPerEntry as number | undefined;
-          existing.entryLayout = def.entryLayout as 'row' | 'column' | undefined;
-          existing.dynamicEntryRows = def.dynamicEntryRows as
-            | ExportTemplate['dynamicEntryRows']
-            | undefined;
+          applyTemplateDefToEntity(existing, def);
           await this.exportTemplateRepository.save(existing);
         },
         createNew: async (_key, def) => {
-          await this.createExportTemplate({
-            templateId: def.templateId as string,
-            name: def.name as string,
-            displayName: def.displayName as string,
-            filePath: def.filePath as string,
-            format: def.format as 'xlsx',
-            fieldMapping: def.fieldMapping as Record<string, unknown>,
-            standardFields: def.standardFields as Record<string, unknown>,
-            maxEntries: readMaxEntries(def),
-            rowsPerEntry: def.rowsPerEntry as number | undefined,
-            colsPerEntry: def.colsPerEntry as number | undefined,
-            entryLayout: def.entryLayout as 'row' | 'column' | undefined,
-            dynamicEntryRows: def.dynamicEntryRows as
-              | ExportTemplate['dynamicEntryRows']
-              | undefined,
-          });
+          await this.createExportTemplate(templateDefToCreatePayload(def));
         },
         logLabel: (_key, def) => String(def.displayName ?? _key),
       });

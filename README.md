@@ -1,6 +1,6 @@
 # HJA Reports Manager
 
-A production-ready application for managing soil compaction and sieve analysis reports with dynamic form structures, database persistence, and XLS export capabilities.
+A production-ready application for managing soil compaction and sieve analysis reports with dynamic form structures, database persistence, and XLSX export capabilities.
 
 ## 🔗 Quick Links
 
@@ -23,8 +23,8 @@ A production-ready application for managing soil compaction and sieve analysis r
 - **Automatic Form Generation** from schemas
 - **Field Validation** on client and server
 
-### XLS Export System
-- **Template Management** - Register XLS/XLSX templates
+### XLSX Export System
+- **Template Management** - Register XLSX templates
 - **Field Mapping** - Map database fields to Excel cells
 - **Server-Side Filling** - Generate reports on demand (XLSX and PDF)
 - **Format Preservation** - Keeps Excel formatting and styling
@@ -233,7 +233,7 @@ DELETE /api/templates/:id         # Delete
 ### Exports (`/api/export`)
 ```bash
 GET    /api/export/templates                    # List export templates
-GET    /api/export/list                         # List available XLS files
+GET    /api/export/list                         # List available XLSX files
 POST   /api/export/register-template            # Register export template
 GET    /api/export/report/:reportId/export      # Download XLSX or PDF (?format=xlsx|pdf&exportTemplateId=)
 GET    /api/export/report/:reportId/export-all  # Merged multi-template PDF
@@ -397,7 +397,7 @@ More detail: [Backend README — Production Deployment](./backend/README.md#-pro
 ✅ **Production-Ready** - Type-safe, tested, documented  
 ✅ **Scalable** - Database-driven architecture  
 ✅ **Flexible** - JSON-based report templates  
-✅ **Complete** - Full CRUD API with XLS export  
+✅ **Complete** - Full CRUD API with XLSX export  
 ✅ **Typed** - TypeScript throughout  
 ✅ **Tested** - 140+ backend Vitest tests  
 ✅ **Documented** - Comprehensive guides and API docs  

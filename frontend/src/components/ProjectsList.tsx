@@ -1,5 +1,6 @@
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import type { Project, ID } from '../types';
+import { EntityListCard } from './EntityListCard';
 
 export default function ProjectsList({
   projects,
@@ -26,12 +27,12 @@ export default function ProjectsList({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
-            <div key={project.id} className="card-border border-primary-light">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-800">{project.projectName}</h3>
-                  <p className="subtext">Project #: {project.projectNumber}</p>
-                </div>
+            <EntityListCard
+              key={project.id}
+              title={project.projectName}
+              subtitle={<p>Project #: {project.projectNumber}</p>}
+              meta={<p>{project.locations?.length || 0} Location(s)</p>}
+              actions={
                 <div className="flex gap-2">
                   <button
                     onClick={() => onEditProject(project)}
@@ -46,12 +47,8 @@ export default function ProjectsList({
                     <Trash2 size={18} />
                   </button>
                 </div>
-              </div>
-              <div className="flex flex-col subtext gap-1 mt-3 pt-3 border-t">
-                <p>{project.locations?.length || 0} Location(s)</p>
-                <p>{project.locations?.length || 0} Location(s)</p>
-              </div>
-            </div>
+              }
+            />
           ))}
         </div>
       )}

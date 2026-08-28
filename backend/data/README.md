@@ -1,6 +1,6 @@
 # Data Configuration
 
-This directory contains JSON schema definitions and XLS export template configurations for the HJA Reports Manager application.
+This directory contains JSON schema definitions and XLSX export template configurations for the HJA Reports Manager application.
 
 ## 📁 Directory Structure
 
@@ -8,7 +8,7 @@ This directory contains JSON schema definitions and XLS export template configur
 data/
 ├── schemas/           # Report JSON schemas (report type definitions)
 ├── template_defs/     # Export template JSON definitions (field mappings)
-└── templates/         # XLS/XLSX template files (actual Excel files)
+└── templates/         # XLSX template files (Excel workbooks)
 ```
 
 ---
@@ -277,7 +277,7 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 
 ### Adding a New Export Template
 
-1. **Design the XLS/XLSX template** in Excel and note cell references for header fields and trial slots (rows or columns).
+1. **Design the XLSX template** in Excel and note cell references for header fields and trial slots (rows or columns).
 
 2. **Save the file** to `templates/` (e.g. `my_template.xlsx`). `filePath` in the JSON must match.
 
@@ -303,13 +303,13 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 
 ---
 
-## 📊 templates/ - XLS/XLSX Template Files
+## templates/ - XLSX Template Files
 
 Actual Excel files used as templates for generating reports.
 
 ### File Naming Convention
-- Use lowercase with underscores: `standard_proctor.xls`
-- Match filename in JSON configuration: `filePath: "standard_proctor.xls"`
+- Use lowercase with underscores: `standard_proctor.xlsx`
+- Match filename in JSON configuration: `filePath: "standard_proctor.xlsx"`
 
 ### Creating a Template
 
@@ -324,12 +324,12 @@ Actual Excel files used as templates for generating reports.
    - Template preserves formatting
 
 3. **Save to this directory**:
-   - Format: XLS or XLSX
+   - Format: XLSX
    - Filename matches configuration
 
 ### Current Files
 
-One XLS/XLSX file per export template (filename must match `filePath` in the corresponding `template_defs/*.json`), for example:
+One XLSX file per export template (filename must match `filePath` in the corresponding `template_defs/*.json`), for example:
 
 - `standard_proctor.xlsx`, `modified-proctor.xlsx`
 - `atterberg-limit.xlsx` (column-oriented trial columns)
@@ -388,7 +388,7 @@ One XLS/XLSX file per export template (filename must match `filePath` in the cor
 ## 🔗 Related Documentation
 
 - **[Backend README](../README.md)** - Backend API documentation
-- **[XLS Template Guide](../XLS_TEMPLATE_GUIDE.md)** - Detailed template setup guide
+- **[Add report type skill](../../.cursor/skills/add-report-type/SKILL.md)** - Workflow for new schemas and template defs
 - **[Main README](../../README.md)** - Project overview
 
 ---

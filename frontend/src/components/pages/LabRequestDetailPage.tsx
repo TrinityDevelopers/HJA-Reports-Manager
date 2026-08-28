@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Edit2, FileText, RefreshCw } from 'lucide-react';
+import { Edit2, FileText, RefreshCw } from 'lucide-react';
 import type { LabRequest, Project, Report, ReportTemplate } from '../../types';
 import { apiClient } from '../../api/client';
 import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
+import { BackLink } from '../BackLink';
 import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
 import { templateAbbreviation } from '../../utils/templates';
 import { downloadFromUrl } from '../../utils/download';
-import {
-  getSchemaExportTemplateIds,
-  labRequestMergedBaseName,
-  labRequestSummaryBaseName,
-  reportExportBaseName,
-} from '@hja/shared';
+import { labRequestSummaryBaseName } from '@hja/shared';
+import { exportLabRequestMergedPdf, exportLabRequestPacket } from '../../utils/exportActions';
 
 export function LabRequestDetailPage({
   labRequest,
@@ -98,36 +95,7 @@ export function LabRequestDetailPage({
   const handleExportAll = async (format: ExportFormat) => {
     setExporting(true);
     try {
-      // Download each file sequentially: fetch as a blob and wait for conversion
-      // to finish before requesting the next one. This keeps only one request in
-      // flight at a time, which matters for PDF since LibreOffice conversion is
-      // slow and the browser blocks multiple simultaneous automatic downloads.
-      await downloadFromUrl(
-        apiClient.exports.downloadLabRequest(labRequest.id, format),
-        summaryFileName(format),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      for (const report of reports) {
-        const exportContext = {
-          ...report,
-          labRequest: report.labRequest ?? labRequest,
-          project: report.project ?? project,
-        };
-        const exportTemplateIds = getSchemaExportTemplateIds(
-          report.template?.schema,
-          report.template?.name ?? '',
-        );
-
-        for (const exportTemplateId of exportTemplateIds) {
-          const baseName = reportExportBaseName(exportContext, exportTemplateId);
-          await downloadFromUrl(
-            apiClient.exports.downloadReport(report.id, format, exportTemplateId),
-            `${baseName}.${format}`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
-      }
+      await exportLabRequestPacket(labRequest, reports, project, format);
     } catch (error) {
       console.error('Failed to export reports:', error);
       alert(`Failed to export reports${error instanceof Error ? `: ${error.message}` : ''}`);
@@ -139,13 +107,7 @@ export function LabRequestDetailPage({
   const handleExportAllMerged = async () => {
     setExporting(true);
     try {
-      await downloadFromUrl(
-        apiClient.exports.downloadLabRequestAllMerged(labRequest.id),
-        `${labRequestMergedBaseName({
-          name: labRequest.name,
-          project: labRequest.project ?? project,
-        })}.pdf`,
-      );
+      await exportLabRequestMergedPdf(labRequest, project);
     } catch (error) {
       console.error('Failed to export merged PDF:', error);
       alert(`Failed to export merged PDF${error instanceof Error ? `: ${error.message}` : ''}`);
@@ -161,10 +123,7 @@ export function LabRequestDetailPage({
   return (
     <div className="card">
       <div className="flex justify-between items-center mb-6">
-        <button onClick={onBack} className="flex items-center text-gray-600 hover:text-gray-800">
-          <ArrowLeft size={20} className="mr-2" />
-          Back to Lab Requests
-        </button>
+        <BackLink label="Back to Lab Requests" onClick={onBack} />
         <div className="flex gap-2">
           <button onClick={onEdit} className="button-secondary border-primary text-primary">
             <Edit2 size={18} className="inline mr-2" />

@@ -124,13 +124,13 @@ Report structure definitions
 - `createdAt`, `updatedAt` (timestamp)
 
 ### ExportTemplate
-XLS/XLSX export template mappings
+XLSX export template mappings
 - `id` (UUID, PK)
 - `templateId` (UUID, FK to ReportTemplate)
 - `name` (string)
 - `displayName` (string)
 - `filePath` (string) - Location in `/data/templates/`
-- `format` ('xls' | 'xlsx')
+- `format` ('xlsx')
 - `fieldMapping` (JSON) - Maps report fields to Excel cells
 - `maxEntries` (int, nullable) - Maximum trials per entry section in the template (row or column layout)
 - `rowsPerEntry` (int) - Rows used per entry (default: 1)
@@ -175,7 +175,7 @@ DELETE /api/templates/:id          Delete template
 ```
 GET    /api/export/templates                              List export templates
 POST   /api/export/register-template                      Register export template
-GET    /api/export/list                                   List available XLS files
+GET    /api/export/list                                   List available XLSX files
 GET    /api/export/report/:reportId/export                Download XLSX or PDF (?format=xlsx|pdf&exportTemplateId=)
 GET    /api/export/report/:reportId/export-all            Merged multi-template PDF
 GET    /api/export/lab-request/:labRequestId/export       Lab request summary export
@@ -227,7 +227,7 @@ See [Backend Data Configuration](./data/README.md) for adding new templates.
 - **ProjectService** - Project CRUD and validation
 - **ReportService** - Report and entry management
 - **TemplateService** - Template seeding and management
-- **ExportService** - XLS template filling and generation
+- **ExportService** - XLSX template filling and generation
 - **LabRequestService** - Lab request CRUD and report generation
 - **SettingsService** - Application settings
 
@@ -247,7 +247,7 @@ See [Backend Data Configuration](./data/README.md) for adding new templates.
 ### Data Configuration
 - `data/schemas/` - Report JSON schemas
 - `data/template_defs/` - Export template definitions
-- `data/templates/` - XLS/XLSX template files
+- `data/templates/` - XLSX template files
 
 ---
 

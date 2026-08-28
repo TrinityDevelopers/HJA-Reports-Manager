@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
@@ -13,5 +13,8 @@ export default defineConfig({
     alias: {
       '@hja/shared': path.resolve(__dirname, '../packages/shared/src/index.ts'),
     },
+  },
+  test: {
+    environment: 'node',
   },
 });

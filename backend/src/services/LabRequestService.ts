@@ -9,13 +9,7 @@ import { pickAndCoerce } from '../utils/pickAndCoerce';
 import { coerceDateOnly } from '../utils/dateOnly';
 import { formatDepthRange } from '../utils/depth';
 import { chunkArray } from '../utils/chunkArray';
-import { getSchemaExportTemplateIds } from '@hja/shared';
-
-/** Per-template lab request rule embedded in the schema JSON. */
-interface LabRequestRule {
-  mode: 'per-sample' | 'per-boring';
-  map: Partial<Record<'boring' | 'depth' | 'sample' | 'material', string>>;
-}
+import { getSchemaExportTemplateIds, parseLabRequestRule, type LabRequestRule } from '@hja/shared';
 
 interface SchemaSection {
   type?: string;
@@ -121,13 +115,6 @@ export class LabRequestService {
       .getMany();
   }
 
-  private parseRule(schema: Record<string, unknown> | undefined): LabRequestRule | null {
-    if (!schema || typeof schema !== 'object') return null;
-    const rule = (schema as Record<string, unknown>).labRequest as LabRequestRule | undefined;
-    if (!rule || (rule.mode !== 'per-sample' && rule.mode !== 'per-boring')) return null;
-    return { mode: rule.mode, map: rule.map ?? {} };
-  }
-
   /** The id of the first entry-type section in a schema (used as ReportEntry.sectionId). */
   private firstEntrySectionId(schema: Record<string, unknown> | undefined): string | undefined {
     if (!schema || typeof schema !== 'object') return undefined;
@@ -210,7 +197,7 @@ export class LabRequestService {
         const template = await getTemplate(templateId);
         if (!template) continue;
         const schema = template.schema as Record<string, unknown> | undefined;
-        const rule = this.parseRule(schema);
+        const rule = parseLabRequestRule(schema);
         if (!rule) continue;
 
         if (rule.mode === 'per-boring') {
