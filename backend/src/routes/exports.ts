@@ -14,6 +14,7 @@ import {
 } from '../exports/exportFileName';
 import { mergePdfBuffers } from '../exports/mergePdfs';
 import { getSchemaExportTemplateIds } from '../schemas/exportTemplateIds';
+import { mapWithConcurrency } from '../utils/mapWithConcurrency';
 import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
 import type { ExportTemplate } from '../entities/ExportTemplate';
 import type { LabRequest } from '../entities/LabRequest';
@@ -26,6 +27,7 @@ const labRequestService = new LabRequestService();
 const templateService = new TemplateService();
 
 const TEMP_DIR = path.join(process.cwd(), 'temp');
+const XLSX_FILL_CONCURRENCY = 4;
 
 async function unlinkQuiet(filePath: string): Promise<void> {
   try {
@@ -71,27 +73,55 @@ function exportTemplateIdsForReport(report: Report): string[] {
   return getSchemaExportTemplateIds(report.template.schema, report.template.name);
 }
 
-async function findExportTemplateById(templateId: string): Promise<ExportTemplate | null> {
+async function preloadExportTemplateCache(): Promise<Map<string, ExportTemplate>> {
+  let templates = await exportService.listExportTemplates();
+  if (templates.length === 0) {
+    try {
+      await exportService.seedDefaultExportTemplates();
+      templates = await exportService.listExportTemplates();
+    } catch (error) {
+      console.error('Failed to seed export templates:', error);
+    }
+  }
+  return new Map(templates.map((template) => [template.templateId, template]));
+}
+
+async function findExportTemplateById(
+  templateId: string,
+  cache?: Map<string, ExportTemplate>,
+): Promise<ExportTemplate | null> {
+  if (cache?.has(templateId)) {
+    return cache.get(templateId) ?? null;
+  }
+
   let exportTemplate = await exportService.findExportTemplate(templateId);
 
   if (!exportTemplate) {
     try {
       await exportService.seedDefaultExportTemplates();
       exportTemplate = await exportService.findExportTemplate(templateId);
+      if (exportTemplate && cache) {
+        cache.set(templateId, exportTemplate);
+      }
     } catch (error) {
       console.error('Failed to seed export templates:', error);
     }
+  } else if (cache) {
+    cache.set(templateId, exportTemplate);
   }
 
   return exportTemplate;
 }
 
-async function resolveExportTemplates(report: Report): Promise<ExportTemplate[]> {
+async function resolveExportTemplates(
+  report: Report,
+  cache?: Map<string, ExportTemplate>,
+): Promise<ExportTemplate[]> {
   const templateIds = exportTemplateIdsForReport(report);
   const templates: ExportTemplate[] = [];
 
   for (const templateId of templateIds) {
-    const exportTemplate = await findExportTemplateById(templateId);
+    const exportTemplate = await findExportTemplateById(templateId, cache);
     if (exportTemplate) {
       templates.push(exportTemplate);
     }
@@ -152,16 +182,46 @@ async function fillLabRequestSummaryXlsx(labRequest: LabRequest): Promise<string
 }
 
 async function convertXlsxFileToPdfBuffer(xlsxPath: string): Promise<Buffer> {
-  const xlsxBuffer = await fs.readFile(xlsxPath);
-  return await exportService.convertXlsxToPdf(xlsxBuffer);
+  const [pdfBuffer] = await exportService.convertXlsxFilesToPdfs([xlsxPath]);
+  if (!pdfBuffer) {
+    throw new Error(`PDF conversion produced no output for ${xlsxPath}`);
+  }
+  return pdfBuffer;
 }
 
-async function convertXlsxToPdfAndCleanup(xlsxPath: string): Promise<Buffer> {
-  try {
-    return await convertXlsxFileToPdfBuffer(xlsxPath);
-  } finally {
-    await unlinkQuiet(xlsxPath);
+async function convertXlsxPathsToPdfBuffers(xlsxPaths: string[]): Promise<Buffer[]> {
+  return await exportService.convertXlsxFilesToPdfs(xlsxPaths);
+}
+
+async function cleanupTempFiles(filePaths: string[]): Promise<void> {
+  await Promise.allSettled(filePaths.map((filePath) => unlinkQuiet(filePath)));
+}
+
+interface ReportExportJob {
+  report: Report;
+  exportTemplate: ExportTemplate;
+}
+
+async function buildReportExportJobs(
+  report: Report,
+  cache: Map<string, ExportTemplate>,
+): Promise<ReportExportJob[]> {
+  if (!report.template) {
+    throw new Error(`Report ${report.id} has no associated template`);
   }
+
+  const exportTemplates = await resolveExportTemplates(report, cache);
+  if (exportTemplates.length === 0) {
+    throw new Error(`Export templates not found for type "${report.template.name}"`);
+  }
+
+  return exportTemplates.map((exportTemplate) => ({ report, exportTemplate }));
+}
+
+async function fillReportExportJobs(jobs: ReportExportJob[]): Promise<string[]> {
+  return await mapWithConcurrency(jobs, XLSX_FILL_CONCURRENCY, async (job) =>
+    fillReportXlsx(job.report, job.exportTemplate, job.exportTemplate.templateId),
+  );
 }
 
 async function sendExportDownload(
@@ -298,34 +358,33 @@ router.get('/report/:reportId/export-all', async (req: Request, res: Response) =
       return;
     }
 
-    const exportTemplates = await resolveExportTemplates(report);
-    if (exportTemplates.length === 0) {
+    if (req.query.format !== 'pdf') {
+      res.status(400).json({ error: 'export-all supports format=pdf only' });
+      return;
+    }
+
+    const templateCache = await preloadExportTemplateCache();
+    const jobs = await buildReportExportJobs(report, templateCache);
+    if (jobs.length === 0) {
       res.status(404).json({
         error: `Export templates not found for type "${report.template.name}"`,
       });
       return;
     }
 
-    if (req.query.format !== 'pdf') {
-      res.status(400).json({ error: 'export-all supports format=pdf only' });
-      return;
-    }
+    const xlsxPaths = await fillReportExportJobs(jobs);
+    tempFiles.push(...xlsxPaths);
 
-    const pdfBuffers: Buffer[] = [];
-    for (const exportTemplate of exportTemplates) {
-      const xlsxPath = await fillReportXlsx(report, exportTemplate, exportTemplate.templateId);
-      tempFiles.push(xlsxPath);
-      pdfBuffers.push(await convertXlsxToPdfAndCleanup(xlsxPath));
-    }
-
+    const pdfBuffers = await convertXlsxPathsToPdfBuffers(xlsxPaths);
     const merged = await mergePdfBuffers(pdfBuffers);
     await sendPdfBuffer(res, merged, reportExportAllBaseName(report));
   } catch (error) {
     console.error('Failed to export merged report PDF:', error);
-    await Promise.allSettled(tempFiles.map((filePath) => unlinkQuiet(filePath)));
     if (!res.headersSent) {
       res.status(500).json({ error: (error as Error).message });
     }
+  } finally {
+    await cleanupTempFiles(tempFiles);
   }
 });
 
@@ -361,35 +420,29 @@ router.get('/lab-request/:labRequestId/export-all', async (req: Request, res: Re
       return;
     }
 
-    const pdfBuffers: Buffer[] = [];
-
+    const templateCache = await preloadExportTemplateCache();
     const summaryPath = await fillLabRequestSummaryXlsx(labRequest);
     tempFiles.push(summaryPath);
-    pdfBuffers.push(await convertXlsxToPdfAndCleanup(summaryPath));
 
+    const reportJobs: ReportExportJob[] = [];
     for (const report of reports) {
-      if (!report.template) {
-        throw new Error(`Report ${report.id} has no associated template`);
-      }
-      const exportTemplates = await resolveExportTemplates(report);
-      if (exportTemplates.length === 0) {
-        throw new Error(`Export templates not found for type "${report.template.name}"`);
-      }
-      for (const exportTemplate of exportTemplates) {
-        const xlsxPath = await fillReportXlsx(report, exportTemplate, exportTemplate.templateId);
-        tempFiles.push(xlsxPath);
-        pdfBuffers.push(await convertXlsxToPdfAndCleanup(xlsxPath));
-      }
+      reportJobs.push(...(await buildReportExportJobs(report, templateCache)));
     }
 
+    const reportXlsxPaths = await fillReportExportJobs(reportJobs);
+    tempFiles.push(...reportXlsxPaths);
+
+    const xlsxPaths = [summaryPath, ...reportXlsxPaths];
+    const pdfBuffers = await convertXlsxPathsToPdfBuffers(xlsxPaths);
     const merged = await mergePdfBuffers(pdfBuffers);
     await sendPdfBuffer(res, merged, labRequestMergedBaseName(labRequest));
   } catch (error) {
     console.error('Failed to export merged lab request PDF:', error);
-    await Promise.allSettled(tempFiles.map((filePath) => unlinkQuiet(filePath)));
     if (!res.headersSent) {
       res.status(500).json({ error: (error as Error).message });
     }
+  } finally {
+    await cleanupTempFiles(tempFiles);
   }
 });
 

@@ -1,9 +1,9 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { promisify } from 'util';
 import ExcelJS from 'exceljs';
-import * as libre from 'libreoffice-convert';
 import CloudmersiveConvertApiClient from 'cloudmersive-convert-api-client';
+import { convertXlsxFilesViaLibreOffice } from '../exports/libreOfficePool';
+import { mapWithConcurrency } from '../utils/mapWithConcurrency';
 import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
@@ -51,7 +51,7 @@ function readMaxEntries(def: Record<string, unknown>): number | undefined {
   return value === undefined || value === null ? undefined : Number(value);
 }
 
-const convertAsync = promisify(libre.convert);
+const DEFAULT_CLOUDMERSIVE_CONCURRENCY = 4;
 
 type CloudmersiveConvertDocumentApi = InstanceType<
   typeof CloudmersiveConvertApiClient.ConvertDocumentApi
@@ -148,35 +148,93 @@ export class ExportService {
   }
 
   /**
-   * Converts a filled XLSX buffer to a PDF buffer.
-   * Prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set; falls back to
-   * LibreOffice (via libreoffice-convert) if the key is missing or the API call fails.
+   * Converts many filled XLSX files to PDF buffers in input order.
+   * Prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set (parallel, capped);
+   * per-file Cloudmersive failures fall back to the LibreOffice pool.
    */
-  async convertXlsxToPdf(xlsxBuffer: Buffer): Promise<Buffer> {
-    const apiKey = process.env.CLOUDMERSIVE_API_KEY?.trim();
+  async convertXlsxFilesToPdfs(xlsxPaths: string[]): Promise<Buffer[]> {
+    if (xlsxPaths.length === 0) {
+      return [];
+    }
 
-    if (apiKey) {
+    const apiKey = process.env.CLOUDMERSIVE_API_KEY?.trim();
+    if (!apiKey) {
+      return await convertXlsxFilesViaLibreOffice(xlsxPaths);
+    }
+
+    const cloudmersiveConcurrency = Number.parseInt(
+      process.env.CLOUDMERSIVE_CONCURRENCY?.trim() ?? '',
+      10,
+    );
+    const concurrency =
+      Number.isFinite(cloudmersiveConcurrency) && cloudmersiveConcurrency > 0
+        ? cloudmersiveConcurrency
+        : DEFAULT_CLOUDMERSIVE_CONCURRENCY;
+
+    const pdfBuffers = new Array<Buffer>(xlsxPaths.length);
+    const libreFallbackPaths: string[] = [];
+    const libreFallbackIndexes: number[] = [];
+
+    await mapWithConcurrency(xlsxPaths, concurrency, async (xlsxPath, index) => {
+      const xlsxBuffer = await fs.readFile(xlsxPath);
       try {
-        return await this.convertViaCloudmersive(xlsxBuffer, apiKey);
+        pdfBuffers[index] = await this.convertViaCloudmersive(xlsxBuffer, apiKey);
       } catch (error) {
         console.warn(
-          `Cloudmersive PDF conversion failed; falling back to LibreOffice. (${
+          `Cloudmersive PDF conversion failed for ${xlsxPath}; falling back to LibreOffice. (${
             (error as Error).message
           })`,
         );
-        try {
-          return await this.convertViaLibreOffice(xlsxBuffer);
-        } catch (libreError) {
-          throw new Error(
-            `PDF conversion failed via Cloudmersive and LibreOffice. Cloudmersive: ${
-              (error as Error).message
-            }; LibreOffice: ${(libreError as Error).message}`,
-          );
-        }
+        libreFallbackPaths.push(xlsxPath);
+        libreFallbackIndexes.push(index);
+      }
+    });
+
+    if (libreFallbackPaths.length > 0) {
+      try {
+        const fallbackBuffers = await convertXlsxFilesViaLibreOffice(libreFallbackPaths);
+        libreFallbackIndexes.forEach((originalIndex, fallbackIndex) => {
+          pdfBuffers[originalIndex] = fallbackBuffers[fallbackIndex];
+        });
+      } catch (libreError) {
+        throw new Error(
+          `PDF conversion failed via Cloudmersive and LibreOffice. LibreOffice: ${
+            (libreError as Error).message
+          }`,
+        );
       }
     }
 
-    return await this.convertViaLibreOffice(xlsxBuffer);
+    if (pdfBuffers.some((buffer) => !buffer)) {
+      throw new Error('PDF conversion produced incomplete results');
+    }
+
+    return pdfBuffers;
+  }
+
+  /**
+   * Converts a filled XLSX buffer to a PDF buffer.
+   * Prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set; falls back to
+   * the LibreOffice pool if the key is missing or the API call fails.
+   */
+  async convertXlsxToPdf(xlsxBuffer: Buffer): Promise<Buffer> {
+    const tempDir = path.join(process.cwd(), 'temp');
+    await fs.mkdir(tempDir, { recursive: true });
+    const xlsxPath = path.join(
+      tempDir,
+      `single_${Date.now()}_${Math.random().toString(16).slice(2)}.xlsx`,
+    );
+
+    try {
+      await fs.writeFile(xlsxPath, xlsxBuffer);
+      const [pdfBuffer] = await this.convertXlsxFilesToPdfs([xlsxPath]);
+      if (!pdfBuffer) {
+        throw new Error('PDF conversion produced no output');
+      }
+      return pdfBuffer;
+    } finally {
+      await fs.unlink(xlsxPath).catch(() => undefined);
+    }
   }
 
   private getCloudmersiveApi(apiKey: string): CloudmersiveConvertDocumentApi {
@@ -215,18 +273,6 @@ export class ExportService {
         reject(new Error('Cloudmersive returned empty or unrecognized PDF data'));
       });
     });
-  }
-
-  private async convertViaLibreOffice(xlsxBuffer: Buffer): Promise<Buffer> {
-    try {
-      return await convertAsync(xlsxBuffer, '.pdf', undefined);
-    } catch (error) {
-      throw new Error(
-        `PDF conversion failed - is LibreOffice installed and available on this server? (${
-          (error as Error).message
-        })`,
-      );
-    }
   }
 
   async getTemplateList(): Promise<string[]> {

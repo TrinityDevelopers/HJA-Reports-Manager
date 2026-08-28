@@ -147,7 +147,7 @@ See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-mon
 
 ### PDF export fails or formatting differs from Windows
 
-PDF export prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set on the backend service, and falls back to LibreOffice (installed in the backend Docker image) if the key is missing or the API call fails. XLSX export does not require either. The image includes Microsoft Core Fonts (`ttf-mscorefonts-installer`) so Arial renders correctly during LibreOffice PDF conversion.
+PDF export prefers Cloudmersive when `CLOUDMERSIVE_API_KEY` is set on the backend service, and falls back to a headless LibreOffice process pool (installed in the backend Docker image; tune with `LIBREOFFICE_CONCURRENCY`, default 3) if the key is missing or the API call fails. XLSX export does not require either. The image includes Microsoft Core Fonts (`ttf-mscorefonts-installer`) so Arial renders correctly during LibreOffice PDF conversion.
 
 Check deploy logs for Cloudmersive fallback warnings or LibreOffice-related errors if PDF export fails. To verify fonts in a running container: `fc-list | grep -i arial`.
 

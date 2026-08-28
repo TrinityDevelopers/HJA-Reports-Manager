@@ -360,7 +360,7 @@ npm start
 
 **Important:** Railway must use root directory `/backend`, not the repo root. See **[RAILWAY.md](../RAILWAY.md)** for step-by-step setup (fixes the Railpack “No start command detected” error).
 
-Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice as the PDF export fallback and runs the database bootstrap migration before starting the API. Set `CLOUDMERSIVE_API_KEY` to prefer Cloudmersive for XLSX→PDF conversion.
+Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice for the PDF export pool and runs the database bootstrap migration before starting the API. Set `CLOUDMERSIVE_API_KEY` to prefer Cloudmersive for XLSX→PDF conversion; tune LibreOffice parallelism with `LIBREOFFICE_CONCURRENCY` (default 3).
 
 **Backend service (Railway)**
 
@@ -390,7 +390,7 @@ docker compose up --build
 - Backend API: http://localhost:5000
 - MySQL: internal to the compose network (`mysql:3306`)
 
-XLSX export works with Node alone. PDF export (`?format=pdf`) uses Cloudmersive when `CLOUDMERSIVE_API_KEY` is set, otherwise LibreOffice (installed in the backend image). LibreOffice also serves as the fallback if the Cloudmersive call fails.
+XLSX export works with Node alone. PDF export (`?format=pdf`) uses Cloudmersive when `CLOUDMERSIVE_API_KEY` is set, otherwise a headless LibreOffice process pool (`LIBREOFFICE_CONCURRENCY`, default 3; optional `LIBREOFFICE_PATH`). Merged exports fill XLSX files in parallel and batch-convert them across isolated LibreOffice workers. LibreOffice also serves as the fallback if the Cloudmersive call fails.
 
 See the [main README](../README.md#-deployment) for a full deployment overview.
 
