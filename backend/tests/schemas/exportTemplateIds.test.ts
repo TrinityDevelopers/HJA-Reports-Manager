@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSchemaExportTemplateIds } from '../../src/schemas/exportTemplateIds';
+import { getSchemaExportTemplateIds } from '@hja/shared';
 
 describe('getSchemaExportTemplateIds', () => {
   it('returns schema.templates when present', () => {

@@ -4,7 +4,7 @@ import {
   labRequestSummaryBaseName,
   reportExportAllBaseName,
   reportExportBaseName,
-} from '../../src/exports/exportFileName';
+} from '@hja/shared';
 
 const LAB_REQUEST_NAME = '12345G Lab Request';
 

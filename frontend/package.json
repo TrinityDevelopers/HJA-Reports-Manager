@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hja/shared": "file:../packages/shared",
     "@tailwindcss/vite": "^4.1.17",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",
@@ -15,6 +16,7 @@
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
+    "@types/node": "^20.10.6",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",

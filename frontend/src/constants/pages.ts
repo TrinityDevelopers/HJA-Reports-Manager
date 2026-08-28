@@ -7,5 +7,3 @@ export const PAGES = {
 } as const;
 
 export type PageType = (typeof PAGES)[keyof typeof PAGES];
-
-export const PAGE_KEYS = Object.values(PAGES) as PageType[];

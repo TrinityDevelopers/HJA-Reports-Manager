@@ -13,35 +13,33 @@ A production-ready application for managing soil compaction and sieve analysis r
 
 ### Database-Driven Architecture
 - **TypeORM ORM** with MySQL 8+ or PostgreSQL 12+ support
-- **6 Main Tables**: projects, locations, reports, entries, templates, export_templates
-- **Automatic Schema Creation** on first run
+- **8 entities**: projects, locations, reports, report_entries, report_templates, export_templates, lab_requests, settings
+- **Automatic Schema Creation** on first run (TypeORM `synchronize`, default enabled)
 - **Type-Safe Queries** with full TypeScript support
 
 ### Dynamic Report Templates
 - **JSON-Based Schemas** - Define report types without code changes
-- **Pre-Configured Templates**:
-  - Standard Proctor (ASTM D698) - Soil compaction testing
-  - Percent Passing #200 (ASTM D1140) - Sieve analysis
+- **17+ pre-configured report schemas** in `backend/data/schemas/` (Standard Proctor, Atterberg Limits, lab-request workflows, and more)
 - **Automatic Form Generation** from schemas
 - **Field Validation** on client and server
 
 ### XLS Export System
 - **Template Management** - Register XLS/XLSX templates
 - **Field Mapping** - Map database fields to Excel cells
-- **Server-Side Filling** - Generate reports on demand
+- **Server-Side Filling** - Generate reports on demand (XLSX and PDF)
 - **Format Preservation** - Keeps Excel formatting and styling
 
 ### REST API
-- **25+ Endpoints** across 4 route groups
+- **40+ endpoints** across 6 route groups (projects, reports, templates, export, settings, lab-requests)
 - **Full CRUD Operations** for all entities
 - **CORS-Enabled** for frontend integration
-- **37 Passing Tests** covering all routes
+- **140+ passing backend tests** (Vitest)
 
 ### Frontend React Integration
-- **Custom Hooks** - `useProjects()`, `useReports()`, `useTemplates()`
-- **API Client** - Centralized, typed API communication
-- **Form Utilities** - Dynamic form generation and validation
-- **TypeScript Support** - Full type safety throughout
+- **Centralized state** in `App.tsx` with CRUD hooks from `hooks.ts`
+- **API Client** - Centralized API communication in `api/client.ts`
+- **Form Utilities** - Dynamic form generation from schemas (`formHelpers.ts`)
+- **Shared package** - Export filename logic in `packages/shared` (`@hja/shared`)
 
 ---
 
@@ -111,15 +109,13 @@ npm run frontend:dev
 npm run backend:dev
 ```
 
-**Run both (in separate terminals):**
+**Run both (single command, cross-platform):**
 
 ```bash
-# Terminal 1
-npm run backend:dev
-
-# Terminal 2
-npm run frontend:dev
+npm run dev:both
 ```
+
+Or in separate terminals: `npm run backend:dev` and `npm run frontend:dev`.
 
 Frontend runs on `http://localhost:3000`  
 Backend API runs on `http://localhost:5000`
@@ -148,37 +144,33 @@ npm run test
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              React Frontend (3000)                  │
-│  • Dynamic forms from schemas                       │
+│         React Frontend (port 3000)                  │
+│  • Schema-driven forms                              │
 │  • API client integration                           │
-│  • Export functionality                             │
+│  • Export (XLSX / PDF)                              │
 └──────────────────┬──────────────────────────────────┘
                    │ REST API (JSON)
 ┌──────────────────▼──────────────────────────────────┐
-│           Express Backend (5000)                    │
+│           Express Backend (port 5000)               │
 │  │                                                  │
-│  ├─ 4 Service Classes                               │
-│  │  • ProjectService                                │
-│  │  • ReportService                                 │
-│  │  • TemplateService                               │
-│  │  • ExportService                                 │
+│  ├─ 6 Service Classes                               │
+│  │  • ProjectService, ReportService                 │
+│  │  • TemplateService, ExportService                │
+│  │  • LabRequestService, SettingsService            │
 │  │                                                  │
-│  ├─ 4 Route Groups (25+ endpoints)                  │
-│  │  • POST/GET/PUT/DELETE /api/projects             │
-│  │  • POST/GET/PUT/DELETE /api/reports              │
-│  │  • POST/GET/PUT/DELETE /api/templates            │
-│  │  • POST/GET /api/exports                         │
+│  ├─ 6 Route Groups                                  │
+│  │  • /api/projects, /api/reports                   │
+│  │  • /api/templates, /api/export                   │
+│  │  • /api/settings, /api/lab-requests              │
 │  │                                                  │
-│  └─ TypeORM ORM Layer                               │
-│     (6 typed entities)                              │
+│  └─ TypeORM ORM Layer (8 entities)                  │
 └──────────────────┬──────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────┐
 │        MySQL 8+ / PostgreSQL 12+                    │
-│  • projects • locations • reports                   │
-│  • report_entries • report_templates                │
-│  • export_templates                                 │
 └─────────────────────────────────────────────────────┘
+
+Shared: packages/shared (@hja/shared) — export filenames and template IDs
 ```
 
 ---
@@ -238,40 +230,29 @@ PUT    /api/templates/:id         # Update
 DELETE /api/templates/:id         # Delete
 ```
 
-### Exports
+### Exports (`/api/export`)
 ```bash
-GET    /api/exports/templates     # List export templates
-GET    /api/exports/list          # List available XLS files
-POST   /api/exports/register-template  # Register template
-GET    /api/exports/report/:reportId/xls?templateId=id  # Download XLS
+GET    /api/export/templates                    # List export templates
+GET    /api/export/list                         # List available XLS files
+POST   /api/export/register-template            # Register export template
+GET    /api/export/report/:reportId/export      # Download XLSX or PDF (?format=xlsx|pdf&exportTemplateId=)
+GET    /api/export/report/:reportId/export-all  # Merged multi-template PDF
+GET    /api/export/lab-request/:id/export       # Lab request summary export
+GET    /api/export/lab-request/:id/export-all   # Merged lab-request PDF packet
 ```
 
 ---
 
 ## 🧪 Testing
 
-The backend includes comprehensive test coverage:
+Backend tests run from the repo root:
 
 ```bash
-cd backend
-npm run test           # Run all tests
-npx vitest run        # Run tests once
-npx vitest run tests/routes/reports.test.ts  # Run specific test file
+npm run test           # Run all backend Vitest tests
+cd backend && npm run test:ui   # Vitest UI
 ```
 
-**Test Files**:
-- `tests/routes/reports.test.ts` - 11 tests for report endpoints
-- `tests/routes/projects.test.ts` - 7 tests for project endpoints
-- `tests/routes/templates.test.ts` - 7 tests for template endpoints
-- `tests/routes/exports.test.ts` - 7 tests for export endpoints
-- `tests/forms/generic-export.test.ts` - 5 tests for Excel export functionality
-
-**Total**: 37 passing tests covering:
-- Route definitions and HTTP methods
-- Request/response handling
-- Error scenarios
-- XLS file generation with field mapping
-- Multi-row entry handling
+Tests cover export pipeline (cell mapping, PDF merge, LibreOffice pool), lab-request generation, route smoke tests, and parametrized golden exports for every template. Run `npm run lint` from the **repo root** (not `backend/`).
 
 ---
 
@@ -279,73 +260,58 @@ npx vitest run tests/routes/reports.test.ts  # Run specific test file
 
 ```
 .
-├── src/                              # React Frontend
-│   ├── components/
-│   │   ├── ProjectsList.tsx
-│   │   ├── ProjectEditor.tsx
-│   │   ├── EditableTable.tsx
-│   │   └── pages/
-│   ├── api/
-│   │   └── client.ts                # API client
-│   ├── hooks/
-│   │   └── useApi.ts                # React hooks
-│   ├── utils/
-│   │   └── formHelpers.ts           # Form utilities
-│   ├── types.ts
-│   └── App.tsx
-│
-├── backend/                          # Node.js + Express + TypeORM
+├── frontend/                         # React + Vite SPA
 │   ├── src/
-│   │   ├── entities/                # 6 TypeORM entities
-│   │   ├── services/                # 4 service classes
-│   │   ├── routes/                  # 4 route files (+ tests)
-│   │   ├── schemas/                 # Report schemas
-│   │   ├── templates/               # XLS template configs
-│   │   ├── database/                # Connection, init, seed
-│   │   ├── middleware/              # Error handling
-│   │   └── index.ts
-│   ├── tests/                       # Test suite
-│   │   ├── routes/                  # Route tests (37 tests)
-│   │   └── forms/                   # Export tests
-│   ├── data/                        # Configuration data
-│   │   ├── schemas/                 # Report JSON schemas
-│   │   ├── template_defs/           # Export template configs
-│   │   └── templates/               # XLS/XLSX template files
-│   ├── package.json
-│   └── README.md
+│   │   ├── components/
+│   │   ├── api/client.ts
+│   │   ├── hooks.ts
+│   │   └── App.tsx
+│   └── .env.example
 │
-├── DATABASE_ARCHITECTURE.md         # Database design
-├── ARCHITECTURE_DIAGRAMS.md         # Visual diagrams
-└── FRONTEND_INTEGRATION.md          # React integration
+├── backend/                          # Express + TypeORM API
+│   ├── src/
+│   │   ├── entities/                 # 8 TypeORM entities
+│   │   ├── services/                 # 6 service classes
+│   │   ├── routes/                   # 6 route modules
+│   │   ├── exports/                  # XLSX/PDF export pipeline
+│   │   └── database/
+│   ├── tests/                        # Vitest suite
+│   └── data/                         # Schemas, template defs, XLSX files
+│
+├── packages/shared/                  # @hja/shared (export filenames, template IDs)
+├── RAILWAY.md                        # Railway deployment
+└── FRONTEND_INTEGRATION.md           # Frontend API integration
 ```
 
 ---
 
 ## 🛠️ Development
 
-### Frontend Commands
+### Root commands (recommended)
 ```bash
-npm run dev           # Start dev server (HMR enabled)
-npm run build         # Build for production
-npm run lint          # Run ESLint
-npm run format        # Format with Prettier
+npm run dev:both      # Backend + frontend (Windows/macOS/Linux)
+npm run lint          # ESLint (entire monorepo)
+npm run format        # Prettier
+npm run test          # Backend Vitest
+npm run build         # shared → backend → frontend
 ```
 
-### Backend Commands
+### Frontend
 ```bash
-cd backend
-npm run dev           # Start with hot reload
-npm run build         # Compile TypeScript
-npm run lint          # Run ESLint
-npm run test          # Run tests
-npm run seed          # Seed sample data
+npm run frontend:dev  # Vite dev server on port 3000
+```
+
+### Backend
+```bash
+npm run backend:dev   # tsx watch on port 5000
+cd backend && npm run seed   # Sample data (optional)
 ```
 
 ---
 
 ## 📋 Environment Configuration
 
-### Frontend (`.env` in `frontend/`)
+### Frontend (`.env` in `frontend/` — copy from `frontend/.env.example`)
 
 ```env
 VITE_API_URL=http://localhost:5000/api
@@ -393,15 +359,13 @@ The migration creates **only** the empty `hja_reports` database (or whatever `DB
 
 ### Railway (Docker)
 
-**Important:** Do not deploy from the repo root — set each service’s root directory (`/backend`, `/frontend`). Full instructions: **[RAILWAY.md](./RAILWAY.md)**.
-
-Use three Railway services (or two if you use Railway's managed MySQL instead of the compose MySQL image):
+**Important:** Each service uses the **repository root** as build context so `packages/shared` is available. Full instructions: **[RAILWAY.md](./RAILWAY.md)**.
 
 | Service | Root directory | Dockerfile | Notes |
 |---------|----------------|------------|-------|
-| Backend | `backend` | `backend/Dockerfile` | LibreOffice included; entrypoint runs DB bootstrap migration |
-| Frontend | `frontend` | `frontend/Dockerfile` | Set build arg `VITE_API_URL` to the public backend URL |
-| MySQL | — | Railway MySQL plugin | Point backend `DB_HOST` at the plugin hostname |
+| Backend | `/` (repo root) | `backend/Dockerfile` | LibreOffice included; entrypoint runs DB bootstrap migration |
+| Frontend | `/` (repo root) | `frontend/Dockerfile` | Set build arg `VITE_API_URL` to the public backend URL |
+| MySQL | — | Railway MySQL plugin | Point backend `DB_*` at the plugin hostname |
 
 **Backend env:** `NODE_ENV=production`, `DB_*`, `CORS_ORIGIN` (frontend URL), and `PORT` (Railway sets this).
 
@@ -435,7 +399,7 @@ More detail: [Backend README — Production Deployment](./backend/README.md#-pro
 ✅ **Flexible** - JSON-based report templates  
 ✅ **Complete** - Full CRUD API with XLS export  
 ✅ **Typed** - TypeScript throughout  
-✅ **Tested** - 37 tests covering all endpoints  
+✅ **Tested** - 140+ backend Vitest tests  
 ✅ **Documented** - Comprehensive guides and API docs  
 
 ---

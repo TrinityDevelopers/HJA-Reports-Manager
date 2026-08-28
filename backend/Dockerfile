@@ -4,12 +4,20 @@ FROM node:20-bookworm AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Build shared package first (@hja/shared)
+COPY packages/shared/package.json packages/shared/package-lock.json packages/shared/tsconfig.json ./packages/shared/
+COPY packages/shared/src ./packages/shared/src
+WORKDIR /app/packages/shared
+RUN npm ci && npm run build
+
+# Build backend
+WORKDIR /app/backend
+COPY backend/package.json backend/package-lock.json ./
 RUN npm ci
 
-COPY tsconfig.json ./
-COPY src ./src
-COPY data ./data
+COPY backend/tsconfig.json ./
+COPY backend/src ./src
+COPY backend/data ./data
 
 RUN npm run build
 
@@ -33,17 +41,18 @@ RUN sed -i '/^Components:/ {/\bcontrib\b/! s/ main$/ main contrib/}' /etc/apt/so
   && fc-cache -f -v \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/backend
 
 ENV NODE_ENV=production
 
-COPY package.json package-lock.json ./
+COPY backend/package.json backend/package-lock.json ./
+COPY --from=build /app/packages/shared /app/packages/shared
 RUN npm ci --omit=dev && npm cache clean --force
 
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/data ./data
+COPY --from=build /app/backend/dist ./dist
+COPY --from=build /app/backend/data ./data
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
   && mkdir -p temp
 

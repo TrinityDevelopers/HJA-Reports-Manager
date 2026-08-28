@@ -8,11 +8,11 @@ import { formatDepthRange } from '../../utils/depth';
 import { templateAbbreviation } from '../../utils/templates';
 import { downloadFromUrl } from '../../utils/download';
 import {
+  getSchemaExportTemplateIds,
   labRequestMergedBaseName,
   labRequestSummaryBaseName,
   reportExportBaseName,
-} from '../../utils/exportFileName';
-import { getSchemaExportTemplateIds } from '../../utils/exportTemplateIds';
+} from '@hja/shared';
 
 export function LabRequestDetailPage({
   labRequest,

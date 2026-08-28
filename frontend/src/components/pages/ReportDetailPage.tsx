@@ -20,9 +20,12 @@ import {
 } from '../../utils/reportEntryMapping';
 import type { NormalizedEntrySection } from '../../utils/formHelpers';
 import { FieldInput } from '../forms/FieldInput';
-import { reportExportAllBaseName, reportExportBaseName } from '../../utils/exportFileName';
+import {
+  getSchemaExportTemplateIds,
+  reportExportAllBaseName,
+  reportExportBaseName,
+} from '@hja/shared';
 import { downloadFromUrl } from '../../utils/download';
-import { getSchemaExportTemplateIds } from '../../utils/exportTemplateIds';
 
 export function ReportDetailPage({
   report,

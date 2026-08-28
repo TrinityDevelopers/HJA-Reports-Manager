@@ -8,7 +8,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   // Global ignores
-  globalIgnores(['dist', 'frontend/dist', 'backend/dist', 'node_modules', 'frontend/node_modules', 'backend/node_modules']),
+  globalIgnores(['dist', 'frontend/dist', 'backend/dist', 'packages/shared/dist', 'node_modules', 'frontend/node_modules', 'backend/node_modules', 'packages/shared/node_modules']),
 
   // Frontend config
   {
@@ -33,7 +33,7 @@ export default defineConfig([
 
   // Backend config
   {
-    files: ['backend/**/*.ts'],
+    files: ['backend/**/*.ts', 'packages/shared/**/*.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

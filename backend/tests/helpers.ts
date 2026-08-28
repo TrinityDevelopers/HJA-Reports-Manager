@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { existsSync } from 'fs';
 import path from 'path';
 import { loadJsonDirSync } from '../src/utils/jsonDir';
-import { getSchemaExportTemplateIds } from '../src/schemas/exportTemplateIds';
+import { getSchemaExportTemplateIds } from '@hja/shared';
 
 export interface SchemaField {
   id: string;

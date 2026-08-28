@@ -28,5 +28,4 @@ export const AppDataSource = new DataSource({
     Settings,
     LabRequest,
   ],
-  subscribers: ['src/database/subscribers/**/*.ts'],
 });

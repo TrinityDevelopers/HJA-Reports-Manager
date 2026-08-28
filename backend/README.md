@@ -171,12 +171,32 @@ PUT    /api/templates/:id          Update template
 DELETE /api/templates/:id          Delete template
 ```
 
-### Exports (4 endpoints)
+### Exports (`/api/export`)
 ```
-GET    /api/exports/templates           List export templates
-POST   /api/exports/register-template   Register export template
-GET    /api/exports/list                List available XLS files
-GET    /api/exports/report/:reportId/xls?templateId=<id>  Download XLS
+GET    /api/export/templates                              List export templates
+POST   /api/export/register-template                      Register export template
+GET    /api/export/list                                   List available XLS files
+GET    /api/export/report/:reportId/export                Download XLSX or PDF (?format=xlsx|pdf&exportTemplateId=)
+GET    /api/export/report/:reportId/export-all            Merged multi-template PDF
+GET    /api/export/lab-request/:labRequestId/export       Lab request summary export
+GET    /api/export/lab-request/:labRequestId/export-all   Merged lab-request PDF packet
+```
+
+### Settings
+```
+GET    /api/settings              Get settings
+PUT    /api/settings              Update settings
+```
+
+### Lab Requests
+```
+GET    /api/lab-requests                    List lab requests
+POST   /api/lab-requests                   Create lab request
+GET    /api/lab-requests/:id                Get lab request
+PUT    /api/lab-requests/:id                Update lab request
+DELETE /api/lab-requests/:id                Delete lab request
+GET    /api/lab-requests/:id/reports        List generated reports
+POST   /api/lab-requests/:id/generate       Generate reports from lab request
 ```
 
 ---
@@ -208,12 +228,16 @@ See [Backend Data Configuration](./data/README.md) for adding new templates.
 - **ReportService** - Report and entry management
 - **TemplateService** - Template seeding and management
 - **ExportService** - XLS template filling and generation
+- **LabRequestService** - Lab request CRUD and report generation
+- **SettingsService** - Application settings
 
 ### Route Handlers
 - `routes/projects.ts` - Project endpoints
 - `routes/reports.ts` - Report endpoints
 - `routes/templates.ts` - Template endpoints
 - `routes/exports.ts` - Export endpoints
+- `routes/settings.ts` - Settings endpoints
+- `routes/labRequests.ts` - Lab request endpoints
 
 ### Database Layer
 - **Connection**: TypeORM DataSource initialization
@@ -229,40 +253,15 @@ See [Backend Data Configuration](./data/README.md) for adding new templates.
 
 ## 🧪 Testing
 
-Comprehensive test suite with 37 passing tests:
+Run tests from the repo root (`npm run test`) or from `backend/`:
 
 ```bash
 npm run test           # Run all tests
-npx vitest run        # Run once
-npx vitest watch      # Watch mode
-npm run test -- --coverage  # Coverage report
+npx vitest run         # Run once
+npx vitest watch       # Watch mode
 ```
 
-### Test Files
-
-**Route Tests** (37 tests total):
-- `tests/routes/projects.test.ts` - 7 tests for project endpoints
-- `tests/routes/reports.test.ts` - 11 tests for report endpoints
-- `tests/routes/templates.test.ts` - 7 tests for template endpoints
-- `tests/routes/exports.test.ts` - 7 tests for export endpoints
-
-**Integration Tests** (5 tests):
-- `tests/forms/generic-export.test.ts` - 5 tests for Excel export functionality
-
-### Test Coverage
-✅ Route definitions and HTTP methods  
-✅ CRUD operation validation  
-✅ Request and response handling  
-✅ Error scenarios  
-✅ XLS file generation with field mapping  
-✅ Multi-row entry handling with `rowsPerEntry`  
-
-### Test Pattern
-Tests use **Vitest** with **Supertest** for HTTP testing:
-- Module isolation with `vi.resetModules()`
-- Dynamic imports for service injection
-- Proper setup/teardown with `beforeEach` and `afterEach`
-- Type-safe Express Router typing
+Tests cover export pipeline modules, lab-request generation, route smoke tests, and parametrized golden exports for every template. **Lint** is configured at the **repo root** only (`npm run lint` from `/`); there is no `lint` script in `backend/package.json`.
 
 ---
 
@@ -274,12 +273,6 @@ npm run dev
 
 # Build for production
 npm run build
-
-# Lint code
-npm run lint
-
-# Fix linting errors
-npm run lint:fix
 
 # Run tests
 npm run test
@@ -294,6 +287,8 @@ npm run seed
 npm run migration:run
 npm run migration:revert
 ```
+
+Lint and format from the **repo root**: `npm run lint`, `npm run format`.
 
 ---
 
@@ -312,7 +307,7 @@ npm run migration:revert
 
 **Testing**:
 - vitest 4.0
-- supertest 6.3
+- supertest 7.x
 
 **Utilities**:
 - uuid 9.x
@@ -358,24 +353,22 @@ npm start
 
 ### Railway (Docker)
 
-**Important:** Railway must use root directory `/backend`, not the repo root. See **[RAILWAY.md](../RAILWAY.md)** for step-by-step setup (fixes the Railpack “No start command detected” error).
+See **[RAILWAY.md](../RAILWAY.md)** for step-by-step setup. Each service uses the **repository root** as build context (so `packages/shared` is included), with `dockerfilePath` set to `backend/Dockerfile` or `frontend/Dockerfile` in the service’s `railway.toml`.
 
-Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice for the PDF export pool and runs the database bootstrap migration before starting the API. Set `CLOUDMERSIVE_API_KEY` to prefer Cloudmersive for XLSX→PDF conversion; tune LibreOffice parallelism with `LIBREOFFICE_CONCURRENCY` (default 3).
+Deploy the backend from `backend/Dockerfile`. The image includes LibreOffice for the PDF export pool and runs the database bootstrap migration before starting the API.
 
 **Backend service (Railway)**
 
-- Root directory: `backend`
-- Builder: Dockerfile
-- No custom start command needed (entrypoint runs migration + `node dist/index.js`)
+- Root directory: `/` (repo root)
+- Config: `backend/railway.toml`, Dockerfile: `backend/Dockerfile`
+- Entrypoint runs migration + `node dist/src/index.js`
 - Set `NODE_ENV=production`, all `DB_*` variables, `PORT` (Railway injects this), and `CORS_ORIGIN` to your frontend URL
-- Use a Railway MySQL plugin or a separate MySQL service; set `DB_HOST` to that service hostname (not `localhost`)
 
 **Frontend service (Railway)**
 
-- Root directory: `frontend`
-- Builder: Dockerfile
+- Root directory: `/` (repo root)
+- Config: `frontend/railway.toml`, Dockerfile: `frontend/Dockerfile`
 - Build arg / env at build time: `VITE_API_URL=https://<backend-public-host>/api`
-- Set `CORS_ORIGIN` on the backend to the frontend public URL
 
 **Local full stack with Docker Compose**
 

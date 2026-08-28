@@ -92,18 +92,6 @@ export interface Report {
   updatedAt: Date;
 }
 
-export interface ExportTemplate {
-  id: ID;
-  templateId: ID;
-  name: string;
-  displayName: string;
-  filePath: string;
-  format: 'xlsx';
-  fieldMapping?: Record<string, unknown>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface SettingsState {
   companyName: string;
   units: 'imperial' | 'metric';

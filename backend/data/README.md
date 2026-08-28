@@ -364,7 +364,7 @@ One XLS/XLSX file per export template (filename must match `filePath` in the cor
 2. **Export Templates**:
    - Loads all `.json` files from `template_defs/`
    - Registers in database as `ExportTemplate` entities
-   - Available via `/api/exports/templates` endpoint
+   - Available via `/api/export/templates` endpoint
 
 3. **Template Files**:
    - Validates files exist in `templates/` directory

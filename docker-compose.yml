@@ -16,8 +16,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -37,8 +37,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
     restart: unless-stopped

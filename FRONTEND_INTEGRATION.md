@@ -1,27 +1,38 @@
 # Frontend Integration Guide
 
-This guide explains how to integrate the React frontend with the new backend API.
+This guide explains how the React frontend integrates with the backend API.
 
 ## Overview
 
-The frontend has been updated to use the REST API instead of localStorage. Key changes include:
+The frontend uses the REST API for all persistence. Key pieces:
 
-1. **API Client** - `src/api/client.ts` - Centralized API communication
-2. **Custom Hooks** - `src/hooks/useApi.ts` - React hooks for data fetching
-3. **Form Utilities** - `src/utils/formHelpers.ts` - Dynamic form handling
-4. **Updated Types** - `src/types.ts` - New database-compatible types
+1. **API Client** — `frontend/src/api/client.ts` — Centralized API communication
+2. **App state** — `frontend/src/App.tsx` — Loads entities on mount via `apiClient`
+3. **CRUD hooks** — `frontend/src/hooks.ts` — `useCRUD`, `useFormState`, `useLocalStorage`
+4. **Form utilities** — `frontend/src/utils/formHelpers.ts` — Schema-driven forms
+5. **Shared export logic** — `packages/shared` (`@hja/shared`) — Export filenames and template IDs
 
 ## Setup
 
 ### 1. Install Dependencies
 
+From the repo root:
+
 ```bash
 npm install
 ```
 
+This installs root, `packages/shared`, `backend`, and `frontend` dependencies.
+
 ### 2. Configure Backend URL
 
-Create `.env` in the root directory:
+Copy the example env file:
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+Default:
 
 ```env
 VITE_API_URL=http://localhost:5000/api
@@ -29,20 +40,17 @@ VITE_API_URL=http://localhost:5000/api
 
 ### 3. Start Both Servers
 
-Terminal 1 - Backend:
+From the repo root:
+
 ```bash
-cd backend
-npm run dev
+npm run dev:both
 ```
 
-Terminal 2 - Frontend:
-```bash
-npm run dev
-```
+Or separately: `npm run backend:dev` and `npm run frontend:dev`.
 
 ## API Client Usage
 
-The `apiClient` provides typed access to all backend endpoints:
+The `apiClient` provides access to backend endpoints:
 
 ```typescript
 import { apiClient } from './api/client';
@@ -52,7 +60,7 @@ const projects = await apiClient.projects.getAll();
 const project = await apiClient.projects.getById('project-id');
 const newProject = await apiClient.projects.create({
   projectName: 'New Project',
-  projectNumber: 'PRJ-001'
+  projectNumber: 'PRJ-001',
 });
 await apiClient.projects.update('project-id', { projectName: 'Updated' });
 await apiClient.projects.delete('project-id');
@@ -60,320 +68,78 @@ await apiClient.projects.delete('project-id');
 // Reports
 const reports = await apiClient.reports.getAll();
 const report = await apiClient.reports.getById('report-id');
-const newReport = await apiClient.reports.create({
-  projectId: 'project-id',
-  templateId: 'template-id',
-  projectName: 'Project Name',
-  dateOfTest: new Date(),
-  headerData: {
-    // Template-specific fields only
-  },
-});
 
-// Report Entries
+// Report entries
 await apiClient.reports.addEntry('report-id', {
   data: { fieldId: 'value' },
-  entryOrder: 0
+  entryOrder: 0,
 });
-await apiClient.reports.updateEntry('entry-id', { data: {...} });
-await apiClient.reports.deleteEntry('entry-id');
 
-// Templates
+// Templates (read-only in the UI)
 const templates = await apiClient.templates.getAll();
-const template = await apiClient.templates.getById('template-id');
 
-// Export (format defaults to 'xlsx'; pass 'pdf' for a PDF rendered via LibreOffice)
+// Lab requests
+const labRequests = await apiClient.labRequests.getAll();
+await apiClient.labRequests.generate('lab-request-id');
+
+// Export (format defaults to 'xlsx'; pass 'pdf' for PDF)
 const exportUrl = apiClient.exports.downloadReport('report-id', 'pdf');
-// Use this URL for download: window.location.href = exportUrl;
+// Trigger download via downloadFromUrl() or window.location
 ```
 
-## Custom Hooks
+## Data loading pattern
 
-React hooks provide convenient data fetching and state management:
+Entity lists are loaded in `App.tsx` on mount and held in `useCRUD` state:
 
 ```typescript
-import { useProjects, useReports, useTemplates } from './hooks/useApi';
+import { apiClient } from './api/client';
+import { useCRUD } from './hooks';
 
-function MyComponent() {
-  const { projects, loading, error, createProject, deleteProject } = useProjects();
-  const { reports, createReport, updateReport } = useReports('project-id');
-  const { templates } = useTemplates();
+const { items: projects, setItems: setProjects } = useCRUD<Project>([]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-
-  return (
-    <div>
-      {projects.map(p => (
-        <div key={p.id}>{p.projectName}</div>
-      ))}
-    </div>
-  );
-}
+useEffect(() => {
+  apiClient.projects
+    .getAll()
+    .then((data) => setProjects(data as Project[]))
+    .catch(console.error);
+}, []);
 ```
 
 ## Form Utilities
 
-Helper functions for working with dynamic form schemas:
+Helper functions for dynamic schema-driven forms:
 
 ```typescript
-import { 
-  normalizeTemplateSchema,
-  validateField,
-  formatFieldValue,
-  parseFieldValue
-} from './utils/formHelpers';
+import { normalizeTemplateSchema } from './utils/formHelpers';
 
-// Parse template structure (new canonical pipeline)
 const normalized = normalizeTemplateSchema(template);
-
-// Validate a field
-const validation = validateField(fieldDef, value);
-if (!validation.valid) {
-  console.error(validation.error);
-}
-
-// Validate entire entry
-const entryValidation = validateEntry(fields, entryData);
-
-// Format for display
-const displayValue = formatFieldValue(fieldDef, value);
-
-// Parse user input
-const parsedValue = parseFieldValue(fieldDef, inputString);
+// normalized.beforeEntriesSections, normalized.entrySections, etc.
 ```
 
-## Component Updates
+See `ReportDetailPage.tsx` and `FieldInput.tsx` for the canonical form rendering pipeline.
 
-### Before - Using localStorage
-
-```typescript
-// Old: hardcoded report types
-const report: Report = {
-  id: 1,
-  projectId: 1,
-  reportType: REPORT_TYPES.DIGITAL_DENSITY,
-  entries: [...]
-};
-```
-
-### After - Using API
+## Exporting to XLSX or PDF
 
 ```typescript
-// New: template-based dynamic forms
-const { templates } = useTemplates();
-const template = templates.find(t => t.name === 'standard-proctor');
-
-const report: Report = {
-  id: 'uuid',
-  projectId: 'project-uuid',
-  templateId: template.id,
-  headerData: {
-    projectName: 'Project A',
-    jobNumber: '123',
-    // ... other header fields
-  },
-  entries: [
-    {
-      id: 'entry-uuid',
-      data: {
-        boringNumber: '1',
-        depth: '5.5',
-        // ... other entry fields
-      },
-      entryOrder: 0
-    }
-  ]
-};
-```
-
-## Common Patterns
-
-### Fetching Data
-
-```typescript
-function ProjectList() {
-  const { projects, loading, error, refetch } = useProjects();
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-
-  return (
-    <ul>
-      {projects.map(p => (
-        <li key={p.id}>{p.projectName}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-### Creating Data
-
-```typescript
-function CreateProjectForm() {
-  const { createProject } = useProjects();
-  const [name, setName] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createProject({
-        projectName: name,
-        projectNumber: `PRJ-${Date.now()}`,
-        locations: []
-      });
-      setName('');
-    } catch (error) {
-      console.error('Failed to create project:', error);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={name} onChange={e => setName(e.target.value)} />
-      <button type="submit">Create</button>
-    </form>
-  );
-}
-```
-
-### Dynamic Form Generation
-
-```typescript
-function ReportForm({ template }) {
-  const normalized = normalizeTemplateSchema(template);
-  const [headerData, setHeaderData] = useState({});
-
-  const handleHeaderChange = (fieldId: string, value: unknown) => {
-    setHeaderData(prev => setFieldValue(prev, fieldId, value));
-  };
-
-  return (
-    <div>
-      <h2>Report Header</h2>
-      {normalized.beforeEntriesSections.flatMap(s => s.fields).map(field => (
-        <div key={field.id}>
-          <label>{field.label}</label>
-          <input
-            type={field.type}
-            value={getFieldValue(headerData, field.id) || ''}
-            onChange={e => handleHeaderChange(field.id, parseFieldValue(field, e.target.value))}
-            required={field.required}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-```
-
-### Exporting to XLSX or PDF
-
-```typescript
-function ExportButton({ reportId }) {
-  const handleExport = async (format: 'xlsx' | 'pdf') => {
-    const url = apiClient.exports.downloadReport(reportId, format);
-    window.location.href = url;
-  };
-
-  return (
-    <>
-      <button onClick={() => handleExport('xlsx')}>Download XLSX</button>
-      <button onClick={() => handleExport('pdf')}>Download PDF</button>
-    </>
-  );
-}
-```
-
-## Error Handling
-
-All API calls may throw errors. Handle them appropriately:
-
-```typescript
-async function fetchReport(reportId: string) {
-  try {
-    const report = await apiClient.reports.getById(reportId);
-    return report;
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('404')) {
-        console.error('Report not found');
-      } else {
-        console.error('API Error:', error.message);
-      }
-    }
-  }
-}
-```
-
-## State Management Pattern
-
-For complex state, use React Context or a state management library:
-
-```typescript
-import { createContext, useContext, useState } from 'react';
-
-interface AppContextType {
-  selectedProject: Project | null;
-  setSelectedProject: (project: Project | null) => void;
-}
-
-const AppContext = createContext<AppContextType | null>(null);
-
-export function AppProvider({ children }) {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-
-  return (
-    <AppContext.Provider value={{ selectedProject, setSelectedProject }}>
-      {children}
-    </AppContext.Provider>
-  );
-}
-
-export function useAppContext() {
-  const context = useContext(AppContext);
-  if (!context) throw new Error('useAppContext must be used within AppProvider');
-  return context;
-}
-```
-
-## Testing API Integration
-
-```typescript
-// Test with curl
-curl http://localhost:5000/api/projects
-
-// Test in browser console
-fetch('http://localhost:5000/api/projects')
-  .then(r => r.json())
-  .then(data => console.log(data));
-
-// Test with API client
 import { apiClient } from './api/client';
-apiClient.projects.getAll().then(console.log);
+import { downloadFromUrl } from './utils/download';
+
+const url = apiClient.exports.downloadReport(reportId, 'pdf');
+await downloadFromUrl(url, 'report.pdf');
 ```
+
+Multi-template reports use `downloadReportAllMerged` or loop per `exportTemplateId` from `@hja/shared`'s `getSchemaExportTemplateIds`.
 
 ## Troubleshooting
 
 ### CORS Errors
 - Ensure backend is running on port 5000
-- Check CORS_ORIGIN in backend .env matches http://localhost:3000
+- Check `CORS_ORIGIN` in `backend/.env` matches `http://localhost:3000`
 
 ### 404 Errors
-- Verify IDs are correct UUIDs
-- Check that entities exist in database
-- Confirm endpoint path is correct
-
-### Type Errors
-- Update types.ts if entities change
-- Regenerate types from database schema if needed
+- Verify IDs are UUIDs
+- Confirm entities exist in the database
 
 ### Data Not Persisting
-- Check backend logs for errors
-- Verify database connection
-- Confirm records are created in database
+- Check backend logs
+- Verify database connection in `backend/.env`

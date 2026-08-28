@@ -53,19 +53,10 @@ export const apiClient = {
   templates: {
     getAll: () => request('/templates'),
     getById: (id: string) => request(`/templates/${id}`),
-    create: (data: unknown) =>
-      request('/templates', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: unknown) =>
-      request(`/templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => request(`/templates/${id}`, { method: 'DELETE' }),
   },
 
   // Exports
   exports: {
-    getTemplates: () => request('/export/templates'),
-    listFiles: () => request('/export/list'),
-    registerTemplate: (data: unknown) =>
-      request('/export/register-template', { method: 'POST', body: JSON.stringify(data) }),
     downloadReport: (
       reportId: string,
       format: 'xlsx' | 'pdf' = 'xlsx',

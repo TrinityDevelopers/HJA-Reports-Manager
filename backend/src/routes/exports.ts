@@ -7,13 +7,13 @@ import { LabRequestService } from '../services/LabRequestService';
 import { TemplateService } from '../services/TemplateService';
 import { labRequestToExportableReport } from '../exports/labRequestExport';
 import {
+  getSchemaExportTemplateIds,
   labRequestMergedBaseName,
   labRequestSummaryBaseName,
   reportExportAllBaseName,
   reportExportBaseName,
-} from '../exports/exportFileName';
+} from '@hja/shared';
 import { mergePdfBuffers } from '../exports/mergePdfs';
-import { getSchemaExportTemplateIds } from '../schemas/exportTemplateIds';
 import { mapWithConcurrency } from '../utils/mapWithConcurrency';
 import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
 import type { ExportTemplate } from '../entities/ExportTemplate';

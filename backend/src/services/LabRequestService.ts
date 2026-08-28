@@ -9,7 +9,7 @@ import { pickAndCoerce } from '../utils/pickAndCoerce';
 import { coerceDateOnly } from '../utils/dateOnly';
 import { formatDepthRange } from '../utils/depth';
 import { chunkArray } from '../utils/chunkArray';
-import { getSchemaExportTemplateIds } from '../schemas/exportTemplateIds';
+import { getSchemaExportTemplateIds } from '@hja/shared';
 
 /** Per-template lab request rule embedded in the schema JSON. */
 interface LabRequestRule {

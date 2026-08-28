@@ -1,20 +1,22 @@
 # Deploying to Railway
 
-This repository is a monorepo with separate `backend` and `frontend` applications. Deploy them as **independent Railway services**, each with its own root directory and Dockerfile.
+This repository is a monorepo with separate `backend` and `frontend` applications plus a shared package (`packages/shared`). Deploy them as **independent Railway services**, each using Docker with the **repository root** as build context so `@hja/shared` is available during the image build.
 
-Do **not** build from the repository root. The root `package.json` has no production `start` script, which causes Railpack to fail with:
+Do **not** use Railpack at the repo root without a Dockerfile. The root `package.json` has no production `start` script, which causes Railpack to fail with:
 
 > No start command detected
+
+Each service’s `railway.toml` sets `builder = "DOCKERFILE"` so Railway uses the Dockerfile instead of Railpack.
 
 ## Architecture
 
 | Component | Railway service | Root directory | Config file | Dockerfile |
 |-----------|-----------------|----------------|-------------|------------|
 | Database | Managed MySQL (or PostgreSQL) | — | — | — |
-| API | Backend | `backend` | `backend/railway.toml` | `backend/Dockerfile` |
-| UI | Frontend | `frontend` | `frontend/railway.toml` | `frontend/Dockerfile` |
+| API | Backend | `/` (repo root) | `backend/railway.toml` | `backend/Dockerfile` |
+| UI | Frontend | `/` (repo root) | `frontend/railway.toml` | `frontend/Dockerfile` |
 
-Each service’s `railway.toml` sets `builder = "DOCKERFILE"` so Railway uses the Dockerfile instead of Railpack.
+Both Dockerfiles copy `packages/shared` and build it before compiling the app. `watchPatterns` in each `railway.toml` includes `packages/shared/**` so shared changes trigger redeploys.
 
 ## Prerequisites
 
@@ -37,10 +39,10 @@ Create a service from the same repository (or configure an existing one) with th
 
 | Setting | Value |
 |---------|-------|
-| **Root Directory** | `backend` |
+| **Root Directory** | `/` (repository root) |
 | **Config-as-code file** | `backend/railway.toml` |
 
-Root Directory ensures Railway builds from `backend/`, where the Dockerfile and npm `start` script live.
+The Dockerfile path is `backend/Dockerfile` (set in `railway.toml`). Build context must be the repo root so `packages/shared` is included.
 
 ### Networking
 
@@ -92,8 +94,10 @@ Create a second service from the same repository.
 
 | Setting | Value |
 |---------|-------|
-| **Root Directory** | `frontend` |
+| **Root Directory** | `/` (repository root) |
 | **Config-as-code file** | `frontend/railway.toml` |
+
+The Dockerfile path is `frontend/Dockerfile` (set in `railway.toml`). Build context must be the repo root so `packages/shared` is included.
 
 ### Environment variables
 
@@ -119,10 +123,12 @@ Open the frontend URL in a browser and confirm API requests succeed in the netwo
 
 ## Monorepo layout
 
-If Railway created a single service pointing at the repository root, either:
+Create **two services** from the same repo (backend and frontend). Each service should use:
 
-- Reconfigure it as the backend (`Root Directory`: `backend`, config: `backend/railway.toml`) and add a separate frontend service, or
-- Remove the misconfigured service and create two services from the same repo, each with the correct root directory.
+- **Root Directory**: `/` (repository root)
+- **Config-as-code**: `backend/railway.toml` or `frontend/railway.toml` with `builder = "DOCKERFILE"`
+
+If Railway created a single service at the repo root without a Dockerfile config, add the appropriate `railway.toml` or split into two services as above.
 
 See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-monorepo) for platform-specific details.
 
@@ -130,8 +136,8 @@ See [Railway’s monorepo guide](https://docs.railway.com/guides/deploying-a-mon
 
 ### Railpack / “No start command detected”
 
-- **Root Directory** is still `/` (repo root). Set it to `backend` or `frontend`.
-- **Config-as-code file** is missing. Add `backend/railway.toml` or `frontend/railway.toml` with `builder = "DOCKERFILE"`.
+- **Config-as-code file** is missing or not loaded. Add `backend/railway.toml` or `frontend/railway.toml` with `builder = "DOCKERFILE"` and the correct `dockerfilePath`.
+- Railway is using Railpack instead of Docker. Confirm build logs show **Docker**, not Railpack.
 
 ### Backend builds with Docker but fails on database connection
 
