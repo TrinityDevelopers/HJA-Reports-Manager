@@ -66,8 +66,19 @@ export const apiClient = {
     listFiles: () => request('/export/list'),
     registerTemplate: (data: unknown) =>
       request('/export/register-template', { method: 'POST', body: JSON.stringify(data) }),
-    downloadReport: (reportId: string, format: 'xlsx' | 'pdf' = 'xlsx') =>
-      `${API_BASE_URL}/export/report/${reportId}/export?format=${format}`,
+    downloadReport: (
+      reportId: string,
+      format: 'xlsx' | 'pdf' = 'xlsx',
+      exportTemplateId?: string,
+    ) => {
+      const params = new URLSearchParams({ format });
+      if (exportTemplateId) {
+        params.set('exportTemplateId', exportTemplateId);
+      }
+      return `${API_BASE_URL}/export/report/${reportId}/export?${params.toString()}`;
+    },
+    downloadReportAllMerged: (reportId: string) =>
+      `${API_BASE_URL}/export/report/${reportId}/export-all?format=pdf`,
     downloadLabRequest: (labRequestId: string, format: 'xlsx' | 'pdf' = 'xlsx') =>
       `${API_BASE_URL}/export/lab-request/${labRequestId}/export?format=${format}`,
     downloadLabRequestAllMerged: (labRequestId: string) =>

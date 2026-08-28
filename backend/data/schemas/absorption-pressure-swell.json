@@ -5,6 +5,10 @@
   "abbreviation": "APS",
   "description": "Absorption-pressure swell test data sheet",
   "version": "1.0.0",
+  "templates": [
+    "absorption-pressure-swell",
+    "absorption-pressure-swell-balancing"
+  ],
   "labRequest": {
     "mode": "per-sample",
     "map": {
@@ -269,6 +273,7 @@
     },
     {
       "type": "entry",
+      "id": "swellReadings",
       "title": "Swell Readings",
       "fields": [
         {
@@ -297,6 +302,49 @@
         },
         {
           "id": "swellReadBy",
+          "label": "Read By",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "id": "balancingLoads",
+      "title": "Balancing Loads",
+      "fields": [
+        {
+          "id": "changeInLoadGms",
+          "label": "Change in Load (gms)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "accumulatedLoadGms",
+          "label": "Accumulated Load (gms)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "dialReading",
+          "label": "Dial Reading",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "time",
+          "label": "Time",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "readBy",
           "label": "Read By",
           "type": "text",
           "required": false

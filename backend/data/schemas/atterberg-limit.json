@@ -5,6 +5,7 @@
   "abbreviation": "AL",
   "description": "Liquid and plastic limit determination data sheet",
   "version": "1.0.0",
+  "templates": ["atterberg-limit"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

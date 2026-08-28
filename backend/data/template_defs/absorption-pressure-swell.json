@@ -53,10 +53,10 @@
     "header_takenDownBy[date]": "N54",
     "header_dryWeightsBy[name]": "E55",
     "header_dryWeightsBy[date]": "N55",
-    "entry_swellLoadGms_row": "A38-51,K38-51",
-    "entry_swellDialReading_row": "B38-51,N38-51",
-    "entry_swellTime_row": "E38-51,P38-51",
-    "entry_swellDate_row": "F38-51,S38-51",
-    "entry_swellReadBy_row": "I38-51,U38-51"
+    "entry_swellReadings_swellLoadGms_row": "A38-51,K38-51",
+    "entry_swellReadings_swellDialReading_row": "B38-51,N38-51",
+    "entry_swellReadings_swellTime_row": "E38-51,P38-51",
+    "entry_swellReadings_swellDate_row": "F38-51,S38-51",
+    "entry_swellReadings_swellReadBy_row": "I38-51,U38-51"
   }
 }

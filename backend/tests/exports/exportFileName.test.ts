@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   labRequestMergedBaseName,
   labRequestSummaryBaseName,
+  reportExportAllBaseName,
   reportExportBaseName,
 } from '../../src/exports/exportFileName';
 
@@ -167,5 +168,33 @@ describe('reportExportBaseName', () => {
         headerData: { boringNumber: 'B*1', sampleNumber: 'W:1' },
       }),
     ).toBe('FooBarBaz-B1-W1-atterberg-limit');
+  });
+
+  it('uses exportTemplateId in the filename when it differs from the report type', () => {
+    const apsSchema = {
+      templates: ['absorption-pressure-swell', 'absorption-pressure-swell-balancing'],
+      labRequest: atterbergSchema.labRequest,
+    };
+
+    expect(
+      reportExportBaseName(
+        {
+          labRequest: { name: LAB_REQUEST_NAME },
+          template: { name: 'absorption-pressure-swell', schema: apsSchema },
+          headerData: { boringNumber: 'B1', sampleNumber: 'W1' },
+        },
+        'absorption-pressure-swell-balancing',
+      ),
+    ).toBe('12345G Lab Request-B1-W1-absorption-pressure-swell-balancing');
+  });
+});
+
+describe('reportExportAllBaseName', () => {
+  it('appends -all to the report export base name', () => {
+    expect(
+      reportExportAllBaseName({
+        template: { name: 'absorption-pressure-swell' },
+      }),
+    ).toBe('report_absorption-pressure-swell-all');
   });
 });

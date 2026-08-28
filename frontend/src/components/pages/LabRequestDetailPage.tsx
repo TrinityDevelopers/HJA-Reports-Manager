@@ -12,6 +12,7 @@ import {
   labRequestSummaryBaseName,
   reportExportBaseName,
 } from '../../utils/exportFileName';
+import { getSchemaExportTemplateIds } from '../../utils/exportTemplateIds';
 
 export function LabRequestDetailPage({
   labRequest,
@@ -108,16 +109,24 @@ export function LabRequestDetailPage({
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       for (const report of reports) {
-        const baseName = reportExportBaseName({
+        const exportContext = {
           ...report,
           labRequest: report.labRequest ?? labRequest,
           project: report.project ?? project,
-        });
-        await downloadFromUrl(
-          apiClient.exports.downloadReport(report.id, format),
-          `${baseName}.${format}`,
+        };
+        const exportTemplateIds = getSchemaExportTemplateIds(
+          report.template?.schema,
+          report.template?.name ?? '',
         );
-        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        for (const exportTemplateId of exportTemplateIds) {
+          const baseName = reportExportBaseName(exportContext, exportTemplateId);
+          await downloadFromUrl(
+            apiClient.exports.downloadReport(report.id, format, exportTemplateId),
+            `${baseName}.${format}`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
       }
     } catch (error) {
       console.error('Failed to export reports:', error);

@@ -5,6 +5,7 @@
   "abbreviation": "DUW",
   "description": "Dry unit weight test data sheet",
   "version": "1.0.0",
+  "templates": ["dry-unit-weights"],
   "labRequest": {
     "mode": "per-boring",
     "map": {

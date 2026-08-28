@@ -1,7 +1,9 @@
 import { v4 as uuid } from 'uuid';
+import { readFileSync } from 'fs';
 import { existsSync } from 'fs';
 import path from 'path';
 import { loadJsonDirSync } from '../src/utils/jsonDir';
+import { getSchemaExportTemplateIds } from '../src/schemas/exportTemplateIds';
 
 export interface SchemaField {
   id: string;
@@ -200,6 +202,7 @@ export function createTestReport(
  */
 export interface TemplateTestConfig {
   templateId: string;
+  reportTypeName: string;
   displayName: string;
   outputFilename: string;
   schemaPath: string;
@@ -217,23 +220,27 @@ export const TEMPLATE_CONFIGS: Record<string, TemplateTestConfig> = {};
 const schemaFiles = loadJsonDirSync(schemasDir, { sort: true, stripExt: false }).map((e) => e.file);
 
 for (const file of schemaFiles) {
-  const templateId = file.replace('.json', '');
-  const templateDefFile = path.join(templateDefsDir, file);
+  const reportTypeName = file.replace('.json', '');
+  const schemaPath = path.join(schemasDir, file);
+  const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as Record<string, unknown>;
+  const exportTemplateIds = getSchemaExportTemplateIds(schema, reportTypeName);
 
-  // Only include if corresponding template_def exists
-  if (existsSync(templateDefFile)) {
-    // Convert kebab-case to Title Case for displayName
+  for (const templateId of exportTemplateIds) {
+    const templateDefFile = path.join(templateDefsDir, `${templateId}.json`);
+    if (!existsSync(templateDefFile)) continue;
+
     const displayName = templateId
       .split('-')
       .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
     TEMPLATE_CONFIGS[templateId] = {
-      templateId: templateId,
-      displayName: displayName,
+      templateId,
+      reportTypeName,
+      displayName,
       outputFilename: `${templateId}-test.xlsx`,
       schemaPath: `../../data/schemas/${file}`,
-      templatePath: `../../data/template_defs/${file}`,
+      templatePath: `../../data/template_defs/${templateId}.json`,
     };
   }
 }

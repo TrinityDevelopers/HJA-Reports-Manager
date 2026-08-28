@@ -5,6 +5,7 @@
   "abbreviation": "CONS",
   "description": "Consolidation test time-dial data sheet",
   "version": "1.0.0",
+  "templates": ["consolidation"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

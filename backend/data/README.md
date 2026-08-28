@@ -27,6 +27,7 @@ Each schema is an ordered list of **sections**. Sections render on the report de
   "displayName": "Atterberg Limits (ASTM D4318)",
   "description": "Liquid and plastic limit determination data sheet",
   "version": "1.0.0",
+  "templates": ["atterberg-limit"],
   "sections": [
     {
       "type": "header",
@@ -67,7 +68,23 @@ Each schema is an ordered list of **sections**. Sections render on the report de
 | `type` | Purpose | Notes |
 |--------|---------|--------|
 | `header` | Single-value fields stored on the report | Multiple header sections are allowed (e.g. main header, sieve data, sign-off). Each becomes its own collapsible block in the UI. |
-| `entry` | Repeating trial rows stored as `ReportEntry` records | One or more entry sections per report. Use `id` when a report has **multiple entry tables** (liquid vs plastic limit, etc.). |
+| `entry` | Repeating trial rows stored as `ReportEntry` records | One or more entry sections per report. Use `id` when a report has **multiple entry tables** (liquid vs plastic limit, swell vs balancing, etc.). |
+
+#### Export templates (`templates`)
+
+Each schema lists one or more export template ids in `templates`:
+
+```json
+"templates": ["standard-proctor"]
+```
+
+Multi-workbook example:
+
+```json
+"templates": ["absorption-pressure-swell", "absorption-pressure-swell-balancing"]
+```
+
+Values match `templateId` in `template_defs/*.json` (not necessarily the schema filename). When omitted, export falls back to the schema filename. Header fields with the same id are written to every listed template; entry sections map via `entry_<sectionId>_<fieldId>_row` keys in each template def.
 
 #### Entry section `id` and storage
 
@@ -102,8 +119,7 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `sieve-analysis.json` | ASTM D422 grain size | 3 header, 1 entry |
 | `percent-passing-200.json` | ASTM D1140 #200 wash | 3 header, 1 entry |
 | `moisture-contents.json` | Moisture content | 2 header, 1 entry |
-| `absorption-pressure-swell.json` | Absorption / swell | 7 header, 1 entry |
-| `absorption-pressure-swell-balancing.json` | Absorption balancing | 1 header, 1 entry |
+| `absorption-pressure-swell.json` | Absorption / swell + balancing | 7 header, **2 entry** (`swellReadings`, `balancingLoads`) |
 | `free-swell.json` | ASTM D 4546 free swell | 7 header, 1 entry |
 | `resistivity.json` | ASTM G187 resistivity | 4 header (no entry table) |
 | `unconfined-compression-rock.json` | ASTM D 7012 unconfined compression on rock | 2 header, 1 entry |
@@ -119,6 +135,7 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
      "displayName": "My Test Type",
      "description": "Description here",
      "version": "1.0.0",
+     "templates": ["my-test"],
      "sections": [
        {
          "type": "header",
@@ -252,7 +269,7 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 | `percent-passing-200.json` | XLSX | row | 1 | varies |
 | `moisture-contents.json` | XLSX | row | 1 | varies |
 | `absorption-pressure-swell.json` | XLSX | row | 2 | varies |
-| `absorption-pressure-swell-balancing.json` | XLSX | row | 1 | varies |
+| `absorption-pressure-swell-balancing.json` | XLSX | row | 1 | varies (second workbook for APS report type) |
 | `free-swell.json` | XLSX | row | 2 | 28 |
 | `resistivity.json` | XLSX | row | 1 | varies |
 | `unconfined-compression-rock.json` | XLSX | row | 14 rows | 3 |
@@ -388,6 +405,7 @@ One XLS/XLSX file per export template (filename must match `filePath` in the cor
   "displayName": "My Custom Test",
   "description": "Custom soil testing procedure",
   "version": "1.0.0",
+  "templates": ["my-custom-test"],
   "sections": [
     {
       "type": "header",

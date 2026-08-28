@@ -9,6 +9,7 @@ import { pickAndCoerce } from '../utils/pickAndCoerce';
 import { coerceDateOnly } from '../utils/dateOnly';
 import { formatDepthRange } from '../utils/depth';
 import { chunkArray } from '../utils/chunkArray';
+import { getSchemaExportTemplateIds } from '../schemas/exportTemplateIds';
 
 /** Per-template lab request rule embedded in the schema JSON. */
 interface LabRequestRule {
@@ -215,7 +216,8 @@ export class LabRequestService {
         if (rule.mode === 'per-boring') {
           // One or more reports for this boring + template; each sample becomes an entry row.
           const sectionId = this.firstEntrySectionId(schema) ?? null;
-          const exportTemplate = await getExportTemplate(template.name);
+          const exportTemplateIds = getSchemaExportTemplateIds(schema, template.name);
+          const exportTemplate = await getExportTemplate(exportTemplateIds[0] ?? template.name);
           const maxEntries = exportTemplate?.maxEntries;
           const sampleChunks =
             maxEntries && maxEntries > 0

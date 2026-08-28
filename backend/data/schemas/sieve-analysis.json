@@ -5,6 +5,7 @@
   "abbreviation": "GSA",
   "description": "Grain size analysis (sieve analysis) data sheet",
   "version": "1.0.0",
+  "templates": ["sieve-analysis"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

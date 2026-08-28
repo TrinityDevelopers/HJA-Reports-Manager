@@ -23,11 +23,11 @@
     "header_takenDownBy[date]": "K40",
     "header_dryWeightsBy[name]": "D41",
     "header_dryWeightsBy[date]": "K41",
-    "entry_changeInLoadGms_row": "A15-37",
-    "entry_accumulatedLoadGms_row": "B15-37",
-    "entry_dialReading_row": "E15-37",
-    "entry_time_row": "H15-37",
-    "entry_date_row": "J15-37",
-    "entry_readBy_row": "L15-37"
+    "entry_balancingLoads_changeInLoadGms_row": "A15-37",
+    "entry_balancingLoads_accumulatedLoadGms_row": "B15-37",
+    "entry_balancingLoads_dialReading_row": "E15-37",
+    "entry_balancingLoads_time_row": "H15-37",
+    "entry_balancingLoads_date_row": "J15-37",
+    "entry_balancingLoads_readBy_row": "L15-37"
   }
 }

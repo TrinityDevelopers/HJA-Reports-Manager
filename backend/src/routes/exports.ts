@@ -9,9 +9,11 @@ import { labRequestToExportableReport } from '../exports/labRequestExport';
 import {
   labRequestMergedBaseName,
   labRequestSummaryBaseName,
+  reportExportAllBaseName,
   reportExportBaseName,
 } from '../exports/exportFileName';
 import { mergePdfBuffers } from '../exports/mergePdfs';
+import { getSchemaExportTemplateIds } from '../schemas/exportTemplateIds';
 import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
 import type { ExportTemplate } from '../entities/ExportTemplate';
 import type { LabRequest } from '../entities/LabRequest';
@@ -62,17 +64,20 @@ function tempXlsxPath(prefix: string): string {
   return path.join(TEMP_DIR, `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}.xlsx`);
 }
 
-async function resolveExportTemplate(report: Report): Promise<ExportTemplate | null> {
+function exportTemplateIdsForReport(report: Report): string[] {
   if (!report.template) {
-    return null;
+    return [];
   }
+  return getSchemaExportTemplateIds(report.template.schema, report.template.name);
+}
 
-  let exportTemplate = await exportService.findExportTemplate(report.template.name);
+async function findExportTemplateById(templateId: string): Promise<ExportTemplate | null> {
+  let exportTemplate = await exportService.findExportTemplate(templateId);
 
   if (!exportTemplate) {
     try {
       await exportService.seedDefaultExportTemplates();
-      exportTemplate = await exportService.findExportTemplate(report.template.name);
+      exportTemplate = await exportService.findExportTemplate(templateId);
     } catch (error) {
       console.error('Failed to seed export templates:', error);
     }
@@ -81,8 +86,55 @@ async function resolveExportTemplate(report: Report): Promise<ExportTemplate | n
   return exportTemplate;
 }
 
-async function fillReportXlsx(report: Report, exportTemplate: ExportTemplate): Promise<string> {
-  const xlsxPath = tempXlsxPath(`report_${report.template.name}`);
+async function resolveExportTemplates(report: Report): Promise<ExportTemplate[]> {
+  const templateIds = exportTemplateIdsForReport(report);
+  const templates: ExportTemplate[] = [];
+
+  for (const templateId of templateIds) {
+    const exportTemplate = await findExportTemplateById(templateId);
+    if (exportTemplate) {
+      templates.push(exportTemplate);
+    }
+  }
+
+  return templates;
+}
+
+async function resolveExportTemplate(
+  report: Report,
+  exportTemplateId?: string,
+): Promise<ExportTemplate | null> {
+  const templateIds = exportTemplateIdsForReport(report);
+  if (templateIds.length === 0) {
+    return null;
+  }
+
+  const requestedId =
+    typeof exportTemplateId === 'string' && exportTemplateId.trim() !== ''
+      ? exportTemplateId.trim()
+      : templateIds.length === 1
+        ? templateIds[0]
+        : undefined;
+
+  if (!requestedId) {
+    return null;
+  }
+
+  if (!templateIds.includes(requestedId)) {
+    throw new Error(
+      `Export template "${requestedId}" is not configured for report type "${report.template?.name ?? 'unknown'}"`,
+    );
+  }
+
+  return await findExportTemplateById(requestedId);
+}
+
+async function fillReportXlsx(
+  report: Report,
+  exportTemplate: ExportTemplate,
+  exportTemplateId: string,
+): Promise<string> {
+  const xlsxPath = tempXlsxPath(`report_${report.template.name}_${exportTemplateId}`);
   await fs.mkdir(path.dirname(xlsxPath), { recursive: true });
   await exportService.exportReport(report, asExportableTemplate(exportTemplate), xlsxPath);
   return xlsxPath;
@@ -191,7 +243,25 @@ router.get('/report/:reportId/export', async (req: Request, res: Response) => {
       return;
     }
 
-    const exportTemplate = await resolveExportTemplate(report);
+    const exportTemplateId =
+      typeof req.query.exportTemplateId === 'string' ? req.query.exportTemplateId : undefined;
+
+    const templateIds = exportTemplateIdsForReport(report);
+    if (templateIds.length > 1 && !exportTemplateId) {
+      res.status(400).json({
+        error: `Report type "${report.template.name}" has multiple export templates; specify exportTemplateId`,
+      });
+      return;
+    }
+
+    let exportTemplate: ExportTemplate | null;
+    try {
+      exportTemplate = await resolveExportTemplate(report, exportTemplateId);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
+
     if (!exportTemplate) {
       res.status(404).json({
         error: `Export template not found for type "${report.template.name}"`,
@@ -200,11 +270,62 @@ router.get('/report/:reportId/export', async (req: Request, res: Response) => {
     }
 
     const format = req.query.format === 'pdf' ? 'pdf' : 'xlsx';
-    const xlsxPath = await fillReportXlsx(report, exportTemplate);
-    await sendExportDownload(res, xlsxPath, reportExportBaseName(report), format);
+    const resolvedTemplateId = exportTemplate.templateId;
+    const xlsxPath = await fillReportXlsx(report, exportTemplate, resolvedTemplateId);
+    await sendExportDownload(
+      res,
+      xlsxPath,
+      reportExportBaseName(report, resolvedTemplateId),
+      format,
+    );
   } catch (error) {
     console.error('Failed to export report:', error);
     res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+router.get('/report/:reportId/export-all', async (req: Request, res: Response) => {
+  const tempFiles: string[] = [];
+  try {
+    const report = await reportService.findById(req.params.reportId);
+    if (!report) {
+      res.status(404).json({ error: 'Report not found' });
+      return;
+    }
+
+    if (!report.template) {
+      res.status(400).json({ error: 'Report has no associated template' });
+      return;
+    }
+
+    const exportTemplates = await resolveExportTemplates(report);
+    if (exportTemplates.length === 0) {
+      res.status(404).json({
+        error: `Export templates not found for type "${report.template.name}"`,
+      });
+      return;
+    }
+
+    if (req.query.format !== 'pdf') {
+      res.status(400).json({ error: 'export-all supports format=pdf only' });
+      return;
+    }
+
+    const pdfBuffers: Buffer[] = [];
+    for (const exportTemplate of exportTemplates) {
+      const xlsxPath = await fillReportXlsx(report, exportTemplate, exportTemplate.templateId);
+      tempFiles.push(xlsxPath);
+      pdfBuffers.push(await convertXlsxToPdfAndCleanup(xlsxPath));
+    }
+
+    const merged = await mergePdfBuffers(pdfBuffers);
+    await sendPdfBuffer(res, merged, reportExportAllBaseName(report));
+  } catch (error) {
+    console.error('Failed to export merged report PDF:', error);
+    await Promise.allSettled(tempFiles.map((filePath) => unlinkQuiet(filePath)));
+    if (!res.headersSent) {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 });
 
@@ -250,13 +371,15 @@ router.get('/lab-request/:labRequestId/export-all', async (req: Request, res: Re
       if (!report.template) {
         throw new Error(`Report ${report.id} has no associated template`);
       }
-      const exportTemplate = await resolveExportTemplate(report);
-      if (!exportTemplate) {
-        throw new Error(`Export template not found for type "${report.template.name}"`);
+      const exportTemplates = await resolveExportTemplates(report);
+      if (exportTemplates.length === 0) {
+        throw new Error(`Export templates not found for type "${report.template.name}"`);
       }
-      const xlsxPath = await fillReportXlsx(report, exportTemplate);
-      tempFiles.push(xlsxPath);
-      pdfBuffers.push(await convertXlsxToPdfAndCleanup(xlsxPath));
+      for (const exportTemplate of exportTemplates) {
+        const xlsxPath = await fillReportXlsx(report, exportTemplate, exportTemplate.templateId);
+        tempFiles.push(xlsxPath);
+        pdfBuffers.push(await convertXlsxToPdfAndCleanup(xlsxPath));
+      }
     }
 
     const merged = await mergePdfBuffers(pdfBuffers);

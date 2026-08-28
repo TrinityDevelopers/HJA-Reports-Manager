@@ -5,6 +5,7 @@
   "abbreviation": "MP",
   "description": "Modified Proctor soil compaction test data sheet",
   "version": "1.0.0",
+  "templates": ["modified-proctor"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

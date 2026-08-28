@@ -5,6 +5,7 @@
   "abbreviation": "FS",
   "description": "Free swell test data sheet",
   "version": "1.0.0",
+  "templates": ["free-swell"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

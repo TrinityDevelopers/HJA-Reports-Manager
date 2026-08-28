@@ -5,6 +5,7 @@
   "abbreviation": "pH",
   "description": "pH test data sheet",
   "version": "1.0.0",
+  "templates": ["ph-test"],
   "labRequest": {
     "mode": "per-boring",
     "map": {

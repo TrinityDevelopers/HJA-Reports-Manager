@@ -65,7 +65,14 @@ describe('Exports Routes', () => {
     it('should respond to GET /report/:reportId/export', async () => {
       const response = await request(app)
         .get('/exports/report/test-id/export')
-        .query({ templateId: 'test' });
+        .query({ exportTemplateId: 'test' });
+      expect([200, 404, 500]).toContain(response.status);
+    });
+
+    it('should respond to GET /report/:reportId/export-all', async () => {
+      const response = await request(app)
+        .get('/exports/report/test-id/export-all')
+        .query({ format: 'pdf' });
       expect([200, 404, 500]).toContain(response.status);
     });
 

@@ -20,7 +20,9 @@ import {
 } from '../../utils/reportEntryMapping';
 import type { NormalizedEntrySection } from '../../utils/formHelpers';
 import { FieldInput } from '../forms/FieldInput';
-import { reportExportBaseName } from '../../utils/exportFileName';
+import { reportExportAllBaseName, reportExportBaseName } from '../../utils/exportFileName';
+import { downloadFromUrl } from '../../utils/download';
+import { getSchemaExportTemplateIds } from '../../utils/exportTemplateIds';
 
 export function ReportDetailPage({
   report,
@@ -248,23 +250,65 @@ export function ReportDetailPage({
   };
 
   const handleExport = async (format: ExportFormat) => {
+    const exportContext = {
+      ...report,
+      template: report.template ?? template,
+      project: report.project ?? project,
+    };
+    const exportTemplateIds = getSchemaExportTemplateIds(
+      (report.template ?? template)?.schema,
+      (report.template ?? template)?.name ?? '',
+    );
+
     try {
-      const downloadUrl = apiClient.exports.downloadReport(report.id, format);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${reportExportBaseName({
-        ...report,
-        template: report.template ?? template,
-        project: report.project ?? project,
-      })}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (exportTemplateIds.length <= 1) {
+        const exportTemplateId = exportTemplateIds[0];
+        const downloadUrl = apiClient.exports.downloadReport(report.id, format, exportTemplateId);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${reportExportBaseName(exportContext, exportTemplateId)}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      for (const exportTemplateId of exportTemplateIds) {
+        await downloadFromUrl(
+          apiClient.exports.downloadReport(report.id, format, exportTemplateId),
+          `${reportExportBaseName(exportContext, exportTemplateId)}.${format}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
     } catch (error) {
       console.error('Failed to export report:', error);
-      alert('Failed to export report');
+      alert(`Failed to export report${error instanceof Error ? `: ${error.message}` : ''}`);
     }
   };
+
+  const handleExportAllMerged = async () => {
+    const exportContext = {
+      ...report,
+      template: report.template ?? template,
+      project: report.project ?? project,
+    };
+
+    try {
+      await downloadFromUrl(
+        apiClient.exports.downloadReportAllMerged(report.id),
+        `${reportExportAllBaseName(exportContext)}.pdf`,
+      );
+    } catch (error) {
+      console.error('Failed to export merged PDF:', error);
+      alert(`Failed to export merged PDF${error instanceof Error ? `: ${error.message}` : ''}`);
+    }
+  };
+
+  const exportTemplateIds = getSchemaExportTemplateIds(
+    (report.template ?? template)?.schema,
+    (report.template ?? template)?.name ?? '',
+  );
+  const hasMultipleExportTemplates = exportTemplateIds.length > 1;
 
   return (
     <div className="card">
@@ -273,7 +317,25 @@ export function ReportDetailPage({
           <ArrowLeft size={20} className="mr-2" />
           {backLabel}
         </button>
-        {!isNewReport && <ExportSplitButton label="Export" onExport={handleExport} />}
+        {!isNewReport && (
+          <ExportSplitButton
+            label={hasMultipleExportTemplates ? 'Export All' : 'Export'}
+            onExport={handleExport}
+            pdfMenuLabel={
+              hasMultipleExportTemplates ? 'Export All as PDF (Individual)' : 'Export as PDF'
+            }
+            extraMenuItems={
+              hasMultipleExportTemplates
+                ? [
+                    {
+                      label: 'Export All as PDF (Merged)',
+                      onSelect: handleExportAllMerged,
+                    },
+                  ]
+                : []
+            }
+          />
+        )}
       </div>
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">

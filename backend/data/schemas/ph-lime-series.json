@@ -5,6 +5,7 @@
   "abbreviation": "pH-LS",
   "description": "pH lime series data sheet for soil-lime proportion",
   "version": "1.0.0",
+  "templates": ["ph-lime-series"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

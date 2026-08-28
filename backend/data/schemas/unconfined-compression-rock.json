@@ -5,6 +5,7 @@
   "abbreviation": "Qu(Rock)",
   "description": "Unconfined compression test on rock data sheet",
   "version": "1.0.0",
+  "templates": ["unconfined-compression-rock"],
   "labRequest": {
     "mode": "per-boring",
     "map": {

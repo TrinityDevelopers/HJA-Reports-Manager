@@ -5,6 +5,7 @@
   "abbreviation": "SP",
   "description": "Standard Proctor soil compaction test data sheet",
   "version": "1.0.0",
+  "templates": ["standard-proctor"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

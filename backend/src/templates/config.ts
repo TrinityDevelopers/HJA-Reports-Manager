@@ -23,7 +23,9 @@ export const TEMPLATES_DIR = path.join(process.cwd(), 'data', 'templates');
  * 2. Add workbook in backend/data/templates/ (filePath must match)
  * 3. Config loads here as EXPORT_TEMPLATES['my-template'] (filename without .json)
  * 4. Register DB record if needed: POST /api/export/register-template
- * 5. Export: GET /api/export/report/:reportId/export?templateId=<exportTemplateId>
+ * 5. Export: GET /api/export/report/:reportId/export?format=xlsx|pdf&exportTemplateId=<id>
+ *    Multi-template reports: export each workbook with exportTemplateId, or
+ *    GET /api/export/report/:reportId/export-all?format=pdf for a merged PDF.
  *
  * Field mapping keys (parsed in ../exports/mappingKeys.ts, filled in ../exports/fillers.ts):
  *

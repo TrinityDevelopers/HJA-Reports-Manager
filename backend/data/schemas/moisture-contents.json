@@ -5,6 +5,7 @@
   "abbreviation": "MC",
   "description": "Moisture content test data sheet",
   "version": "1.0.0",
+  "templates": ["moisture-contents"],
   "labRequest": {
     "mode": "per-boring",
     "map": {

@@ -5,6 +5,7 @@
   "abbreviation": "DS",
   "description": "Direct shear test data sheet",
   "version": "1.0.0",
+  "templates": ["direct-shear"],
   "labRequest": {
     "mode": "per-sample",
     "map": {

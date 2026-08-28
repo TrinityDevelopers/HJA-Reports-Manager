@@ -5,6 +5,7 @@
   "abbreviation": "Qu(Soil)",
   "description": "Unconfined compression test on soil data sheet",
   "version": "1.0.0",
+  "templates": ["unconfined-compression-soil"],
   "labRequest": {
     "mode": "per-boring",
     "map": {

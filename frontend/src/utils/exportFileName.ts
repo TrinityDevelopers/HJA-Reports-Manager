@@ -111,10 +111,34 @@ function sheetPageSuffix(
 }
 
 /** Download base name (no extension) for a report export. */
-export function reportExportBaseName(report: ReportExportNameSource): string {
-  const templateName = report.template?.name?.trim() || 'export';
+export function reportExportBaseName(
+  report: ReportExportNameSource,
+  exportTemplateId?: string,
+): string {
+  const reportTypeName = report.template?.name?.trim() || 'export';
+  const templateIds =
+    report.template?.schema && typeof report.template.schema === 'object'
+      ? (() => {
+          const raw = (report.template.schema as Record<string, unknown>).templates;
+          if (Array.isArray(raw)) {
+            const ids = raw.filter(
+              (item): item is string => typeof item === 'string' && item.trim() !== '',
+            );
+            if (ids.length > 0) return ids;
+          }
+          return [reportTypeName];
+        })()
+      : [reportTypeName];
+
+  const typeSegment =
+    exportTemplateId &&
+    exportTemplateId !== reportTypeName &&
+    templateIds.includes(exportTemplateId)
+      ? exportTemplateId
+      : reportTypeName;
+
   if (!report.labRequest) {
-    return sanitizeFileName(`report_${templateName}`) || `report_${templateName}`;
+    return sanitizeFileName(`report_${typeSegment}`) || `report_${typeSegment}`;
   }
 
   const name = labRequestBaseName({
@@ -143,9 +167,15 @@ export function reportExportBaseName(report: ReportExportNameSource): string {
     if (sample) parts.push(sample);
   }
 
-  parts.push(templateName);
+  parts.push(typeSegment);
   const page = sheetPageSuffix(report.headerData);
   if (page) parts.push(page);
 
-  return sanitizeFileName(parts.join('-')) || templateName;
+  return sanitizeFileName(parts.join('-')) || typeSegment;
+}
+
+/** Download base name (no extension) for a merged multi-template report PDF. */
+export function reportExportAllBaseName(report: ReportExportNameSource): string {
+  const base = reportExportBaseName(report);
+  return `${base}-all`;
 }

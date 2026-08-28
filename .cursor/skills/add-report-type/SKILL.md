@@ -69,6 +69,7 @@ Pick the closest existing pair under `schemas/` + `template_defs/` (e.g. `unconf
   "abbreviation": "XX",
   "description": "…",
   "version": "1.0.0",
+  "templates": ["my-test"],
   "labRequest": {
     "mode": "per-sample",
     "map": {
@@ -144,6 +145,8 @@ for (const [key, mapping] of Object.entries(def.fieldMapping)) {
 "
 ```
 
-Also check: every schema field id has a mapping key; schema `name` / template `templateId` / filenames all equal `<id>`.
+Also check: every schema field id has a mapping key; schema `name` matches filename `<id>`; each value in `templates` has a `template_defs/<exportTemplateId>.json` file.
+
+For reports that export to **multiple workbooks**, list every export template id in `templates` and give each entry section an `id` with prefixed mapping keys (`entry_<sectionId>_<fieldId>_row`). Header fields with the same id are filled into every listed template automatically.
 
 Schemas and template defs load automatically on backend restart (no manual registry). Export DB registration may still need `POST /api/export/register-template` depending on environment.

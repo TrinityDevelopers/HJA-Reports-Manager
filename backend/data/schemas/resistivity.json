@@ -5,6 +5,7 @@
   "abbreviation": "RES",
   "description": "Soil resistivity test data sheet",
   "version": "1.0.0",
+  "templates": ["resistivity"],
   "labRequest": {
     "mode": "per-sample",
     "map": {
