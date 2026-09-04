@@ -91,7 +91,10 @@ export const apiClient = {
       request('/lab-requests', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: unknown) =>
       request(`/lab-requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => request(`/lab-requests/${id}`, { method: 'DELETE' }),
+    delete: (id: string, options?: { deleteReports?: boolean }) =>
+      request(`/lab-requests/${id}${options?.deleteReports ? '?deleteReports=true' : ''}`, {
+        method: 'DELETE',
+      }),
     getReports: (id: string) => request(`/lab-requests/${id}/reports`),
     generate: (id: string) => request(`/lab-requests/${id}/generate`, { method: 'POST' }),
   },

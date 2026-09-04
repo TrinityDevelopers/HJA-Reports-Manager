@@ -232,10 +232,17 @@ export default function HJAReportsManager() {
     }
   };
 
-  const deleteLabRequest = async (id: string) => {
+  const deleteLabRequest = async (id: string, deleteReports = false) => {
     try {
-      await apiClient.labRequests.delete(id);
+      await apiClient.labRequests.delete(id, { deleteReports });
       setLabRequests(labRequests.filter((lr) => lr.id !== id));
+      if (deleteReports) {
+        setReports((prev) => prev.filter((r) => r.labRequestId !== id));
+      } else {
+        setReports((prev) =>
+          prev.map((r) => (r.labRequestId === id ? { ...r, labRequestId: null } : r)),
+        );
+      }
     } catch (error) {
       console.error('Failed to delete lab request:', error);
       alert('Failed to delete lab request');

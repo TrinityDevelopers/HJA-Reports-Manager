@@ -60,7 +60,8 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const deleted = await labRequestService.delete(req.params.id);
+    const deleteReports = req.query.deleteReports === 'true';
+    const deleted = await labRequestService.delete(req.params.id, { deleteReports });
     if (!deleted) {
       res.status(404).json({ error: 'Lab request not found' });
       return;

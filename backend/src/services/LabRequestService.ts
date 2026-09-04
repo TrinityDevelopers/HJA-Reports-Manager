@@ -96,7 +96,11 @@ export class LabRequestService {
     return await this.findById(id);
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, options?: { deleteReports?: boolean }): Promise<boolean> {
+    // Delete linked reports first; otherwise SET NULL clears labRequestId and they can't be found.
+    if (options?.deleteReports) {
+      await this.reportRepository.delete({ labRequestId: id });
+    }
     const result = await this.labRequestRepository.delete(id);
     return (result.affected ?? 0) > 0;
   }

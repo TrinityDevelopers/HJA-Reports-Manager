@@ -454,3 +454,59 @@ describe('LabRequestService create/update dateDue', () => {
     expect(updated?.dateDue).toBeNull();
   });
 });
+
+describe('LabRequestService.delete', () => {
+  it('deletes the lab request without deleting reports by default', async () => {
+    const labRequestDelete = vi.fn().mockResolvedValue({ affected: 1 });
+    const reportDelete = vi.fn().mockResolvedValue({ affected: 0 });
+
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return { delete: labRequestDelete } as never;
+      }
+      if (name === 'Report') {
+        return { delete: reportDelete } as never;
+      }
+      return {} as never;
+    });
+
+    const service = new LabRequestService();
+    const deleted = await service.delete('lr-1');
+
+    expect(deleted).toBe(true);
+    expect(reportDelete).not.toHaveBeenCalled();
+    expect(labRequestDelete).toHaveBeenCalledWith('lr-1');
+  });
+
+  it('deletes associated reports before the lab request when deleteReports is true', async () => {
+    const callOrder: string[] = [];
+    const labRequestDelete = vi.fn().mockImplementation(async () => {
+      callOrder.push('labRequest');
+      return { affected: 1 };
+    });
+    const reportDelete = vi.fn().mockImplementation(async () => {
+      callOrder.push('report');
+      return { affected: 2 };
+    });
+
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return { delete: labRequestDelete } as never;
+      }
+      if (name === 'Report') {
+        return { delete: reportDelete } as never;
+      }
+      return {} as never;
+    });
+
+    const service = new LabRequestService();
+    const deleted = await service.delete('lr-1', { deleteReports: true });
+
+    expect(deleted).toBe(true);
+    expect(reportDelete).toHaveBeenCalledWith({ labRequestId: 'lr-1' });
+    expect(labRequestDelete).toHaveBeenCalledWith('lr-1');
+    expect(callOrder).toEqual(['report', 'labRequest']);
+  });
+});
