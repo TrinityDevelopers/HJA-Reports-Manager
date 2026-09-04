@@ -49,6 +49,8 @@ export interface LabRequestSample {
   depthFrom?: number | string | null;
   depthTo?: number | string | null;
   testTemplateIds: ID[];
+  /** Optional free-text "other" test/notes; shown in the lab summary, never generates a report. */
+  otherNotes?: string;
 }
 
 export interface LabRequestBoring {

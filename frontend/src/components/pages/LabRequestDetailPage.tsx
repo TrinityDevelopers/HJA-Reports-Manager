@@ -6,7 +6,7 @@ import { ExportSplitButton, type ExportFormat } from '../ExportSplitButton';
 import { BackLink } from '../BackLink';
 import { parseDateLike } from '../../utils/dateAndNormalize.ts';
 import { formatDepthRange } from '../../utils/depth';
-import { templateAbbreviation } from '../../utils/templates';
+import { formatSampleTests } from '../../utils/templates';
 import { downloadFromUrl } from '../../utils/download';
 import { labRequestSummaryBaseName } from '@hja/shared';
 import { exportLabRequestMergedPdf, exportLabRequestPacket } from '../../utils/exportActions';
@@ -206,11 +206,7 @@ export function LabRequestDetailPage({
                             {formatDepthRange(sample.depthFrom, sample.depthTo) || '-'}
                           </td>
                           <td className="table-cell">
-                            {sample.testTemplateIds.length === 0
-                              ? '-'
-                              : sample.testTemplateIds
-                                  .map((id) => templateAbbreviation(templates, id))
-                                  .join(', ')}
+                            {formatSampleTests(sample, templates) || '-'}
                           </td>
                         </tr>
                       ))}

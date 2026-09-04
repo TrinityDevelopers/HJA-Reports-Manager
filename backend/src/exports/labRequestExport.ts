@@ -23,7 +23,10 @@ export function testAbbreviation(templates: TemplateLike[], templateId: string):
 
 function testsAndFeatures(sample: LabRequestSample, templates: TemplateLike[]): string {
   const ids = Array.isArray(sample.testTemplateIds) ? sample.testTemplateIds : [];
-  return ids.map((id) => testAbbreviation(templates, id)).join(', ');
+  const parts = ids.map((id) => testAbbreviation(templates, id));
+  const other = typeof sample.otherNotes === 'string' ? sample.otherNotes.trim() : '';
+  if (other) parts.push(other);
+  return parts.join(', ');
 }
 
 function sampleEntryData(

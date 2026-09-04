@@ -18,6 +18,8 @@ export interface LabRequestSample {
   depthFrom?: number | string | null;
   depthTo?: number | string | null;
   testTemplateIds: string[];
+  /** Optional free-text "other" test/notes; shown in the lab summary, never generates a report. */
+  otherNotes?: string;
 }
 
 /** A boring definition and its samples within a lab request. */

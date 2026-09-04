@@ -268,4 +268,49 @@ describe('lab request summary export', () => {
     expect(cellValue(worksheet, 'A15')).toBeNull();
     expect(cellValue(worksheet, 'B15')).toBe('W2');
   });
+
+  it('includes otherNotes in testsAndFeatures with and without template ids', () => {
+    const withBoth = {
+      ...makeSample('W1', 0, 1, [MC_TEMPLATE.id, AL_TEMPLATE.id]),
+      otherNotes: 'Visual classification',
+    };
+    const notesOnly = {
+      ...makeSample('W2', 1, 2, []),
+      otherNotes: '  Hold for later  ',
+    };
+    const labRequest = {
+      ...makeLabRequest(1),
+      borings: [
+        {
+          id: 'boring-1',
+          prefix: 'B',
+          number: 1,
+          label: 'B1',
+          samplePrefix: 'W',
+          samples: [withBoth, notesOnly],
+        },
+      ],
+    } as LabRequest;
+
+    const exportable = labRequestToExportableReport(labRequest, [MC_TEMPLATE, AL_TEMPLATE]);
+    expect(exportable.entries).toEqual([
+      {
+        entryOrder: 0,
+        data: {
+          boringNumber: 'B1',
+          sampleNumber: 'W1',
+          depth: '0.0-1.0',
+          testsAndFeatures: 'MC, AL, Visual classification',
+        },
+      },
+      {
+        entryOrder: 1,
+        data: {
+          sampleNumber: 'W2',
+          depth: '1.0-2.0',
+          testsAndFeatures: 'Hold for later',
+        },
+      },
+    ]);
+  });
 });

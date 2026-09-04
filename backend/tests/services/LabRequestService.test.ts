@@ -390,6 +390,94 @@ describe('LabRequestService.generate', () => {
     expect(savedReports[0].headerData).toEqual({ sampleNumber: 'S-1' });
     expect(savedReports[1].headerData).toEqual({ sampleNumber: 'S-2' });
   });
+
+  it('does not create reports for otherNotes alone or as an extra test', async () => {
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return {
+          findOne: vi.fn().mockResolvedValue({
+            id: 'lab-request-1',
+            projectId: 'project-1',
+            dateOfTest: '2026-06-19',
+            borings: [
+              {
+                id: 'boring-1',
+                label: 'B-1',
+                prefix: 'B',
+                number: 1,
+                samplePrefix: 'S',
+                samples: [
+                  {
+                    id: 'sample-notes-only',
+                    label: 'S-1',
+                    depthFrom: 1,
+                    depthTo: 2,
+                    testTemplateIds: [],
+                    otherNotes: 'Visual classification',
+                  },
+                  {
+                    id: 'sample-with-both',
+                    label: 'S-2',
+                    depthFrom: 2,
+                    depthTo: 3,
+                    testTemplateIds: ['per-sample-uuid'],
+                    otherNotes: 'Extra notes',
+                  },
+                ],
+              },
+            ],
+          }),
+        } as never;
+      }
+      if (name === 'Report') {
+        return {
+          delete: vi.fn(),
+          create: vi.fn((data) => ({ id: `report-${savedReports.length + 1}`, ...data })),
+          save: vi.fn(async (report) => {
+            savedReports.push(report);
+            return report;
+          }),
+          createQueryBuilder: vi.fn(() => ({
+            leftJoinAndSelect: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            orderBy: vi.fn().mockReturnThis(),
+            addOrderBy: vi.fn().mockReturnThis(),
+            getMany: vi.fn().mockResolvedValue(savedReports),
+          })),
+        } as never;
+      }
+      if (name === 'ReportEntry') {
+        return {
+          create: vi.fn((data) => data),
+          save: vi.fn(async (entry) => {
+            savedEntries.push(entry);
+            return entry;
+          }),
+        } as never;
+      }
+      if (name === 'ReportTemplate') {
+        return {
+          findOne: vi.fn().mockResolvedValue(perSampleTemplate),
+        } as never;
+      }
+      if (name === 'ExportTemplate') {
+        return {
+          findOne: vi.fn().mockResolvedValue({ templateId: 'modified-proctor', maxEntries: 10 }),
+        } as never;
+      }
+      throw new Error(`Unexpected repository: ${name}`);
+    });
+
+    service = new LabRequestService();
+    await service.generate('lab-request-1');
+
+    // Only the real per-sample template on S-2 produces a report; otherNotes never does.
+    expect(savedReports).toHaveLength(1);
+    expect(savedReports[0].templateId).toBe('per-sample-uuid');
+    expect(savedReports[0].headerData).toEqual({ sampleNumber: 'S-2' });
+    expect(savedEntries).toHaveLength(0);
+  });
 });
 
 describe('LabRequestService create/update dateDue', () => {

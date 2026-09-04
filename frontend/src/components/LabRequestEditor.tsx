@@ -11,7 +11,7 @@ import type {
 import { InputField, DepthInput } from './ui';
 import { toISODateOnly, parseDateLike } from '../utils/dateAndNormalize.ts';
 import { formatDepthValue } from '../utils/depth';
-import { templateAbbreviation } from '../utils/templates';
+import { formatSampleTests, templateAbbreviation } from '../utils/templates';
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
@@ -388,22 +388,50 @@ function BoringEditor({
         boring.samples.length > 0 && boring.samples.every((s) => s.testTemplateIds.includes(id)),
     );
 
-  const handleModalConfirm = (selectedIds: ID[]) => {
+  // Other notes common to every sample (same non-empty trimmed text).
+  const otherNotesOnAllSamples = (() => {
+    if (boring.samples.length === 0) return '';
+    const first = (boring.samples[0].otherNotes ?? '').trim();
+    if (!first) return '';
+    return boring.samples.every((s) => (s.otherNotes ?? '').trim() === first) ? first : '';
+  })();
+
+  const handleModalConfirm = (selectedIds: ID[], otherNotes: string) => {
+    const trimmedOther = otherNotes.trim();
     if (modalTarget === 'all') {
       // Add the chosen tests to every sample, and remove tests that were on
       // all samples but have been unchecked. Other per-sample tests are kept.
       const removedIds = testsOnAllSamples.filter((id) => !selectedIds.includes(id));
+      const hadCommonOther = otherNotesOnAllSamples.length > 0;
       onChange({
         ...boring,
-        samples: boring.samples.map((s) => ({
-          ...s,
-          testTemplateIds: Array.from(new Set([...s.testTemplateIds, ...selectedIds])).filter(
-            (id) => !removedIds.includes(id),
-          ),
-        })),
+        samples: boring.samples.map((s) => {
+          const next: LabRequestSample = {
+            ...s,
+            testTemplateIds: Array.from(new Set([...s.testTemplateIds, ...selectedIds])).filter(
+              (id) => !removedIds.includes(id),
+            ),
+          };
+          if (trimmedOther) {
+            next.otherNotes = trimmedOther;
+          } else if (hadCommonOther) {
+            // Unchecked common Other — clear on every sample (same pattern as tests).
+            delete next.otherNotes;
+          }
+          // Per-sample-only notes stay when Other was not common and remains unchecked.
+          return next;
+        }),
       });
     } else if (modalSample) {
-      updateSample(modalSample.id, (s) => ({ ...s, testTemplateIds: selectedIds }));
+      updateSample(modalSample.id, (s) => {
+        const next: LabRequestSample = { ...s, testTemplateIds: selectedIds };
+        if (trimmedOther) {
+          next.otherNotes = trimmedOther;
+        } else {
+          delete next.otherNotes;
+        }
+        return next;
+      });
     }
     setModalTarget(null);
   };
@@ -470,13 +498,7 @@ function BoringEditor({
                       onChange={(next) => updateSample(sample.id, (s) => ({ ...s, depthTo: next }))}
                     />
                   </td>
-                  <td className="table-cell">
-                    {sample.testTemplateIds.length === 0
-                      ? '-'
-                      : sample.testTemplateIds
-                          .map((id) => templateAbbreviation(templates, id))
-                          .join(', ')}
-                  </td>
+                  <td className="table-cell">{formatSampleTests(sample, templates) || '-'}</td>
                   <td className="table-cell">
                     <div className="flex items-center gap-3 justify-end">
                       <button
@@ -512,6 +534,9 @@ function BoringEditor({
               : `Select Tests - Sample ${modalSample?.label ?? ''}`
           }
           initialSelectedIds={modalSample ? modalSample.testTemplateIds : testsOnAllSamples}
+          initialOtherNotes={
+            modalSample ? (modalSample.otherNotes ?? '').trim() : otherNotesOnAllSamples
+          }
           onConfirm={handleModalConfirm}
           onClose={() => setModalTarget(null)}
         />
@@ -520,20 +545,33 @@ function BoringEditor({
   );
 }
 
+/** Rough max checklist rows that fit in the modal body without scrolling (one column). */
+const TEST_SELECTOR_ONE_COLUMN_MAX = 9;
+
 function TestSelectorModal({
   templates,
   title,
   initialSelectedIds,
+  initialOtherNotes,
   onConfirm,
   onClose,
 }: {
   templates: ReportTemplate[];
   title: string;
   initialSelectedIds: ID[];
-  onConfirm: (selectedIds: ID[]) => void;
+  initialOtherNotes: string;
+  onConfirm: (selectedIds: ID[], otherNotes: string) => void;
   onClose: () => void;
 }) {
   const [selected, setSelected] = useState<Set<ID>>(new Set(initialSelectedIds));
+  const [otherChecked, setOtherChecked] = useState(initialOtherNotes.length > 0);
+  const [otherText, setOtherText] = useState(initialOtherNotes);
+
+  const useTwoColumns = templates.length > TEST_SELECTOR_ONE_COLUMN_MAX;
+  const columnSplit = useTwoColumns ? Math.ceil(templates.length / 2) : templates.length;
+  const templateColumns = useTwoColumns
+    ? [templates.slice(0, columnSplit), templates.slice(columnSplit)]
+    : [templates];
 
   const toggle = (templateId: ID) => {
     setSelected((prev) => {
@@ -547,13 +585,31 @@ function TestSelectorModal({
     });
   };
 
+  const renderTemplateLabel = (t: ReportTemplate) => {
+    const abbr = templateAbbreviation([t], t.id);
+    return (
+      <label
+        key={t.id}
+        className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-primary-lighter cursor-pointer"
+      >
+        <input type="checkbox" checked={selected.has(t.id)} onChange={() => toggle(t.id)} />
+        <span className="text-sm text-gray-800">
+          {t.displayName}
+          {abbr !== t.displayName && <span className="text-gray-500 ml-1">({abbr})</span>}
+        </span>
+      </label>
+    );
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 flex flex-col max-h-[80vh]"
+        className={`bg-white rounded-lg shadow-xl w-full mx-4 flex flex-col max-h-[80vh] ${
+          useTwoColumns ? 'max-w-2xl' : 'max-w-md'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center border-b px-6 py-4">
@@ -569,36 +625,51 @@ function TestSelectorModal({
             {selected.size === templates.length ? 'Clear all' : 'Select all'}
           </button>
         </div>
-        <div className="overflow-y-auto px-6 py-4 flex flex-col gap-2">
+        <div className="overflow-y-auto px-6 py-4">
           {templates.length === 0 ? (
             <p className="text-gray-500 text-sm">No tests available.</p>
           ) : (
-            templates.map((t) => {
-              const abbr = templateAbbreviation([t], t.id);
-              return (
-                <label
-                  key={t.id}
-                  className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-primary-lighter cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(t.id)}
-                    onChange={() => toggle(t.id)}
-                  />
-                  <span className="text-sm text-gray-800">
-                    {t.displayName}
-                    {abbr !== t.displayName && <span className="text-gray-500 ml-1">({abbr})</span>}
-                  </span>
-                </label>
-              );
-            })
+            <div className={useTwoColumns ? 'grid grid-cols-2 gap-x-6' : ''}>
+              {templateColumns.map((column, colIndex) => (
+                <div key={colIndex} className="flex flex-col gap-2">
+                  {column.map(renderTemplateLabel)}
+                </div>
+              ))}
+            </div>
           )}
+          <div className="border-t border-gray-200 mt-2 pt-3 flex flex-col gap-2">
+            <label className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-primary-lighter cursor-pointer">
+              <input
+                type="checkbox"
+                checked={otherChecked}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setOtherChecked(checked);
+                  if (!checked) setOtherText('');
+                }}
+              />
+              <span className="text-sm text-gray-800">Other</span>
+            </label>
+            {otherChecked && (
+              <input
+                type="text"
+                value={otherText}
+                onChange={(e) => setOtherText(e.target.value)}
+                placeholder="Describe the test or notes…"
+                className="input focus-ring-primary mx-2"
+                autoFocus
+              />
+            )}
+          </div>
         </div>
         <div className="flex justify-end gap-3 border-t px-6 py-4">
           <button onClick={onClose} className="button-secondary border-primary text-primary">
             Cancel
           </button>
-          <button onClick={() => onConfirm([...selected])} className="button-base">
+          <button
+            onClick={() => onConfirm([...selected], otherChecked ? otherText : '')}
+            className="button-base"
+          >
             Apply
           </button>
         </div>

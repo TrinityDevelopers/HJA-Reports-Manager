@@ -10,7 +10,12 @@ function countSamples(labRequest: LabRequest): number {
 function countTests(labRequest: LabRequest): number {
   return (labRequest.borings ?? []).reduce(
     (sum, b) =>
-      sum + (b.samples ?? []).reduce((s, sample) => s + (sample.testTemplateIds?.length ?? 0), 0),
+      sum +
+      (b.samples ?? []).reduce((s, sample) => {
+        const templateCount = sample.testTemplateIds?.length ?? 0;
+        const otherCount = (sample.otherNotes ?? '').trim() ? 1 : 0;
+        return s + templateCount + otherCount;
+      }, 0),
     0,
   );
 }
