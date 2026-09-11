@@ -1,0 +1,32 @@
+{
+  "templateId": "consolidation-balancing",
+  "name": "consolidation_balancing",
+  "displayName": "Consolidation Test - Balancing Loads (ASTM D 2435)",
+  "filePath": "consolidation_balancing.xlsx",
+  "format": "xlsx",
+  "maxEntries": 20,
+  "rowsPerEntry": 1,
+  "standardFields": {
+    "projectName": "B6",
+    "projectNumber": "H6",
+    "dateOfTest": "K6"
+  },
+  "fieldMapping": {
+    "header_boringNumber": "B7",
+    "header_depth": "D7",
+    "header_sampleNumber": "I7",
+    "header_materialDescription": "C8",
+    "header_consolidometerNumber": "C10",
+    "header_loadFactor": "E10",
+    "header_testedBy[name]": "C37",
+    "header_testedBy[date]": "J37",
+    "header_checkedBy[name]": "C38",
+    "header_checkedBy[date]": "J38",
+    "entry_balancingLoads_changeInLoadGms_row": "A16-35",
+    "entry_balancingLoads_accumulatedLoadGms_row": "B16-35",
+    "entry_balancingLoads_dialReading_row": "D16-35",
+    "entry_balancingLoads_time_row": "G16-35",
+    "entry_balancingLoads_date_row": "I16-35",
+    "entry_balancingLoads_readBy_row": "K16-35"
+  }
+}
