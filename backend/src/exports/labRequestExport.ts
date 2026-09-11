@@ -66,11 +66,42 @@ export function flattenLabRequestEntries(
   return entries;
 }
 
-/** Flatten a lab request into the header + entry shape used by export fillers. */
-export function labRequestToExportableReport(
-  labRequest: LabRequest,
-  templates: TemplateLike[],
-): ExportableReport {
+/**
+ * Pack whole borings onto pages of at most `maxEntries` rows (samples + in-page spacers).
+ * A single boring larger than maxEntries still occupies its own page (overflow allowed).
+ * No spacer is inserted at a page break.
+ */
+export function paginateLabRequestBorings(
+  borings: LabRequestBoring[] | undefined,
+  maxEntries: number,
+): LabRequestBoring[][] {
+  const groups = (borings ?? []).filter((boring) => (boring.samples ?? []).length > 0);
+  if (groups.length === 0) return [[]];
+
+  const pages: LabRequestBoring[][] = [];
+  let current: LabRequestBoring[] = [];
+  let used = 0;
+
+  for (const boring of groups) {
+    const sampleCount = (boring.samples ?? []).length;
+    const spacer = current.length > 0 ? 1 : 0;
+    if (current.length > 0 && used + spacer + sampleCount > maxEntries) {
+      pages.push(current);
+      current = [];
+      used = 0;
+    }
+    current.push(boring);
+    used += (current.length > 1 ? 1 : 0) + sampleCount;
+  }
+
+  if (current.length > 0) {
+    pages.push(current);
+  }
+
+  return pages;
+}
+
+function labRequestHeader(labRequest: LabRequest): ExportableReport {
   return {
     dateOfTest: labRequest.dateOfTest,
     project: labRequest.project,
@@ -79,6 +110,30 @@ export function labRequestToExportableReport(
       technician: labRequest.technician,
       dateDue: toDateValue(labRequest.dateDue),
     },
+  };
+}
+
+/** Flatten a lab request into the header + entry shape used by export fillers. */
+export function labRequestToExportableReport(
+  labRequest: LabRequest,
+  templates: TemplateLike[],
+): ExportableReport {
+  return {
+    ...labRequestHeader(labRequest),
     entries: flattenLabRequestEntries(labRequest.borings, templates),
   };
+}
+
+/** One ExportableReport per printed page (shared header; entries packed by boring). */
+export function labRequestToExportablePages(
+  labRequest: LabRequest,
+  templates: TemplateLike[],
+  maxEntries: number,
+): ExportableReport[] {
+  const header = labRequestHeader(labRequest);
+  const pages = paginateLabRequestBorings(labRequest.borings, maxEntries);
+  return pages.map((pageBorings) => ({
+    ...header,
+    entries: flattenLabRequestEntries(pageBorings, templates),
+  }));
 }

@@ -157,10 +157,10 @@ router.get('/lab-request/:labRequestId/export', async (req: Request, res: Respon
     }
 
     const format = req.query.format === 'pdf' ? 'pdf' : 'xlsx';
-    const xlsxPath = await exportOrchestration.fillLabRequestSummaryXlsx(labRequest);
-    await exportOrchestration.sendExportDownload(
+    const pagePaths = await exportOrchestration.fillLabRequestSummaryXlsxPages(labRequest);
+    await exportOrchestration.sendLabRequestSummaryDownload(
       res,
-      xlsxPath,
+      pagePaths,
       labRequestSummaryBaseName(labRequest),
       format,
     );
@@ -186,8 +186,8 @@ router.get('/lab-request/:labRequestId/export-all', async (req: Request, res: Re
     }
 
     const templateCache = await exportOrchestration.preloadExportTemplateCache();
-    const summaryPath = await exportOrchestration.fillLabRequestSummaryXlsx(labRequest);
-    tempFiles.push(summaryPath);
+    const summaryPagePaths = await exportOrchestration.fillLabRequestSummaryXlsxPages(labRequest);
+    tempFiles.push(...summaryPagePaths);
 
     const reportJobs = [];
     for (const report of reports) {
@@ -198,9 +198,10 @@ router.get('/lab-request/:labRequestId/export-all', async (req: Request, res: Re
       res,
       reportJobs,
       labRequestMergedBaseName(labRequest),
-      { leadingXlsxPaths: [summaryPath] },
+      { leadingXlsxPaths: summaryPagePaths },
     );
-    tempFiles.push(...paths.filter((p) => p !== summaryPath));
+    const summarySet = new Set(summaryPagePaths);
+    tempFiles.push(...paths.filter((p) => !summarySet.has(p)));
   } catch (error) {
     console.error('Failed to export merged lab request PDF:', error);
     if (!res.headersSent) {

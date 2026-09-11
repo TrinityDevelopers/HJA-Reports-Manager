@@ -65,6 +65,23 @@ describe('dynamicEntryRows', () => {
     expect(worksheet!.getCell('A15').border?.bottom?.style).toBe('double');
   });
 
+  it('preserves the right double border on duplicated and bottom entry rows', async () => {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(
+      path.join(process.cwd(), 'data', 'lab_request', 'lab_request_summary.xlsx'),
+    );
+    const worksheet = workbook.worksheets[0]!;
+
+    expandDynamicEntryRows(worksheet, CONFIG, 3);
+
+    // Template G12/G13 use a double right border; mergeCells must not strip it.
+    for (const row of [12, 13, 14, 15]) {
+      expect(worksheet.getCell(`G${row}`).border?.right?.style).toBe('double');
+    }
+    expect(worksheet.getCell('G16').border?.right?.style).toBe('double');
+    expect(worksheet.getCell('G16').border?.bottom?.style).toBe('double');
+  });
+
   it('is a no-op when extra is 0', async () => {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(

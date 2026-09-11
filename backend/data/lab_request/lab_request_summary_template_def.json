@@ -5,7 +5,7 @@
   "displayName": "Lab Request Summary",
   "filePath": "lab_request_summary.xlsx",
   "format": "xlsx",
-  "maxEntries": 3,
+  "maxEntries": 34,
   "rowsPerEntry": 1,
   "dynamicEntryRows": {
     "enabled": true,

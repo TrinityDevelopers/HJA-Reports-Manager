@@ -4,7 +4,8 @@ import type { Response } from 'express';
 import { getSchemaExportTemplateIds } from '@hja/shared';
 import { ExportService, type ExportableTemplate } from './ExportService';
 import { TemplateService } from './TemplateService';
-import { labRequestToExportableReport } from '../exports/labRequestExport';
+import { labRequestToExportablePages } from '../exports/labRequestExport';
+import { combineXlsxSheetsIntoWorkbook } from '../exports/combineXlsxSheets';
 import { mergePdfBuffers } from '../exports/mergePdfs';
 import { mapWithConcurrency } from '../utils/mapWithConcurrency';
 import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
@@ -147,15 +148,60 @@ export class ExportOrchestrationService {
     return xlsxPath;
   }
 
-  async fillLabRequestSummaryXlsx(labRequest: LabRequest): Promise<string> {
+  /** Fill one XLSX per summary page (boring-aware pagination). */
+  async fillLabRequestSummaryXlsxPages(labRequest: LabRequest): Promise<string[]> {
     const templates = await this.templateService.findAll();
-    const exportable = labRequestToExportableReport(labRequest, templates);
-    const xlsxPath = tempXlsxPath('lab-request-summary');
-    await fs.mkdir(path.dirname(xlsxPath), { recursive: true });
-    await this.exportService.exportReport(exportable, summaryExportableTemplate(), xlsxPath, {
-      templatesDir: LAB_REQUEST_DIR,
+    const exportTemplate = summaryExportableTemplate();
+    const maxEntries = exportTemplate.maxEntries ?? 34;
+    const pages = labRequestToExportablePages(labRequest, templates, maxEntries);
+    await fs.mkdir(TEMP_DIR, { recursive: true });
+
+    const paths: string[] = [];
+    for (let i = 0; i < pages.length; i++) {
+      const xlsxPath = tempXlsxPath(`lab-request-summary-p${i + 1}`);
+      await this.exportService.exportReport(pages[i]!, exportTemplate, xlsxPath, {
+        templatesDir: LAB_REQUEST_DIR,
+      });
+      paths.push(xlsxPath);
+    }
+    return paths;
+  }
+
+  /**
+   * Single download path for summary XLSX: one page as-is, or combined multi-sheet workbook.
+   * When combining, returns a new temp path; callers should clean up both page paths and the result.
+   */
+  async resolveLabRequestSummaryXlsxDownload(pagePaths: string[]): Promise<string> {
+    if (pagePaths.length === 0) {
+      throw new Error('No lab request summary pages to download');
+    }
+    if (pagePaths.length === 1) {
+      return pagePaths[0]!;
+    }
+    const combinedPath = tempXlsxPath('lab-request-summary-combined');
+    await combineXlsxSheetsIntoWorkbook(pagePaths, combinedPath);
+    return combinedPath;
+  }
+
+  async sendLabRequestSummaryDownload(
+    res: Response,
+    pagePaths: string[],
+    downloadBaseName: string,
+    format: 'xlsx' | 'pdf',
+  ): Promise<void> {
+    if (format === 'pdf') {
+      const pdfBuffers = await this.convertXlsxPathsToPdfBuffers(pagePaths);
+      const merged = await mergePdfBuffers(pdfBuffers);
+      await this.sendPdfBuffer(res, merged, downloadBaseName);
+      await this.cleanupTempFiles(pagePaths);
+      return;
+    }
+
+    const downloadPath = await this.resolveLabRequestSummaryXlsxDownload(pagePaths);
+    const extraCleanup = downloadPath !== pagePaths[0] ? [downloadPath] : [];
+    res.download(downloadPath, `${downloadBaseName}.xlsx`, async () => {
+      await this.cleanupTempFiles([...pagePaths, ...extraCleanup]);
     });
-    return xlsxPath;
   }
 
   async buildReportExportJobs(

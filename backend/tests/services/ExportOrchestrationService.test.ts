@@ -131,16 +131,16 @@ describe('ExportOrchestrationService', () => {
         download: vi.fn((_path: string, _name: string, cb: () => void) => cb()),
       };
 
-      const leading = '/tmp/summary.xlsx';
+      const leading = ['/tmp/summary-p1.xlsx', '/tmp/summary-p2.xlsx'];
       const tempPaths = await orchestration.exportMergedPdf(res as never, jobs, 'merged-name', {
-        leadingXlsxPaths: [leading],
+        leadingXlsxPaths: leading,
       });
 
       expect(exportService.convertXlsxFilesToPdfs).toHaveBeenCalledOnce();
       const convertArg = exportService.convertXlsxFilesToPdfs.mock.calls[0][0] as string[];
-      expect(convertArg[0]).toBe(leading);
-      expect(convertArg.length).toBe(2);
-      expect(tempPaths[0]).toBe(leading);
+      expect(convertArg.slice(0, 2)).toEqual(leading);
+      expect(convertArg.length).toBe(3);
+      expect(tempPaths.slice(0, 2)).toEqual(leading);
       expect(res.download).toHaveBeenCalledWith(
         expect.stringContaining('merged_'),
         'merged-name.pdf',
