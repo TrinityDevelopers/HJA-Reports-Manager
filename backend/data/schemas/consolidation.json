@@ -5,7 +5,7 @@
   "abbreviation": "CONS",
   "description": "Consolidation test data sheet and time-dial readings",
   "version": "1.0.0",
-  "templates": ["consolidation-data", "consolidation-balancing", "consolidation"],
+  "templates": ["consolidation-data", "consolidation-balancing", "consolidation", "consolidation", "consolidation"],
   "labRequest": {
     "mode": "per-sample",
     "map": {
