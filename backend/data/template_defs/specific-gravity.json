@@ -1,0 +1,41 @@
+{
+  "templateId": "specific-gravity",
+  "name": "specific_gravity",
+  "displayName": "Specific Gravity (ASTM D 854)",
+  "filePath": "specific_gravity.xlsx",
+  "format": "xlsx",
+  "entryLayout": "column",
+  "colsPerEntry": 1,
+  "maxEntries": 3,
+  "standardFields": {
+    "projectName": "E6",
+    "projectNumber": "N6",
+    "dateOfTest": "T6"
+  },
+  "fieldMapping": {
+    "header_boringNumber": "E8",
+    "header_depth": "K8",
+    "header_sampleNumber": "O8",
+    "header_testNumber": "U8",
+    "header_materialDescription": "I9",
+    "header_preparationOfMaterial": "J12",
+    "header_methodOfRemovingAir": "J13",
+    "entry_flaskNumber_col": "16@L,16@P,16@T",
+    "entry_weightOfFlask_col": "17@L,17@P,17@T",
+    "entry_weightFlaskWaterSoil_col": "18@L,18@P,18@T",
+    "entry_temperature_col": "20@L,20@P,20@T",
+    "entry_weightFlaskWater_col": "22@L,22@P,22@T",
+    "entry_containerNumber_col": "24@L,24@P,24@T",
+    "entry_weightDrySoilTare_col": "25@L,25@P,25@T",
+    "entry_tareWeight_col": "26@L,26@P,26@T",
+    "entry_weightDrySoil_col": "27@L,27@P,27@T",
+    "header_remarks": "F33",
+    "header_scaleNumber": "E40",
+    "header_thermometerNumber": "M40",
+    "header_ovenNumber": "R40",
+    "header_testedBy[name]": "G46",
+    "header_testedBy[date]": "M46",
+    "header_checkedBy[name]": "G47",
+    "header_checkedBy[date]": "M47"
+  }
+}

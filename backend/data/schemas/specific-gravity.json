@@ -1,0 +1,182 @@
+{
+  "name": "specific-gravity",
+  "displayName": "Specific Gravity",
+  "fullName": "Specific Gravity (ASTM D 854)",
+  "abbreviation": "SG",
+  "description": "Specific gravity of soil solids data sheet",
+  "version": "1.0.0",
+  "templates": ["specific-gravity"],
+  "labRequest": {
+    "mode": "per-sample",
+    "map": {
+      "boring": "boringNumber",
+      "sample": "sampleNumber",
+      "depth": "depth",
+      "material": "materialDescription"
+    }
+  },
+  "sections": [
+    {
+      "type": "header",
+      "title": "Header",
+      "fields": [
+        {
+          "id": "boringNumber",
+          "label": "Boring No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "testNumber",
+          "label": "Test No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "materialDescription",
+          "label": "Material Description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "preparationOfMaterial",
+          "label": "Preparation of Material",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "methodOfRemovingAir",
+          "label": "Method of Removing Air",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "entry",
+      "title": "Trials",
+      "fields": [
+        {
+          "id": "flaskNumber",
+          "label": "Flask Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "weightOfFlask",
+          "label": "Weight of Flask",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightFlaskWaterSoil",
+          "label": "Weight of Flask + Water + Soil (Wfws)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "temperature",
+          "label": "Temperature (°C)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightFlaskWater",
+          "label": "Weight of Flask + Water (Wfw)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "containerNumber",
+          "label": "Container Number",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "weightDrySoilTare",
+          "label": "Weight Dry Soil + Tare",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "tareWeight",
+          "label": "Tare Weight",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightDrySoil",
+          "label": "Weight Dry Soil (Ws)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Remarks",
+      "fields": [
+        {
+          "id": "remarks",
+          "label": "Remarks",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Equipment",
+      "fields": [
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "thermometerNumber",
+          "label": "Thermometer No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "title": "Sign-Off",
+      "fields": [
+        {
+          "id": "testedBy",
+          "label": "Tested By",
+          "type": "nameAndDate",
+          "required": false
+        },
+        {
+          "id": "checkedBy",
+          "label": "Checked By",
+          "type": "nameAndDate",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

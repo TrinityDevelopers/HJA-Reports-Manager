@@ -4,18 +4,6 @@ Planned work that is not yet started. New report types should follow `.cursor/sk
 
 ---
 
-## Add Specific Gravity Test
-
-New report type for the Specific Gravity data sheet.
-
-### Notes
-
-- Clean up the source XLSX **before** mapping. The sheet uses formulas; those need to calculate correctly in the filled workbook and still render when the export is converted to PDF (LibreOffice / Cloudmersive).
-- Confirm calculated cells survive `ExportService` fill + PDF conversion; do not strip formulas that the sheet depends on (`backend/data/README.md` template guidance: keep formula cells if used).
-- After the sheet is stable, add schema + template_def via the add-report-type skill.
-
----
-
 ## Fix Borders on Moisture Contents
 
 PDF/XLSX export of `moisture_contents.xlsx` draws borders incorrectly because the original sheet uses very small rows as visual borders instead of Excel cell borders.
