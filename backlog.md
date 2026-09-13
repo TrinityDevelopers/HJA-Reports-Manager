@@ -4,19 +4,6 @@ Planned work that is not yet started. New report types should follow `.cursor/sk
 
 ---
 
-## Fix Borders on Moisture Contents
-
-PDF/XLSX export of `moisture_contents.xlsx` draws borders incorrectly because the original sheet uses very small rows as visual borders instead of Excel cell borders.
-
-### Notes
-
-- Rework `backend/data/templates/moisture_contents.xlsx` so row/column separators use real Excel borders, not tiny spacer rows.
-- Update `backend/data/template_defs/moisture-contents.json` cell mappings if row numbers shift.
-- Verify print/fit behavior after the layout change (`worksheetPrintFix` already uses this workbook as a fixture).
-- Do this **before** the dynamic-row work below so pagination is not built on the spacer-row layout.
-
----
-
 ## Make Moisture Contents entries dynamic (multi-boring per report)
 
 Moisture Contents should be **per-request**, not per-boring. Pack as many borings as will fit onto each sheet, using the same smart-fit as the lab request summary.

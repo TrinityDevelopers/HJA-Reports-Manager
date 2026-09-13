@@ -34,9 +34,8 @@ describe('worksheetPrintFix', () => {
     const templateXml = await readWorksheetXmlFromXlsx(templatePath, 'xl/worksheets/sheet1.xml');
     const fragments = extractWorksheetPrintFragments(templateXml);
 
-    expect(fragments.pageSetUpPr).toBe('<pageSetUpPr fitToPage="true"/>');
-    expect(fragments.printBlock).toContain('fitToWidth="1"');
-    expect(fragments.printBlock).toContain('fitToHeight="1"');
+    expect(fragments.pageSetUpPr).toBe('<pageSetUpPr fitToPage="1"/>');
+    expect(fragments.printBlock).toContain('scale="96"');
     expect(fragments.printBlock).toContain('horizontalDpi="300"');
   });
 
@@ -58,9 +57,9 @@ describe('worksheetPrintFix', () => {
     const templateXml = await readWorksheetXmlFromXlsx(templatePath, 'xl/worksheets/sheet1.xml');
     const heights = extractTemplateRowHeights(templateXml);
 
-    expect(heights.get(25)?.ht).toBe('0.7');
-    expect(heights.get(25)?.customHeight).toBe(true);
-    expect(heights.get(26)?.ht).toBe('19.5');
+    expect(heights.get(5)?.ht).toBe('4.5');
+    expect(heights.get(5)?.customHeight).toBe(true);
+    expect(heights.get(6)?.ht).toBe('19.5');
   });
 
   it('preserves self-closing row tags for empty ExcelJS rows', () => {
@@ -186,7 +185,7 @@ describe('worksheetPrintFix integration', () => {
 
     const beforeFix = await readWorksheetXmlFromXlsx(outputPath, 'xl/worksheets/sheet1.xml');
     const beforeFragments = extractWorksheetPrintFragments(beforeFix);
-    expect(beforeFragments.pageSetUpPr).toBeUndefined();
+    expect(beforeFragments.printBlock).not.toBe(templateFragments.printBlock);
 
     await restoreWorksheetPrintSetupInXlsx(outputPath, templatePath);
 
@@ -199,7 +198,7 @@ describe('worksheetPrintFix integration', () => {
   it('restores template row heights after ExcelJS write', async () => {
     const templateXml = await readWorksheetXmlFromXlsx(templatePath, 'xl/worksheets/sheet1.xml');
     const templateHeights = extractTemplateRowHeights(templateXml);
-    expect(templateHeights.get(25)?.ht).toBe('0.7');
+    expect(templateHeights.get(5)?.ht).toBe('4.5');
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(templatePath);
@@ -217,19 +216,19 @@ describe('worksheetPrintFix integration', () => {
 
     const beforeFix = extractRowOpeningTag(
       await readWorksheetXmlFromXlsx(outputPath, 'xl/worksheets/sheet1.xml'),
-      25,
+      5,
     );
     if (beforeFix) {
-      expect(beforeFix).not.toContain('ht="0.7"');
+      expect(beforeFix).not.toContain('ht="4.5"');
     }
 
     await restoreWorksheetRowHeightsInXlsx(outputPath, templatePath);
 
     const afterFix = extractRowOpeningTag(
       await readWorksheetXmlFromXlsx(outputPath, 'xl/worksheets/sheet1.xml'),
-      25,
+      5,
     );
-    expect(afterFix).toBe(templateHeights.get(25)?.openingTag);
+    expect(afterFix).toBe(templateHeights.get(5)?.openingTag);
   });
 
   it('ExportService.exportReport restores worksheet print settings', async () => {
@@ -277,7 +276,7 @@ describe('worksheetPrintFix integration', () => {
     expect(exportedFragments.sheetFormatPr).toBe(templateFragments.sheetFormatPr);
 
     const templateHeights = extractTemplateRowHeights(templateXml);
-    const exportedRow25 = extractRowOpeningTag(exportedXml, 25);
-    expect(exportedRow25).toBe(templateHeights.get(25)?.openingTag);
+    const exportedRow5 = extractRowOpeningTag(exportedXml, 5);
+    expect(exportedRow5).toBe(templateHeights.get(5)?.openingTag);
   });
 });
