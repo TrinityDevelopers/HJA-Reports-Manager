@@ -10,6 +10,13 @@ const LAB_REQUEST_NAME = '12345G Lab Request';
 
 const moistureSchema = {
   labRequest: {
+    mode: 'per-request',
+    map: { boring: 'boringNumber', sample: 'sampleNumber' },
+  },
+};
+
+const perBoringSchema = {
+  labRequest: {
     mode: 'per-boring',
     map: { boring: 'boringNumber', sample: 'sampleNumber' },
   },
@@ -84,14 +91,38 @@ describe('reportExportBaseName', () => {
     ).toBe('report_moisture-contents');
   });
 
-  it('names a per-boring report with boring and template', () => {
+  it('names a per-request report with lab request and template only', () => {
     expect(
       reportExportBaseName({
         labRequest: { name: LAB_REQUEST_NAME },
         template: { name: 'moisture-contents', schema: moistureSchema },
+        entries: [
+          { entryOrder: 1, data: { boringNumber: 'B1', sampleNumber: 'W1' } },
+          { entryOrder: 2, data: { boringNumber: 'B2', sampleNumber: 'W1' } },
+        ],
+      }),
+    ).toBe('12345G Lab Request-moisture-contents');
+  });
+
+  it('does not append sheet page for per-request reports', () => {
+    expect(
+      reportExportBaseName({
+        labRequest: { name: LAB_REQUEST_NAME },
+        template: { name: 'moisture-contents', schema: moistureSchema },
+        headerData: { sheetPage: 2, sheetPageOf: 3 },
+        entries: [{ entryOrder: 1, data: { boringNumber: 'B1' } }],
+      }),
+    ).toBe('12345G Lab Request-moisture-contents');
+  });
+
+  it('names a per-boring report with boring and template', () => {
+    expect(
+      reportExportBaseName({
+        labRequest: { name: LAB_REQUEST_NAME },
+        template: { name: 'dry-unit-weights', schema: perBoringSchema },
         entries: [{ entryOrder: 1, data: { boringNumber: 'B1', sampleNumber: 'W1' } }],
       }),
-    ).toBe('12345G Lab Request-B1-moisture-contents');
+    ).toBe('12345G Lab Request-B1-dry-unit-weights');
   });
 
   it('names a per-sample report with boring, sample, and template', () => {
@@ -128,36 +159,36 @@ describe('reportExportBaseName', () => {
     expect(
       reportExportBaseName({
         labRequest: { name: LAB_REQUEST_NAME },
-        template: { name: 'moisture-contents', schema: moistureSchema },
+        template: { name: 'dry-unit-weights', schema: perBoringSchema },
         headerData: {},
         entries: [
           { entryOrder: 2, data: { boringNumber: 'B2' } },
           { entryOrder: 1, data: { boringNumber: 'B1', sampleNumber: 'W1' } },
         ],
       }),
-    ).toBe('12345G Lab Request-B1-moisture-contents');
+    ).toBe('12345G Lab Request-B1-dry-unit-weights');
   });
 
   it('appends sheet page when a per-boring report is split', () => {
     expect(
       reportExportBaseName({
         labRequest: { name: LAB_REQUEST_NAME },
-        template: { name: 'moisture-contents', schema: moistureSchema },
+        template: { name: 'dry-unit-weights', schema: perBoringSchema },
         headerData: { sheetPage: 2, sheetPageOf: 3 },
         entries: [{ entryOrder: 1, data: { boringNumber: 'B1' } }],
       }),
-    ).toBe('12345G Lab Request-B1-moisture-contents-2');
+    ).toBe('12345G Lab Request-B1-dry-unit-weights-2');
   });
 
   it('does not append sheet page 1', () => {
     expect(
       reportExportBaseName({
         labRequest: { name: LAB_REQUEST_NAME },
-        template: { name: 'moisture-contents', schema: moistureSchema },
+        template: { name: 'dry-unit-weights', schema: perBoringSchema },
         headerData: { sheetPage: 1, sheetPageOf: 2 },
         entries: [{ entryOrder: 1, data: { boringNumber: 'B1' } }],
       }),
-    ).toBe('12345G Lab Request-B1-moisture-contents');
+    ).toBe('12345G Lab Request-B1-dry-unit-weights');
   });
 
   it('strips illegal filename characters from identifiers', () => {

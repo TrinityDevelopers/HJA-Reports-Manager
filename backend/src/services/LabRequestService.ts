@@ -182,41 +182,83 @@ export class LabRequestService {
       return exportTemplate ?? null;
     };
 
-    // Group work by template so per-boring templates can collect all samples of a boring.
+    type SampleRef = { boring: LabRequestBoring; sample: LabRequestSample };
+
+    // Collect (boring, sample) pairs per template across the whole lab request.
+    const refsByTemplate = new Map<string, SampleRef[]>();
     for (const boring of borings) {
       const samples = Array.isArray(boring.samples) ? boring.samples : [];
-
-      // Collect, per template, the samples that requested it within this boring.
-      const samplesByTemplate = new Map<string, LabRequestSample[]>();
       for (const sample of samples) {
         const testIds = Array.isArray(sample.testTemplateIds) ? sample.testTemplateIds : [];
         for (const templateId of testIds) {
-          const list = samplesByTemplate.get(templateId) ?? [];
-          list.push(sample);
-          samplesByTemplate.set(templateId, list);
+          const list = refsByTemplate.get(templateId) ?? [];
+          list.push({ boring, sample });
+          refsByTemplate.set(templateId, list);
         }
       }
+    }
 
-      for (const [templateId, templateSamples] of samplesByTemplate) {
-        const template = await getTemplate(templateId);
-        if (!template) continue;
-        const schema = template.schema as Record<string, unknown> | undefined;
-        const rule = parseLabRequestRule(schema);
-        if (!rule) continue;
+    for (const [templateId, refs] of refsByTemplate) {
+      const template = await getTemplate(templateId);
+      if (!template) continue;
+      const schema = template.schema as Record<string, unknown> | undefined;
+      const rule = parseLabRequestRule(schema);
+      if (!rule) continue;
 
-        if (rule.mode === 'per-boring') {
-          // One or more reports for this boring + template; each sample becomes an entry row.
-          const sectionId = this.firstEntrySectionId(schema) ?? null;
-          const exportTemplateIds = getSchemaExportTemplateIds(schema, template.name);
-          const exportTemplate = await getExportTemplate(exportTemplateIds[0] ?? template.name);
-          const maxEntries = exportTemplate?.maxEntries;
+      if (rule.mode === 'per-request') {
+        // One report for the whole lab request; each sample becomes an entry row.
+        const sectionId = this.firstEntrySectionId(schema) ?? null;
+        const report = this.reportRepository.create({
+          projectId: labRequest.projectId,
+          templateId,
+          labRequestId: id,
+          dateOfTest: labRequest.dateOfTest,
+          headerData: {},
+        });
+        const savedReport = await this.reportRepository.save(report);
+
+        let order = 1;
+        for (const { boring, sample } of refs) {
+          const entry = this.entryRepository.create({
+            reportId: savedReport.id,
+            data: this.mappedValues(rule, boring, sample),
+            entryOrder: order,
+            sectionId,
+          });
+          await this.entryRepository.save(entry);
+          order += 1;
+        }
+        continue;
+      }
+
+      if (rule.mode === 'per-boring') {
+        // One or more reports per boring; each sample becomes an entry row.
+        const sectionId = this.firstEntrySectionId(schema) ?? null;
+        const exportTemplateIds = getSchemaExportTemplateIds(schema, template.name);
+        const exportTemplate = await getExportTemplate(exportTemplateIds[0] ?? template.name);
+        const maxEntries = exportTemplate?.maxEntries;
+
+        // Preserve boring order; group consecutive refs that share the same boring.
+        const byBoring: SampleRef[][] = [];
+        for (const ref of refs) {
+          const last = byBoring[byBoring.length - 1];
+          if (last && last[0]!.boring === ref.boring) {
+            last.push(ref);
+          } else {
+            byBoring.push([ref]);
+          }
+        }
+
+        for (const boringRefs of byBoring) {
+          const boring = boringRefs[0]!.boring;
+          const templateSamples = boringRefs.map((r) => r.sample);
           const sampleChunks =
             maxEntries && maxEntries > 0
               ? chunkArray(templateSamples, maxEntries)
               : [templateSamples];
 
           for (let chunkIndex = 0; chunkIndex < sampleChunks.length; chunkIndex += 1) {
-            const chunk = sampleChunks[chunkIndex];
+            const chunk = sampleChunks[chunkIndex]!;
             const headerData: Record<string, unknown> =
               sampleChunks.length > 1
                 ? { sheetPage: chunkIndex + 1, sheetPageOf: sampleChunks.length }
@@ -243,19 +285,20 @@ export class LabRequestService {
               order += 1;
             }
           }
-        } else {
-          // per-sample: one report per (boring, sample, template).
-          for (const sample of templateSamples) {
-            const report = this.reportRepository.create({
-              projectId: labRequest.projectId,
-              templateId,
-              labRequestId: id,
-              dateOfTest: labRequest.dateOfTest,
-              headerData: this.mappedValues(rule, boring, sample),
-            });
-            await this.reportRepository.save(report);
-          }
         }
+        continue;
+      }
+
+      // per-sample: one report per (boring, sample, template).
+      for (const { boring, sample } of refs) {
+        const report = this.reportRepository.create({
+          projectId: labRequest.projectId,
+          templateId,
+          labRequestId: id,
+          dateOfTest: labRequest.dateOfTest,
+          headerData: this.mappedValues(rule, boring, sample),
+        });
+        await this.reportRepository.save(report);
       }
     }
 

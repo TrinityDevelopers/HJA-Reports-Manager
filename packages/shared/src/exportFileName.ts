@@ -139,6 +139,8 @@ export function reportExportBaseName(
   } else if (mode === 'per-boring') {
     const boring = identifier(report, boringKey, 'entry');
     if (boring) parts.push(boring);
+  } else if (mode === 'per-request') {
+    // Whole-request report: no boring/sample segment; pages combine into one workbook.
   } else {
     const boring = identifier(report, 'boringNumber', 'header');
     const sample = identifier(report, 'sampleNumber', 'header');
@@ -147,8 +149,11 @@ export function reportExportBaseName(
   }
 
   parts.push(typeSegment);
-  const page = sheetPageSuffix(report.headerData);
-  if (page) parts.push(page);
+  // Per-request downloads are combined multi-sheet workbooks; skip sheetPage suffix.
+  if (mode !== 'per-request') {
+    const page = sheetPageSuffix(report.headerData);
+    if (page) parts.push(page);
+  }
 
   return sanitizeFileName(parts.join('-')) || typeSegment;
 }

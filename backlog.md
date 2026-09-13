@@ -4,18 +4,8 @@ Planned work that is not yet started. New report types should follow `.cursor/sk
 
 ---
 
-## Make Moisture Contents entries dynamic (multi-boring per report)
+## Moisture Contents — dynamic entry rows (deferred)
 
-Moisture Contents should be **per-request**, not per-boring. Pack as many borings as will fit onto each sheet, using the same smart-fit as the lab request summary.
+Moisture Contents is now **per-request** with summary-style boring packing on static 29-row sheets.
 
-### Notes
-
-- Today the schema is `labRequest.mode: "per-boring"` (`backend/data/schemas/moisture-contents.json`) with `maxEntries: 25`. Lab request generation only understands `per-sample` and `per-boring` (`packages/shared/src/labRequestSchema.ts`, `LabRequestService`).
-- Add a **per-request** mode: one Moisture Contents report for the whole lab request (not one per boring), with sample rows from every boring that requested MC.
-- Rework the sheet for **dynamic entry rows**, same pattern as lab request summary (`dynamicEntryRows` in `backend/src/exports/dynamicEntryRows.ts`, config in `backend/data/lab_request/lab_request_summary_template_def.json`).
-- Find the max sample/spacer rows that still fit on one printed page; set that as `maxEntries`.
-- On export, pack whole borings onto as few sheets as possible — reuse `paginateLabRequestBorings` in `backend/src/exports/labRequestExport.ts`:
-  - Fill a page up to `maxEntries` (samples + in-page spacers between borings)
-  - A single boring larger than `maxEntries` still gets its own page (overflow allowed)
-  - No spacer at a page break
-- Keep boring number on the first sample of each boring, with a blank spacer row between borings on the same page (same as the summary sheet).
+Still deferred: rework the sheet for **dynamic entry rows** (`dynamicEntryRows` in `backend/src/exports/dynamicEntryRows.ts`). Sign-off boxes sit below the entry rows, so their cell mappings would need to shift when rows are inserted. Until then, `maxEntries` stays 29 (`A12-40`) and oversized borings are split across pages at export.

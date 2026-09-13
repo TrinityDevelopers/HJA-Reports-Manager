@@ -2,6 +2,7 @@ import type { LabRequest, LabRequestBoring, LabRequestSample } from '../entities
 import type { ReportTemplate } from '../entities/ReportTemplate';
 import { formatDepthRange } from '../utils/depth';
 import type { ExportableReport } from '../services/ExportService';
+import { paginateGroupsBySize } from './paginateGroups';
 
 type TemplateLike = Pick<ReportTemplate, 'id' | 'displayName'> & {
   schema?: Record<string, unknown> | null;
@@ -75,30 +76,7 @@ export function paginateLabRequestBorings(
   borings: LabRequestBoring[] | undefined,
   maxEntries: number,
 ): LabRequestBoring[][] {
-  const groups = (borings ?? []).filter((boring) => (boring.samples ?? []).length > 0);
-  if (groups.length === 0) return [[]];
-
-  const pages: LabRequestBoring[][] = [];
-  let current: LabRequestBoring[] = [];
-  let used = 0;
-
-  for (const boring of groups) {
-    const sampleCount = (boring.samples ?? []).length;
-    const spacer = current.length > 0 ? 1 : 0;
-    if (current.length > 0 && used + spacer + sampleCount > maxEntries) {
-      pages.push(current);
-      current = [];
-      used = 0;
-    }
-    current.push(boring);
-    used += (current.length > 1 ? 1 : 0) + sampleCount;
-  }
-
-  if (current.length > 0) {
-    pages.push(current);
-  }
-
-  return pages;
+  return paginateGroupsBySize(borings ?? [], maxEntries, (boring) => (boring.samples ?? []).length);
 }
 
 function labRequestHeader(labRequest: LabRequest): ExportableReport {

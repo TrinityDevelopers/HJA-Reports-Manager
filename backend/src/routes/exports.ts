@@ -87,16 +87,17 @@ router.get('/report/:reportId/export', async (req: Request, res: Response) => {
 
     const format = req.query.format === 'pdf' ? 'pdf' : 'xlsx';
     const resolvedTemplateId = exportTemplate.templateId;
-    const xlsxPath = await exportOrchestration.fillReportXlsx(
+    const pagePaths = await exportOrchestration.fillReportXlsxPages(
       report,
       exportTemplate,
       resolvedTemplateId,
     );
-    await exportOrchestration.sendExportDownload(
+    await exportOrchestration.sendMultiPageDownload(
       res,
-      xlsxPath,
+      pagePaths,
       reportExportBaseName(report, resolvedTemplateId),
       format,
+      `report_${resolvedTemplateId}_combined`,
     );
   } catch (error) {
     console.error('Failed to export report:', error);

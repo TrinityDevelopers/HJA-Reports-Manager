@@ -1,10 +1,10 @@
 export type LabRequestRule = {
-  mode: 'per-sample' | 'per-boring';
+  mode: 'per-sample' | 'per-boring' | 'per-request';
   map: Partial<Record<'boring' | 'depth' | 'sample' | 'material' | string, string>>;
 };
 
 /**
- * Parses `schema.labRequest` when mode is per-sample or per-boring.
+ * Parses `schema.labRequest` when mode is per-sample, per-boring, or per-request.
  * Returns null for missing or invalid rules (used by lab request generation).
  */
 export function parseLabRequestRule(
@@ -15,7 +15,7 @@ export function parseLabRequestRule(
   if (!rule || typeof rule !== 'object') return null;
 
   const mode = (rule as Record<string, unknown>).mode;
-  if (mode !== 'per-sample' && mode !== 'per-boring') return null;
+  if (mode !== 'per-sample' && mode !== 'per-boring' && mode !== 'per-request') return null;
 
   const map = (rule as Record<string, unknown>).map;
   return {

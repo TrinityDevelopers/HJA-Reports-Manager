@@ -478,6 +478,107 @@ describe('LabRequestService.generate', () => {
     expect(savedReports[0].headerData).toEqual({ sampleNumber: 'S-2' });
     expect(savedEntries).toHaveLength(0);
   });
+
+  it('creates one per-request report with samples from all borings', async () => {
+    const perRequestTemplate = {
+      id: 'per-request-uuid',
+      name: 'moisture-contents',
+      schema: {
+        labRequest: {
+          mode: 'per-request',
+          map: {
+            boring: 'boringNumber',
+            sample: 'sampleNumber',
+            depth: 'depth',
+          },
+        },
+        sections: [{ type: 'entry', fields: [] }],
+      },
+    };
+
+    vi.mocked(AppDataSource.getRepository).mockImplementation((entity) => {
+      const name = typeof entity === 'function' ? entity.name : String(entity);
+      if (name === 'LabRequest') {
+        return {
+          findOne: vi.fn().mockResolvedValue({
+            id: 'lab-request-1',
+            projectId: 'project-1',
+            dateOfTest: '2026-06-19',
+            borings: [
+              {
+                id: 'boring-1',
+                label: 'B-1',
+                prefix: 'B',
+                number: 1,
+                samplePrefix: 'S',
+                samples: [
+                  makeSample('S-1', 'per-request-uuid'),
+                  makeSample('S-2', 'per-request-uuid'),
+                ],
+              },
+              {
+                id: 'boring-2',
+                label: 'B-2',
+                prefix: 'B',
+                number: 2,
+                samplePrefix: 'S',
+                samples: [makeSample('S-1', 'per-request-uuid')],
+              },
+            ],
+          }),
+        } as never;
+      }
+      if (name === 'Report') {
+        return {
+          delete: vi.fn(),
+          create: vi.fn((data) => ({ id: 'report-1', ...data })),
+          save: vi.fn(async (report) => {
+            savedReports.push(report);
+            return report;
+          }),
+          createQueryBuilder: vi.fn(() => ({
+            leftJoinAndSelect: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            orderBy: vi.fn().mockReturnThis(),
+            addOrderBy: vi.fn().mockReturnThis(),
+            getMany: vi.fn().mockResolvedValue(savedReports),
+          })),
+        } as never;
+      }
+      if (name === 'ReportEntry') {
+        return {
+          create: vi.fn((data) => data),
+          save: vi.fn(async (entry) => {
+            savedEntries.push(entry);
+            return entry;
+          }),
+        } as never;
+      }
+      if (name === 'ReportTemplate') {
+        return {
+          findOne: vi.fn().mockResolvedValue(perRequestTemplate),
+        } as never;
+      }
+      if (name === 'ExportTemplate') {
+        return {
+          findOne: vi.fn().mockResolvedValue({ templateId: 'moisture-contents', maxEntries: 29 }),
+        } as never;
+      }
+      throw new Error(`Unexpected repository: ${name}`);
+    });
+
+    service = new LabRequestService();
+    await service.generate('lab-request-1');
+
+    expect(savedReports).toHaveLength(1);
+    expect(savedReports[0].headerData).toEqual({});
+    expect(savedEntries).toHaveLength(3);
+    expect(savedEntries.map((e) => e.data)).toEqual([
+      { boringNumber: 'B-1', sampleNumber: 'S-1', depth: '1.0-2.0' },
+      { boringNumber: 'B-1', sampleNumber: 'S-2', depth: '1.0-2.0' },
+      { boringNumber: 'B-2', sampleNumber: 'S-1', depth: '1.0-2.0' },
+    ]);
+  });
 });
 
 describe('LabRequestService create/update dateDue', () => {

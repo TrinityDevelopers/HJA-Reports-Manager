@@ -16,6 +16,20 @@ describe('parseLabRequestRule', () => {
     });
   });
 
+  it('returns per-request rule with map', () => {
+    const schema = {
+      labRequest: {
+        mode: 'per-request',
+        map: { boring: 'boringNumber', sample: 'sampleNumber', depth: 'depth' },
+      },
+    };
+
+    expect(parseLabRequestRule(schema)).toEqual({
+      mode: 'per-request',
+      map: { boring: 'boringNumber', sample: 'sampleNumber', depth: 'depth' },
+    });
+  });
+
   it('returns null for invalid mode', () => {
     expect(parseLabRequestRule({ labRequest: { mode: 'other' } })).toBeNull();
     expect(parseLabRequestRule({})).toBeNull();

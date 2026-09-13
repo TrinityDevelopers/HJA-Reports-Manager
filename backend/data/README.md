@@ -151,6 +151,18 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `triaxial-compression-rock.json` | ASTM D 7012 UU rock Peak Only (`templateVariant: PO`) | 2 header, 1 entry |
 | `triaxial-compression-rock-me.json` | ASTM D 7012 UU rock ME (`templateVariant: ME`; shares rock template_def) | 2 header, 1 entry |
 
+#### Lab request modes (`labRequest.mode`)
+
+When a schema includes a `labRequest` block, report generation from a lab request uses `mode`:
+
+| Mode | Reports created | Typical use |
+|------|-----------------|-------------|
+| `per-sample` | One report per (boring, sample) | Single-sample sheets (Atterberg, proctor, etc.) |
+| `per-boring` | One report per boring (split if samples exceed `maxEntries`) | Multi-row sheets scoped to one boring |
+| `per-request` | One report for the whole lab request | Multi-row sheets that pack samples from all borings (e.g. Moisture Contents); export paginates with spacer rows between borings |
+
+Mapped fields (`boring`, `sample`, `depth`, `material`) go into entry rows for `per-boring` / `per-request`, or into `headerData` for `per-sample`.
+
 ### Adding a New Report Type
 
 1. **Create schema file** in `schemas/` (filename becomes the schema key, e.g. `my-test.json` → `my-test`):

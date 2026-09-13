@@ -56,7 +56,8 @@ For report types that share one workbook and differ only by a checkbox (e.g. roc
 | Sheet pattern | Schema | `labRequest.mode` |
 |---------------|--------|-------------------|
 | One sample; repeating stages/trials | Sample/equipment in **header**; stages as **entry** | `per-sample` |
-| Multiple samples stacked vertically | Sample fields on each **entry** | `per-boring` |
+| Multiple samples stacked vertically (one boring) | Sample fields on each **entry** | `per-boring` |
+| Multiple samples across all borings on one report | Sample fields on each **entry**; export packs borings with spacers | `per-request` |
 | Trials across columns | Entry + `"entryLayout": "column"` | usually `per-sample` |
 
 `nameAndDate` export only works for **header** fields (`header_x[name]` / `[date]`). For per-entry sign-off, use separate `text` + `date` fields (e.g. `preparedBy`, `preparedByDate`).

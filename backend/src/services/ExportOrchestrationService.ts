@@ -5,6 +5,7 @@ import { getSchemaExportTemplateIds } from '@hja/shared';
 import { ExportService, type ExportableTemplate } from './ExportService';
 import { TemplateService } from './TemplateService';
 import { labRequestToExportablePages } from '../exports/labRequestExport';
+import { isPerRequestReport, reportToExportablePages } from '../exports/reportEntryPages';
 import { combineXlsxSheetsIntoWorkbook } from '../exports/combineXlsxSheets';
 import { mergePdfBuffers } from '../exports/mergePdfs';
 import { mapWithConcurrency } from '../utils/mapWithConcurrency';
@@ -153,6 +154,38 @@ export class ExportOrchestrationService {
     return xlsxPath;
   }
 
+  /**
+   * Fill one XLSX per printed page for a report.
+   * Per-request reports paginate by boring with spacer rows; others remain a single page.
+   */
+  async fillReportXlsxPages(
+    report: Report,
+    exportTemplate: ExportTemplate,
+    exportTemplateId: string,
+  ): Promise<string[]> {
+    if (!isPerRequestReport(report)) {
+      return [await this.fillReportXlsx(report, exportTemplate, exportTemplateId)];
+    }
+
+    const exportable = toExportableTemplate(exportTemplate);
+    const maxEntries = exportable.maxEntries ?? 29;
+    const pages = reportToExportablePages(report, maxEntries);
+    const templateVariant = readTemplateVariant(
+      report.template?.schema as Record<string, unknown> | undefined,
+    );
+    await fs.mkdir(TEMP_DIR, { recursive: true });
+
+    const paths: string[] = [];
+    for (let i = 0; i < pages.length; i++) {
+      const xlsxPath = tempXlsxPath(
+        `report_${report.template!.name}_${exportTemplateId}_p${i + 1}`,
+      );
+      await this.exportService.exportReport(pages[i]!, exportable, xlsxPath, { templateVariant });
+      paths.push(xlsxPath);
+    }
+    return paths;
+  }
+
   /** Fill one XLSX per summary page (boring-aware pagination). */
   async fillLabRequestSummaryXlsxPages(labRequest: LabRequest): Promise<string[]> {
     const templates = await this.templateService.findAll();
@@ -173,26 +206,31 @@ export class ExportOrchestrationService {
   }
 
   /**
-   * Single download path for summary XLSX: one page as-is, or combined multi-sheet workbook.
+   * Single download path for multi-page XLSX: one page as-is, or combined multi-sheet workbook.
    * When combining, returns a new temp path; callers should clean up both page paths and the result.
    */
-  async resolveLabRequestSummaryXlsxDownload(pagePaths: string[]): Promise<string> {
+  async resolveMultiPageXlsxDownload(pagePaths: string[], combinedPrefix: string): Promise<string> {
     if (pagePaths.length === 0) {
-      throw new Error('No lab request summary pages to download');
+      throw new Error('No pages to download');
     }
     if (pagePaths.length === 1) {
       return pagePaths[0]!;
     }
-    const combinedPath = tempXlsxPath('lab-request-summary-combined');
+    const combinedPath = tempXlsxPath(combinedPrefix);
     await combineXlsxSheetsIntoWorkbook(pagePaths, combinedPath);
     return combinedPath;
   }
 
-  async sendLabRequestSummaryDownload(
+  async resolveLabRequestSummaryXlsxDownload(pagePaths: string[]): Promise<string> {
+    return this.resolveMultiPageXlsxDownload(pagePaths, 'lab-request-summary-combined');
+  }
+
+  async sendMultiPageDownload(
     res: Response,
     pagePaths: string[],
     downloadBaseName: string,
     format: 'xlsx' | 'pdf',
+    combinedPrefix: string,
   ): Promise<void> {
     if (format === 'pdf') {
       const pdfBuffers = await this.convertXlsxPathsToPdfBuffers(pagePaths);
@@ -202,11 +240,26 @@ export class ExportOrchestrationService {
       return;
     }
 
-    const downloadPath = await this.resolveLabRequestSummaryXlsxDownload(pagePaths);
+    const downloadPath = await this.resolveMultiPageXlsxDownload(pagePaths, combinedPrefix);
     const extraCleanup = downloadPath !== pagePaths[0] ? [downloadPath] : [];
     res.download(downloadPath, `${downloadBaseName}.xlsx`, async () => {
       await this.cleanupTempFiles([...pagePaths, ...extraCleanup]);
     });
+  }
+
+  async sendLabRequestSummaryDownload(
+    res: Response,
+    pagePaths: string[],
+    downloadBaseName: string,
+    format: 'xlsx' | 'pdf',
+  ): Promise<void> {
+    await this.sendMultiPageDownload(
+      res,
+      pagePaths,
+      downloadBaseName,
+      format,
+      'lab-request-summary-combined',
+    );
   }
 
   async buildReportExportJobs(
@@ -226,9 +279,10 @@ export class ExportOrchestrationService {
   }
 
   async fillReportExportJobs(jobs: ReportExportJob[]): Promise<string[]> {
-    return await mapWithConcurrency(jobs, XLSX_FILL_CONCURRENCY, async (job) =>
-      this.fillReportXlsx(job.report, job.exportTemplate, job.exportTemplate.templateId),
+    const pagePathLists = await mapWithConcurrency(jobs, XLSX_FILL_CONCURRENCY, async (job) =>
+      this.fillReportXlsxPages(job.report, job.exportTemplate, job.exportTemplate.templateId),
     );
+    return pagePathLists.flat();
   }
 
   async sendExportDownload(
@@ -237,20 +291,7 @@ export class ExportOrchestrationService {
     downloadBaseName: string,
     format: 'xlsx' | 'pdf',
   ): Promise<void> {
-    if (format === 'pdf') {
-      const pdfPath = xlsxPath.replace(/\.xlsx$/, '.pdf');
-      const pdfBuffer = await this.convertXlsxFileToPdfBuffer(xlsxPath);
-      await fs.writeFile(pdfPath, pdfBuffer);
-
-      res.download(pdfPath, `${downloadBaseName}.pdf`, async () => {
-        await Promise.allSettled([unlinkQuiet(xlsxPath), unlinkQuiet(pdfPath)]);
-      });
-      return;
-    }
-
-    res.download(xlsxPath, `${downloadBaseName}.xlsx`, async () => {
-      await unlinkQuiet(xlsxPath);
-    });
+    await this.sendMultiPageDownload(res, [xlsxPath], downloadBaseName, format, 'report-combined');
   }
 
   async sendPdfBuffer(res: Response, pdfBuffer: Buffer, downloadBaseName: string): Promise<void> {
@@ -291,14 +332,6 @@ export class ExportOrchestrationService {
 
   async cleanupTempFiles(filePaths: string[]): Promise<void> {
     await Promise.allSettled(filePaths.map((filePath) => unlinkQuiet(filePath)));
-  }
-
-  private async convertXlsxFileToPdfBuffer(xlsxPath: string): Promise<Buffer> {
-    const [pdfBuffer] = await this.exportService.convertXlsxFilesToPdfs([xlsxPath]);
-    if (!pdfBuffer) {
-      throw new Error(`PDF conversion produced no output for ${xlsxPath}`);
-    }
-    return pdfBuffer;
   }
 
   private async convertXlsxPathsToPdfBuffers(xlsxPaths: string[]): Promise<Buffer[]> {
