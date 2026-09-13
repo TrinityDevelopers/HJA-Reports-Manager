@@ -1,6 +1,6 @@
 import type { ExportableTemplate } from '../services/ExportService';
 import type { ExportTemplate } from '../entities/ExportTemplate';
-import type { FieldMapping } from '../exports/fillers';
+import type { FieldMapping, TemplateVariants } from '../exports/fillers';
 import type { DynamicEntryRowsConfig } from '../exports/dynamicEntryRows';
 
 type TemplateDefLike = Record<string, unknown>;
@@ -22,6 +22,7 @@ export function toExportableTemplate(source: ExportTemplate | TemplateDefLike): 
     filePath: source.filePath as string,
     standardFields: source.standardFields as Record<string, string> | undefined,
     fieldMapping: source.fieldMapping as FieldMapping | undefined,
+    variants: source.variants as TemplateVariants | undefined,
     maxEntries: resolveMaxEntries(source),
     rowsPerEntry: source.rowsPerEntry as number | undefined,
     colsPerEntry: source.colsPerEntry as number | undefined,
@@ -40,6 +41,7 @@ export function applyTemplateDefToEntity(
   existing.format = def.format as 'xlsx';
   existing.fieldMapping = def.fieldMapping as Record<string, unknown>;
   existing.standardFields = def.standardFields as Record<string, unknown>;
+  existing.variants = def.variants as ExportTemplate['variants'];
   existing.maxEntries = readMaxEntries(def);
   existing.rowsPerEntry = def.rowsPerEntry as number | undefined;
   existing.colsPerEntry = def.colsPerEntry as number | undefined;
@@ -57,6 +59,7 @@ export function templateDefToCreatePayload(def: TemplateDefLike): Partial<Export
     format: def.format as 'xlsx',
     fieldMapping: def.fieldMapping as Record<string, unknown>,
     standardFields: def.standardFields as Record<string, unknown>,
+    variants: def.variants as ExportTemplate['variants'],
     maxEntries: readMaxEntries(def),
     rowsPerEntry: def.rowsPerEntry as number | undefined,
     colsPerEntry: def.colsPerEntry as number | undefined,

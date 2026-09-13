@@ -10,6 +10,7 @@ import { mergePdfBuffers } from '../exports/mergePdfs';
 import { mapWithConcurrency } from '../utils/mapWithConcurrency';
 import { LAB_REQUEST_DIR, LAB_REQUEST_SUMMARY_TEMPLATE_DEF } from '../labRequest/config';
 import { toExportableTemplate } from '../schemas/templateDefMapper';
+import { readTemplateVariant } from '../schemas/templateVariant';
 import type { ExportTemplate } from '../entities/ExportTemplate';
 import type { LabRequest } from '../entities/LabRequest';
 import type { Report } from '../entities/Report';
@@ -144,7 +145,11 @@ export class ExportOrchestrationService {
   ): Promise<string> {
     const xlsxPath = tempXlsxPath(`report_${report.template!.name}_${exportTemplateId}`);
     await fs.mkdir(path.dirname(xlsxPath), { recursive: true });
-    await this.exportService.exportReport(report, toExportableTemplate(exportTemplate), xlsxPath);
+    await this.exportService.exportReport(report, toExportableTemplate(exportTemplate), xlsxPath, {
+      templateVariant: readTemplateVariant(
+        report.template?.schema as Record<string, unknown> | undefined,
+      ),
+    });
     return xlsxPath;
   }
 

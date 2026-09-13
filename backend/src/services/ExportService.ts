@@ -8,8 +8,13 @@ import { ExportTemplate } from '../entities/ExportTemplate';
 import { AppDataSource } from '../database/connection';
 import { Repository } from 'typeorm';
 import { seedFromDefinitions } from '../utils/seedFromDefinitions';
-import type { FieldMapping } from '../exports/fillers';
-import { fillEntryFields, fillHeaderFields, fillStandardFields } from '../exports/fillers';
+import type { FieldMapping, TemplateVariants } from '../exports/fillers';
+import {
+  fillEntryFields,
+  fillHeaderFields,
+  fillStandardFields,
+  fillVariantFields,
+} from '../exports/fillers';
 import {
   expandDynamicEntryRows,
   extendEntryMappingRanges,
@@ -34,6 +39,7 @@ export interface ExportableTemplate {
   filePath: string;
   standardFields?: Record<string, string>;
   fieldMapping?: FieldMapping;
+  variants?: TemplateVariants;
   maxEntries?: number;
   rowsPerEntry?: number;
   colsPerEntry?: number;
@@ -43,6 +49,8 @@ export interface ExportableTemplate {
 
 export type ExportReportOptions = {
   templatesDir?: string;
+  /** Schema templateVariant id; used with ExportableTemplate.variants. */
+  templateVariant?: string;
 };
 
 import { applyTemplateDefToEntity, templateDefToCreatePayload } from '../schemas/templateDefMapper';
@@ -132,6 +140,7 @@ export class ExportService {
       maxEntries,
       entryLayout: exportTemplate.entryLayout ?? 'row',
     });
+    fillVariantFields(worksheet, exportTemplate.variants, options.templateVariant);
 
     const sheetPrintSetup = captureSheetPrintSetup(workbook);
 

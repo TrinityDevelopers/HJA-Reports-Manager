@@ -9,6 +9,12 @@ import {
 
 export type FieldMapping = Record<string, string>;
 
+/** Cell address → fill text for a single template variant (e.g. checkbox marks). */
+export type VariantCellMap = Record<string, string>;
+
+/** Variant id → cells to fill when that variant is selected. */
+export type TemplateVariants = Record<string, VariantCellMap>;
+
 export type FillEntryFieldsOptions = {
   rowsPerEntry?: number;
   colsPerEntry?: number;
@@ -75,6 +81,37 @@ export function fillHeaderFields(
     }
 
     setCellValue(worksheet, fieldMapping[headerKey(key)], value, { skipEmptyString: false });
+  }
+}
+
+/**
+ * Fill variant-specific constant cells (e.g. method checkboxes).
+ * No-op when variants or selectedVariant is missing/unknown.
+ * Clears cells that belong only to other variants (radio-button behavior).
+ */
+export function fillVariantFields(
+  worksheet: ExcelJS.Worksheet,
+  variants: TemplateVariants | undefined,
+  selectedVariant: string | undefined,
+): void {
+  if (!variants || !selectedVariant) return;
+
+  const selected = variants[selectedVariant];
+  if (!selected || typeof selected !== 'object') return;
+
+  const selectedAddresses = new Set(Object.keys(selected));
+
+  for (const [variantId, cellMap] of Object.entries(variants)) {
+    if (variantId === selectedVariant || !cellMap || typeof cellMap !== 'object') continue;
+    for (const address of Object.keys(cellMap)) {
+      if (!selectedAddresses.has(address)) {
+        setCellValue(worksheet, address, '', { skipEmptyString: false });
+      }
+    }
+  }
+
+  for (const [address, value] of Object.entries(selected)) {
+    setCellValue(worksheet, address, value);
   }
 }
 

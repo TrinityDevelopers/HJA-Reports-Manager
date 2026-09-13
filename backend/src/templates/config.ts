@@ -49,6 +49,8 @@ export const TEMPLATES_DIR = path.join(process.cwd(), 'data', 'templates');
  *
  * maxEntries: max trials per entry section (row or column slots); warns on overflow
  * standardFields: projectName, projectNumber, dateOfTest → cells on every export
+ * variants: optional map of variant id → { cellAddress: fillText }; paired with
+ *   schema.templateVariant (explicit; no default). Sibling variant cells are cleared.
  *
  * Example:
  * {

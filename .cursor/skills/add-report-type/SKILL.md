@@ -47,6 +47,8 @@ Do not map sketch/drawing boxes (e.g. FAILURE diagrams).
 
 Pick the closest existing pair under `schemas/` + `template_defs/` (e.g. `unconfined-compression-rock`, `free-swell`, `atterberg-limit`). Reuse field id style: camelCase, no underscores (`heightH1`, `wetWeightTareBefore`).
 
+For report types that share one workbook and differ only by a checkbox (e.g. rock Peak Only vs ME), use one template_def with a `variants` map and set `templateVariant` on each schema.
+
 **Critical:** field ids must not contain `_`. Entry mapping keys are parsed as `entry_<optionalSectionId_>_<fieldId>_row|col`; underscores in field ids break parsing.
 
 ### 3. Header vs entry
@@ -90,6 +92,8 @@ Field types: `text`, `number`, `date`, `select` (+ `options`), `nameAndDate` (he
 
 Multiple entry tables → give each entry section an `id` and use prefixed keys (`entry_<sectionId>_<fieldId>_row`).
 
+When two report types share one workbook and differ only by a checkbox mark, point both schemas at the same template id and set an explicit `"templateVariant"` (e.g. `"PO"` / `"ME"`). There is no implicit default.
+
 ### 5. Template def shape
 
 ```json
@@ -105,6 +109,10 @@ Multiple entry tables → give each entry section an `id` and use prefixed keys 
     "projectName": "D6",
     "projectNumber": "S6",
     "dateOfTest": "Y6"
+  },
+  "variants": {
+    "PO": { "P6": "X" },
+    "ME": { "P7": "X" }
   },
   "fieldMapping": {
     "header_boringNumber": "E7",

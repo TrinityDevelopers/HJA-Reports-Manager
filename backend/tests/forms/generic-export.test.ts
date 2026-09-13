@@ -62,10 +62,18 @@ describe.each(Object.values(TEMPLATE_CONFIGS))(
         colsPerEntry: templateDef.default.colsPerEntry,
         entryLayout: templateDef.default.entryLayout,
         standardFields: templateDef.default.standardFields,
+        variants: templateDef.default.variants,
       };
 
+      const templateVariant =
+        typeof schema.default.templateVariant === 'string'
+          ? schema.default.templateVariant
+          : undefined;
+
       // Export to XLSX
-      await exportService.exportReport(reportWithProject, exportTemplate, outputFile);
+      await exportService.exportReport(reportWithProject, exportTemplate, outputFile, {
+        templateVariant,
+      });
 
       // Verify file was created
       const fileExists = await fs

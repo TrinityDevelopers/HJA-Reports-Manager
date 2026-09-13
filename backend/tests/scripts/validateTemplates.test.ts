@@ -3,6 +3,7 @@ import {
   collectSchemaFieldIds,
   validateFieldMappingKey,
   validateTemplates,
+  validateVariantsShape,
 } from '../../scripts/validateTemplates';
 
 describe('collectSchemaFieldIds', () => {
@@ -44,6 +45,35 @@ describe('validateFieldMappingKey', () => {
   it('rejects unknown field ids', () => {
     expect(validateFieldMappingKey('header_missing', fieldIds)).toMatch(/not in schema/);
     expect(validateFieldMappingKey('entry_missing_row', fieldIds)).toMatch(/not in schema/);
+  });
+});
+
+describe('validateVariantsShape', () => {
+  it('accepts a well-formed variants map', () => {
+    expect(
+      validateVariantsShape(
+        {
+          PO: { P6: 'X' },
+          ME: { P7: 'X' },
+        },
+        'rock',
+      ),
+    ).toEqual([]);
+  });
+
+  it('rejects empty or non-object variants', () => {
+    expect(validateVariantsShape({}, 'rock')[0]?.kind).toBe('invalid-variants');
+    expect(validateVariantsShape([], 'rock')[0]?.kind).toBe('invalid-variants');
+  });
+
+  it('rejects empty cell maps and non-string values', () => {
+    expect(validateVariantsShape({ PO: {} }, 'rock')[0]?.kind).toBe('invalid-variants');
+    expect(validateVariantsShape({ PO: { P6: 1 } }, 'rock')[0]?.kind).toBe('invalid-variants');
+    expect(validateVariantsShape({ PO: { '': 'X' } }, 'rock')[0]?.kind).toBe('invalid-variants');
+  });
+
+  it('returns no issues when variants is absent', () => {
+    expect(validateVariantsShape(undefined, 'rock')).toEqual([]);
   });
 });
 

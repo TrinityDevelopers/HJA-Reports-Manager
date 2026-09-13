@@ -234,11 +234,13 @@ for (const file of schemaFiles) {
       .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    TEMPLATE_CONFIGS[templateId] = {
+    // Key by report type + template id so two schemas can share one template_def.
+    const configKey = `${reportTypeName}::${templateId}`;
+    TEMPLATE_CONFIGS[configKey] = {
       templateId,
       reportTypeName,
-      displayName,
-      outputFilename: `${templateId}-test.xlsx`,
+      displayName: `${displayName} (${reportTypeName})`,
+      outputFilename: `${reportTypeName}-${templateId}-test.xlsx`,
       schemaPath: `../../data/schemas/${file}`,
       templatePath: `../../data/template_defs/${templateId}.json`,
     };

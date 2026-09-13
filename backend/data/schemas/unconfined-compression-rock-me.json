@@ -5,7 +5,8 @@
   "abbreviation": "ME",
   "description": "Qu(Rock) data sheet with Modulus of Elasticity",
   "version": "1.0.0",
-  "templates": ["unconfined-compression-rock-me"],
+  "templates": ["unconfined-compression-rock"],
+  "templateVariant": "ME",
   "labRequest": {
     "mode": "per-boring",
     "map": {

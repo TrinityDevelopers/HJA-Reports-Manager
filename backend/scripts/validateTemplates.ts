@@ -16,6 +16,7 @@ type SchemaSection = {
 type SchemaJson = {
   name?: string;
   templates?: string[];
+  templateVariant?: string;
   sections?: SchemaSection[];
   headerFields?: Array<{ id?: string }>;
   entryFields?: Array<{ id?: string }>;
@@ -25,10 +26,17 @@ type TemplateDefJson = {
   templateId?: string;
   filePath?: string;
   fieldMapping?: Record<string, string>;
+  variants?: Record<string, Record<string, string>>;
 };
 
 export type TemplateValidationIssue = {
-  kind: 'missing-template-def' | 'missing-xlsx' | 'unknown-mapping-key';
+  kind:
+    | 'missing-template-def'
+    | 'missing-xlsx'
+    | 'unknown-mapping-key'
+    | 'invalid-variants'
+    | 'missing-template-variant'
+    | 'unknown-template-variant';
   message: string;
 };
 
@@ -108,6 +116,79 @@ export function validateFieldMappingKey(key: string, fieldIds: SchemaFieldIds): 
   return null;
 }
 
+/**
+ * Validates the shape of template_def.variants.
+ * Returns issue messages (empty when valid or when variants is absent).
+ */
+export function validateVariantsShape(
+  variants: unknown,
+  templateId: string,
+): TemplateValidationIssue[] {
+  if (variants === undefined || variants === null) {
+    return [];
+  }
+
+  if (typeof variants !== 'object' || Array.isArray(variants)) {
+    return [
+      {
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants must be an object mapping variant ids to cell maps`,
+      },
+    ];
+  }
+
+  const entries = Object.entries(variants as Record<string, unknown>);
+  if (entries.length === 0) {
+    return [
+      {
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants must not be empty`,
+      },
+    ];
+  }
+
+  const issues: TemplateValidationIssue[] = [];
+  for (const [variantId, cellMap] of entries) {
+    if (!variantId.trim()) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants has an empty variant id`,
+      });
+      continue;
+    }
+    if (typeof cellMap !== 'object' || cellMap === null || Array.isArray(cellMap)) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants["${variantId}"] must be an object of cell → text`,
+      });
+      continue;
+    }
+    const cells = Object.entries(cellMap as Record<string, unknown>);
+    if (cells.length === 0) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants["${variantId}"] must not be empty`,
+      });
+      continue;
+    }
+    for (const [address, value] of cells) {
+      if (!address.trim()) {
+        issues.push({
+          kind: 'invalid-variants',
+          message: `Template def "${templateId}": variants["${variantId}"] has an empty cell address`,
+        });
+      }
+      if (typeof value !== 'string') {
+        issues.push({
+          kind: 'invalid-variants',
+          message: `Template def "${templateId}": variants["${variantId}"]["${address}"] must be a string`,
+        });
+      }
+    }
+  }
+  return issues;
+}
+
 async function readJsonFiles<T>(dir: string): Promise<Array<{ file: string; data: T }>> {
   const entries = await fs.readdir(dir);
   const results: Array<{ file: string; data: T }> = [];
@@ -180,6 +261,32 @@ export async function validateTemplates(): Promise<TemplateValidationIssue[]> {
           issues.push({
             kind: 'unknown-mapping-key',
             message: `Template def "${templateId}": ${mappingIssue}`,
+          });
+        }
+      }
+
+      issues.push(...validateVariantsShape(templateDef.variants, templateId));
+
+      const hasVariants =
+        templateDef.variants != null &&
+        typeof templateDef.variants === 'object' &&
+        !Array.isArray(templateDef.variants) &&
+        Object.keys(templateDef.variants).length > 0;
+
+      if (hasVariants) {
+        const variantKeys = new Set(Object.keys(templateDef.variants!));
+        const selected =
+          typeof schema.templateVariant === 'string' ? schema.templateVariant.trim() : '';
+
+        if (!selected) {
+          issues.push({
+            kind: 'missing-template-variant',
+            message: `Schema "${schema.name ?? file}" references template "${templateId}" which has variants, but schema.templateVariant is missing`,
+          });
+        } else if (!variantKeys.has(selected)) {
+          issues.push({
+            kind: 'unknown-template-variant',
+            message: `Schema "${schema.name ?? file}" templateVariant "${selected}" is not defined in template_defs/${defFileName} variants`,
           });
         }
       }

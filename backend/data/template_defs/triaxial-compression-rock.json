@@ -1,0 +1,60 @@
+{
+  "templateId": "triaxial-compression-rock",
+  "name": "triaxial_compression_rock",
+  "displayName": "Triaxial Compression Test on Rock (ASTM D 7012)",
+  "filePath": "triaxial_compression_rock.xlsx",
+  "format": "xlsx",
+  "maxEntries": 3,
+  "rowsPerEntry": 14,
+  "standardFields": {
+    "projectName": "D9",
+    "projectNumber": "U9",
+    "dateOfTest": "AA9"
+  },
+  "variants": {
+    "PO": {
+      "Q6": "X"
+    },
+    "ME": {
+      "Q7": "X"
+    }
+  },
+  "fieldMapping": {
+    "header_loadFrameNumber": "F11",
+    "header_caliperNumber": "P11",
+    "header_loadCellNumber": "G12",
+    "header_scaleNumber": "P12",
+    "header_lvdtNumber": "D13",
+    "header_ovenNumber": "P13",
+    "header_strainRate": "H14",
+    "header_testedBy[name]": "F58",
+    "header_testedBy[date]": "N58",
+    "header_checkedBy[name]": "G59",
+    "header_checkedBy[date]": "N59",
+    "entry_boringNumber_row": "F16-57",
+    "entry_depth_row": "L16-57",
+    "entry_sampleNumber_row": "T16-57",
+    "entry_sampleDate_row": "Z16-57",
+    "entry_materialDescription_row": "I17-58",
+    "entry_failureType_row": "Y18-59",
+    "entry_heightH1_row": "F19-60",
+    "entry_heightH2_row": "F20-61",
+    "entry_heightH3_row": "F21-62",
+    "entry_heightAvg_row": "F22-63",
+    "entry_diameterD1_row": "N19-60",
+    "entry_diameterD2_row": "N20-61",
+    "entry_diameterD3_row": "N21-62",
+    "entry_diameterAvg_row": "N22-63",
+    "entry_confiningPressure_row": "Y20-61",
+    "entry_trueLoad_row": "Z21-62",
+    "entry_peakStress_row": "AA22-63",
+    "entry_failureStrain_row": "AA23-64",
+    "entry_weightOfSample_row": "I23-64",
+    "entry_wetWeightTare_row": "I24-65",
+    "entry_dryWeightTare_row": "I25-66",
+    "entry_tarePanNumber_row": "I26-67",
+    "entry_tareWeight_row": "I27-68",
+    "entry_comments_row": "V25-66",
+    "entry_dataFile_row": "V27-68"
+  }
+}

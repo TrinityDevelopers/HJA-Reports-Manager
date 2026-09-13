@@ -1,0 +1,67 @@
+{
+  "templateId": "triaxial-compression-soil",
+  "name": "triaxial_compression_soil",
+  "displayName": "Triaxial Compression Test on Soil",
+  "filePath": "triaxial_compression_soil.xlsx",
+  "format": "xlsx",
+  "maxEntries": 3,
+  "rowsPerEntry": 15,
+  "standardFields": {
+    "projectName": "D9",
+    "projectNumber": "V9",
+    "dateOfTest": "AB9"
+  },
+  "variants": {
+    "UU": {
+      "R5": "X"
+    },
+    "CU": {
+      "R6": "X"
+    },
+    "CD": {
+      "R7": "X"
+    }
+  },
+  "fieldMapping": {
+    "header_loadFrameNumber": "F11",
+    "header_caliperNumber": "Q11",
+    "header_loadCellNumber": "G12",
+    "header_scaleNumber": "Q12",
+    "header_lvdtNumber": "D13",
+    "header_ovenNumber": "Q13",
+    "header_strainRate": "H14",
+    "header_testedBy[name]": "E61",
+    "header_testedBy[date]": "O61",
+    "header_checkedBy[name]": "F62",
+    "header_checkedBy[date]": "O62",
+    "entry_boringNumber_row": "E16-60",
+    "entry_depth_row": "L16-60",
+    "entry_sampleNumber_row": "U16-60",
+    "entry_sampleDate_row": "AA16-60",
+    "entry_materialDescription_row": "I17-61",
+    "entry_failureType_row": "Z18-62",
+    "entry_heightH1_row": "E19-63",
+    "entry_heightH2_row": "E20-64",
+    "entry_heightH3_row": "E21-65",
+    "entry_heightAvg_row": "E22-66",
+    "entry_diameterD1_row": "N19-63",
+    "entry_diameterD2_row": "N20-64",
+    "entry_diameterD3_row": "N21-65",
+    "entry_diameterAvg_row": "N22-66",
+    "entry_confiningPressure_row": "Z20-64",
+    "entry_trueLoad_row": "AA21-65",
+    "entry_peakStress_row": "AB22-66",
+    "entry_failureStrain_row": "AB23-67",
+    "entry_weightOfSample_row": "I23-67",
+    "entry_wetWeightTare_row": "I25-69",
+    "entry_dryWeightTare_row": "I26-70",
+    "entry_tarePanNumber_row": "I27-71",
+    "entry_tareWeight_row": "I28-72",
+    "entry_afterWetWeightTare_row": "N25-69",
+    "entry_afterDryWeightTare_row": "N26-70",
+    "entry_afterTarePanNumber_row": "N27-71",
+    "entry_afterTareWeight_row": "N28-72",
+    "entry_comments_row": "W25-69",
+    "entry_dataFile_row": "W28-72"
+  }
+}

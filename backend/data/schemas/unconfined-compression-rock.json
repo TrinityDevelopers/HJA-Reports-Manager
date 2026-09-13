@@ -6,6 +6,7 @@
   "description": "Unconfined compression test on rock data sheet",
   "version": "1.0.0",
   "templates": ["unconfined-compression-rock"],
+  "templateVariant": "PO",
   "labRequest": {
     "mode": "per-boring",
     "map": {

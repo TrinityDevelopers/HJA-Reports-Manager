@@ -86,6 +86,26 @@ Multi-workbook example:
 
 Values match `templateId` in `template_defs/*.json` (not necessarily the schema filename). When omitted, export falls back to the schema filename. Header fields with the same id are written to every listed template; entry sections map via `entry_<sectionId>_<fieldId>_row` keys in each template def.
 
+#### Template variants (`templateVariant` / `variants`)
+
+Two report types can share one XLSX and template_def when they differ only by a baked-in checkbox or similar mark. Put the shared workbook mappings in one `template_defs` file, list that id in each schema’s `templates` array, and set an explicit `templateVariant` on each schema:
+
+```json
+"templates": ["unconfined-compression-rock"],
+"templateVariant": "PO"
+```
+
+The template_def defines the fill map:
+
+```json
+"variants": {
+  "PO": { "P6": "X" },
+  "ME": { "P7": "X" }
+}
+```
+
+At export time the selected variant’s cells are filled and sibling variant cells are cleared. There is **no** implicit default — every schema that references a template_def with `variants` must set `templateVariant` to a key in that map. `templateVariant` is schema metadata (not a form field).
+
 #### Entry section `id` and storage
 
 When an entry section includes `"id"`, each trial row is saved with `ReportEntry.sectionId` set to that value. Trials in different entry sections are independent (separate tables, separate `entryOrder` sequences).
@@ -122,8 +142,14 @@ Older schemas may use top-level `headerFields` and `entryFields` instead of `sec
 | `absorption-pressure-swell.json` | Absorption / swell + balancing | 7 header, **2 entry** (`swellReadings`, `balancingLoads`) |
 | `free-swell.json` | ASTM D 4546 free swell | 7 header, 1 entry |
 | `resistivity.json` | ASTM G187 resistivity | 4 header (no entry table) |
-| `unconfined-compression-rock.json` | ASTM D 7012 unconfined compression on rock | 2 header, 1 entry |
+| `unconfined-compression-rock.json` | ASTM D 7012 unconfined compression on rock (Peak Only, `templateVariant: PO`) | 2 header, 1 entry |
+| `unconfined-compression-rock-me.json` | ASTM D 7012 rock ME (`templateVariant: ME`; shares rock template_def) | 2 header, 1 entry |
 | `unconfined-compression-soil.json` | ASTM D 2166 unconfined compression on soil | 1 entry, 1 header (sign-off) |
+| `triaxial-compression-soil-uu.json` | ASTM D 2850 UU soil (`templateVariant: UU`; shares soil template_def) | 2 header, 1 entry |
+| `triaxial-compression-soil-cu.json` | ASTM D 4767 CU soil (`templateVariant: CU`; shares soil template_def) | 2 header, 1 entry |
+| `triaxial-compression-soil-cd.json` | ASTM D 7181 CD soil (`templateVariant: CD`; shares soil template_def) | 2 header, 1 entry |
+| `triaxial-compression-rock.json` | ASTM D 7012 UU rock Peak Only (`templateVariant: PO`) | 2 header, 1 entry |
+| `triaxial-compression-rock-me.json` | ASTM D 7012 UU rock ME (`templateVariant: ME`; shares rock template_def) | 2 header, 1 entry |
 
 ### Adding a New Report Type
 
@@ -191,6 +217,7 @@ JSON configuration files that map report fields to Excel cell locations.
 | Property | Description |
 |----------|-------------|
 | `standardFields` | Project-level cells filled from the report record (not schema sections) |
+| `variants` | Optional map of variant id → `{ cellAddress: fillText }`. Used with schema `templateVariant` for shared workbooks (e.g. method checkboxes) |
 | `maxEntries` | Soft cap on trials per entry section (row or column slots); warns if exceeded |
 | `rowsPerEntry` | Row layout only — rows consumed per trial (default `1`) |
 | `colsPerEntry` | Column layout only — columns consumed per trial (default `1`) |
@@ -272,8 +299,10 @@ Export fills entries filtered by `sectionId`: keys without a section prefix appl
 | `absorption-pressure-swell-balancing.json` | XLSX | row | 1 | varies (second workbook for APS report type) |
 | `free-swell.json` | XLSX | row | 2 | 28 |
 | `resistivity.json` | XLSX | row | 1 | varies |
-| `unconfined-compression-rock.json` | XLSX | row | 14 rows | 3 |
+| `unconfined-compression-rock.json` | XLSX | row | 14 rows | 3 (variants `PO`/`ME`; shared by rock + rock-me schemas) |
 | `unconfined-compression-soil.json` | XLSX | row | 20 rows | 2 |
+| `triaxial-compression-soil.json` | XLSX | row | 15 rows | 3 (variants `UU`/`CU`/`CD`; shared by soil-uu/cu/cd schemas) |
+| `triaxial-compression-rock.json` | XLSX | row | 14 rows | 3 (variants `PO`/`ME`; shared by rock + rock-me schemas) |
 
 ### Adding a New Export Template
 

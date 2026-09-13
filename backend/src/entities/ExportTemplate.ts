@@ -32,6 +32,10 @@ export class ExportTemplate {
   @Column({ type: 'json', nullable: true })
   standardFields?: Record<string, unknown>;
 
+  /** Variant id → cell address → fill text (e.g. method checkbox marks). */
+  @Column({ type: 'json', nullable: true })
+  variants?: Record<string, Record<string, string>>;
+
   @Column({ type: 'int', nullable: true })
   maxEntries?: number;
 
