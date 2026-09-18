@@ -7,7 +7,8 @@
   "version": "1.0.0",
   "templates": ["ph-test"],
   "labRequest": {
-    "mode": "per-boring",
+    "mode": "per-request",
+    "packBoringSpacers": false,
     "map": {
       "boring": "boringNumber",
       "depth": "depth",

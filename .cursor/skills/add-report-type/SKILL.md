@@ -56,8 +56,9 @@ For report types that share one workbook and differ only by a checkbox (e.g. roc
 | Sheet pattern | Schema | `labRequest.mode` |
 |---------------|--------|-------------------|
 | One sample; repeating stages/trials | Sample/equipment in **header**; stages as **entry** | `per-sample` |
-| Multiple samples stacked vertically (one boring) | Sample fields on each **entry** | `per-boring` |
+| Multiple samples stacked vertically (one boring) | Sample fields on each **entry** | `per-boring` (legacy) |
 | Multiple samples across all borings on one report | Sample fields on each **entry**; export packs borings with spacers | `per-request` |
+| Multiple sample blocks (compression) across borings | Sample fields on each **entry**; dense fill, no spacers | `per-request` + `"packBoringSpacers": false` |
 | Trials across columns | Entry + `"entryLayout": "column"` | usually `per-sample` |
 
 `nameAndDate` export only works for **header** fields (`header_x[name]` / `[date]`). For per-entry sign-off, use separate `text` + `date` fields (e.g. `preparedBy`, `preparedByDate`).
@@ -90,6 +91,8 @@ For report types that share one workbook and differ only by a checkbox (e.g. roc
 ```
 
 Field types: `text`, `number`, `date`, `select` (+ `options`), `nameAndDate` (header only).
+
+For `per-request` compression-style sheets (large sample blocks), set `"packBoringSpacers": false` so export fills consecutive slots without blank spacer rows between borings.
 
 Multiple entry tables → give each entry section an `id` and use prefixed keys (`entry_<sectionId>_<fieldId>_row`).
 

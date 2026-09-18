@@ -241,3 +241,59 @@ describe('per-request moisture contents pagination', () => {
     expect(cellValue(page2, 'B13')).toBe('W2');
   });
 });
+
+const denseSchema = {
+  labRequest: {
+    mode: 'per-request',
+    packBoringSpacers: false,
+    map: { boring: 'boringNumber', sample: 'sampleNumber', depth: 'depth' },
+  },
+};
+
+describe('per-request dense packing (no boring spacers)', () => {
+  it('chunks 4 samples with maxEntries 3 into pages of 3 and 1 with no spacers', () => {
+    const report = {
+      headerData: {},
+      template: { schema: denseSchema },
+      entries: [
+        makeEntry(1, 'B1', 'W1'),
+        makeEntry(2, 'B1', 'W2'),
+        makeEntry(3, 'B2', 'W1'),
+        makeEntry(4, 'B2', 'W2'),
+      ],
+    };
+
+    const pages = reportToExportablePages(report, 3);
+    expect(pages).toHaveLength(2);
+    expect(pages[0]!.entries).toHaveLength(3);
+    expect(pages[1]!.entries).toHaveLength(1);
+    expect(pages[0]!.entries!.map((e) => e.data)).toEqual([
+      { boringNumber: 'B1', sampleNumber: 'W1', depth: '1.0-2.0' },
+      { boringNumber: 'B1', sampleNumber: 'W2', depth: '1.0-2.0' },
+      { boringNumber: 'B2', sampleNumber: 'W1', depth: '1.0-2.0' },
+    ]);
+    expect(pages[1]!.entries![0]!.data).toMatchObject({
+      boringNumber: 'B2',
+      sampleNumber: 'W2',
+    });
+  });
+
+  it('packs mixed borings into consecutive blocks without spacers', () => {
+    const report = {
+      headerData: { loadFrameNumber: 'LF-1' },
+      template: { schema: denseSchema },
+      entries: [makeEntry(1, 'B1', 'S1'), makeEntry(2, 'B2', 'S1'), makeEntry(3, 'B1', 'S2')],
+    };
+
+    const pages = reportToExportablePages(report, 2);
+    expect(pages).toHaveLength(2);
+    expect(pages[0]!.entries).toHaveLength(2);
+    expect(pages[0]!.entries![0]!.data).toMatchObject({ boringNumber: 'B1', sampleNumber: 'S1' });
+    expect(pages[0]!.entries![1]!.data).toMatchObject({ boringNumber: 'B2', sampleNumber: 'S1' });
+    expect(pages[1]!.entries).toHaveLength(1);
+    expect(pages[1]!.entries![0]!.data).toMatchObject({ boringNumber: 'B1', sampleNumber: 'S2' });
+    // No blank spacer entries
+    expect(pages[0]!.entries!.every((e) => Object.keys(e.data ?? {}).length > 0)).toBe(true);
+    expect(pages[0]!.headerData).toEqual({ loadFrameNumber: 'LF-1' });
+  });
+});

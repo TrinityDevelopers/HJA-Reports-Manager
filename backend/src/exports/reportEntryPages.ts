@@ -142,7 +142,8 @@ export function isPerRequestReport(report: ReportLikeForPages): boolean {
 
 /**
  * One ExportableReport per printed page for a per-request report.
- * Shared header; entries packed by boring with in-page spacers.
+ * Shared header. By default packs by boring with in-page spacers;
+ * when packBoringSpacers is false, chunks consecutive samples densely.
  */
 export function reportToExportablePages(
   report: ReportLikeForPages,
@@ -151,6 +152,21 @@ export function reportToExportablePages(
   const rule = readLabRequestRuleForExport(report.template?.schema ?? undefined);
   const boringKey = rule?.map?.boring || 'boringNumber';
   const header = reportHeader(report);
+
+  if (rule?.packBoringSpacers === false) {
+    const sorted = sortedEntries(report.entries);
+    const chunks =
+      maxEntries > 0 ? chunkArray(sorted, maxEntries) : sorted.length > 0 ? [sorted] : [[]];
+    return chunks.map((chunk) => ({
+      ...header,
+      entries: chunk.map((entry, index) => ({
+        entryOrder: index,
+        sectionId: entry.sectionId,
+        data: { ...(entry.data ?? {}) },
+      })),
+    }));
+  }
+
   const groups = groupEntriesByBoring(report.entries, boringKey);
   const pages = paginateEntryGroupsForStaticSheet(groups, maxEntries);
 

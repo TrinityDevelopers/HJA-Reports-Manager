@@ -158,10 +158,17 @@ When a schema includes a `labRequest` block, report generation from a lab reques
 | Mode | Reports created | Typical use |
 |------|-----------------|-------------|
 | `per-sample` | One report per (boring, sample) | Single-sample sheets (Atterberg, proctor, etc.) |
-| `per-boring` | One report per boring (split if samples exceed `maxEntries`) | Multi-row sheets scoped to one boring |
-| `per-request` | One report for the whole lab request | Multi-row sheets that pack samples from all borings (e.g. Moisture Contents); export paginates with spacer rows between borings |
+| `per-boring` | One report per boring (split if samples exceed `maxEntries`) | Multi-row sheets scoped to one boring (legacy; no current schemas use this) |
+| `per-request` | One report for the whole lab request | Multi-row sheets that pack samples from all borings; export paginates across sheets at `maxEntries` |
 
 Mapped fields (`boring`, `sample`, `depth`, `material`) go into entry rows for `per-boring` / `per-request`, or into `headerData` for `per-sample`.
+
+Optional `labRequest.packBoringSpacers` (default `true` for `per-request`):
+
+| Value | Export behavior | Examples |
+|-------|-----------------|----------|
+| `true` / omitted | Pack by boring with a blank spacer row between groups on the same sheet; spacers count toward `maxEntries` | Moisture Contents, Dry Unit Weights, % Passing #200 |
+| `false` | Pack consecutive samples densely (no spacers); fill every slot then add sheets | pH Test, Unconfined / triaxial compression (rock and soil) |
 
 ### Adding a New Report Type
 

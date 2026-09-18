@@ -7,7 +7,7 @@
   "version": "1.0.0",
   "templates": ["dry-unit-weights"],
   "labRequest": {
-    "mode": "per-boring",
+    "mode": "per-request",
     "map": {
       "boring": "boringNumber",
       "depth": "depth",

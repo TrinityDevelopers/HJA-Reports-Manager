@@ -49,6 +49,34 @@ describe('readLabRequestRuleForExport', () => {
     expect(readLabRequestRuleForExport(schema)).toEqual({
       mode: 'legacy-mode',
       map: { boring: 'boringNumber' },
+      packBoringSpacers: true,
+    });
+  });
+
+  it('defaults packBoringSpacers to true', () => {
+    const schema = {
+      labRequest: {
+        mode: 'per-request',
+        map: { boring: 'boringNumber' },
+      },
+    };
+
+    expect(readLabRequestRuleForExport(schema)?.packBoringSpacers).toBe(true);
+  });
+
+  it('reads packBoringSpacers false from schema', () => {
+    const schema = {
+      labRequest: {
+        mode: 'per-request',
+        packBoringSpacers: false,
+        map: { boring: 'boringNumber' },
+      },
+    };
+
+    expect(readLabRequestRuleForExport(schema)).toEqual({
+      mode: 'per-request',
+      map: { boring: 'boringNumber' },
+      packBoringSpacers: false,
     });
   });
 });

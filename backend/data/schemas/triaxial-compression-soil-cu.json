@@ -8,7 +8,8 @@
   "templates": ["triaxial-compression-soil"],
   "templateVariant": "CU",
   "labRequest": {
-    "mode": "per-boring",
+    "mode": "per-request",
+    "packBoringSpacers": false,
     "map": {
       "boring": "boringNumber",
       "sample": "sampleNumber",

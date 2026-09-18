@@ -4,6 +4,7 @@ export {
   parseLabRequestRule,
   readLabRequestRuleForExport,
   type LabRequestRule,
+  type LabRequestRuleForExport,
 } from './labRequestSchema';
 
 export {
