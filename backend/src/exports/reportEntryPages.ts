@@ -1,6 +1,7 @@
 import { readLabRequestRuleForExport } from '@hja/shared';
 import type { ExportableReport } from '../services/ExportService';
 import { chunkArray } from '../utils/chunkArray';
+import { parseEntryMappingKey } from './mappingKeys';
 import { paginateGroupsBySize } from './paginateGroups';
 
 type EntryLike = NonNullable<ExportableReport['entries']>[number];
@@ -174,4 +175,75 @@ export function reportToExportablePages(
     ...header,
     entries: flattenEntryGroups(pageGroups, boringKey),
   }));
+}
+
+function mappedSectionIds(fieldMapping?: Record<string, string>): Array<string | undefined> {
+  const ids = new Set<string | undefined>();
+  if (!fieldMapping) return [];
+  for (const key of Object.keys(fieldMapping)) {
+    const parsed = parseEntryMappingKey(key);
+    if (parsed) {
+      ids.add(parsed.sectionId);
+    }
+  }
+  return [...ids];
+}
+
+function entriesForMappedSection(entries: EntryLike[], sectionId: string | undefined): EntryLike[] {
+  const matching = sectionId
+    ? entries.filter((entry) => entry.sectionId === sectionId)
+    : entries.filter((entry) => !entry.sectionId);
+  return matching.sort((a, b) => (a.entryOrder ?? 0) - (b.entryOrder ?? 0));
+}
+
+/**
+ * One ExportableReport per printed page for a static (non-per-request) template.
+ * Chunks each mapped entry section by maxEntries. Header is repeated on every page.
+ * Unmapped sections do not create extra pages.
+ */
+export function paginateStaticEntryPages(
+  report: ReportLikeForPages,
+  maxEntries?: number,
+  fieldMapping?: Record<string, string>,
+): ExportableReport[] {
+  const header = reportHeader(report);
+  const original: ExportableReport = {
+    ...header,
+    entries: report.entries ?? [],
+  };
+
+  if (maxEntries == null || maxEntries <= 0) {
+    return [original];
+  }
+
+  const allEntries = report.entries ?? [];
+  const bySection = mappedSectionIds(fieldMapping).map((sectionId) => ({
+    entries: entriesForMappedSection(allEntries, sectionId),
+  }));
+  const pageCount = Math.max(
+    1,
+    ...bySection.map((section) => Math.ceil(section.entries.length / maxEntries)),
+  );
+
+  if (pageCount <= 1) {
+    return [original];
+  }
+
+  return Array.from({ length: pageCount }, (_, pageIndex) => {
+    const start = pageIndex * maxEntries;
+    const pageEntries: EntryLike[] = [];
+    for (const { entries } of bySection) {
+      entries.slice(start, start + maxEntries).forEach((entry, index) => {
+        pageEntries.push({
+          entryOrder: index,
+          sectionId: entry.sectionId,
+          data: { ...(entry.data ?? {}) },
+        });
+      });
+    }
+    return {
+      ...header,
+      entries: pageEntries,
+    };
+  });
 }

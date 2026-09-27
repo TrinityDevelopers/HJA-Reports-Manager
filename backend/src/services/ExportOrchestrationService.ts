@@ -2,10 +2,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import type { Response } from 'express';
 import { getSchemaExportTemplateIds } from '@hja/shared';
-import { ExportService, type ExportableTemplate } from './ExportService';
+import { ExportService, type ExportableReport, type ExportableTemplate } from './ExportService';
 import { TemplateService } from './TemplateService';
 import { labRequestToExportablePages } from '../exports/labRequestExport';
-import { isPerRequestReport, reportToExportablePages } from '../exports/reportEntryPages';
+import {
+  isPerRequestReport,
+  paginateStaticEntryPages,
+  reportToExportablePages,
+} from '../exports/reportEntryPages';
 import { combineXlsxSheetsIntoWorkbook } from '../exports/combineXlsxSheets';
 import { mergePdfBuffers } from '../exports/mergePdfs';
 import { mapWithConcurrency } from '../utils/mapWithConcurrency';
@@ -156,20 +160,33 @@ export class ExportOrchestrationService {
 
   /**
    * Fill one XLSX per printed page for a report.
-   * Per-request reports paginate by boring with spacer rows; others remain a single page.
+   * Per-request reports paginate by boring with spacer rows;
+   * other reports overflow mapped entry sections past maxEntries onto extra pages.
    */
   async fillReportXlsxPages(
     report: Report,
     exportTemplate: ExportTemplate,
     exportTemplateId: string,
   ): Promise<string[]> {
-    if (!isPerRequestReport(report)) {
-      return [await this.fillReportXlsx(report, exportTemplate, exportTemplateId)];
+    const exportable = toExportableTemplate(exportTemplate);
+    if (isPerRequestReport(report)) {
+      const pages = reportToExportablePages(report, exportable.maxEntries ?? 29);
+      return this.fillExportablePagePaths(report, exportable, exportTemplateId, pages);
     }
 
-    const exportable = toExportableTemplate(exportTemplate);
-    const maxEntries = exportable.maxEntries ?? 29;
-    const pages = reportToExportablePages(report, maxEntries);
+    const pages = paginateStaticEntryPages(report, exportable.maxEntries, exportable.fieldMapping);
+    if (pages.length <= 1) {
+      return [await this.fillReportXlsx(report, exportTemplate, exportTemplateId)];
+    }
+    return this.fillExportablePagePaths(report, exportable, exportTemplateId, pages);
+  }
+
+  private async fillExportablePagePaths(
+    report: Report,
+    exportable: ExportableTemplate,
+    exportTemplateId: string,
+    pages: ExportableReport[],
+  ): Promise<string[]> {
     const templateVariant = readTemplateVariant(
       report.template?.schema as Record<string, unknown> | undefined,
     );

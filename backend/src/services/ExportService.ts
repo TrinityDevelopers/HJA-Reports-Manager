@@ -94,6 +94,28 @@ export class ExportService {
     return await this.exportTemplateRepository.find();
   }
 
+  async readTemplateWorkbook(templateId: string): Promise<{ buffer: Buffer; fileName: string }> {
+    const exportTemplate = await this.findExportTemplate(templateId);
+    if (!exportTemplate) {
+      throw new Error(`Export template not found: ${templateId}`);
+    }
+
+    const fileName = path.basename(exportTemplate.filePath);
+    const templatesRoot = path.resolve(this.templatesDir);
+    const resolved = path.resolve(templatesRoot, fileName);
+    const relative = path.relative(templatesRoot, resolved);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('Invalid template path');
+    }
+
+    try {
+      const buffer = await fs.readFile(resolved);
+      return { buffer, fileName };
+    } catch {
+      throw new Error(`Export template file not found: ${fileName}`);
+    }
+  }
+
   async exportReport(
     report: ExportableReport,
     exportTemplate: ExportableTemplate,

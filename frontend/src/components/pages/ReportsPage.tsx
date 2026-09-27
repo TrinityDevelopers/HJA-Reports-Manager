@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Edit2, Trash2, FileText } from 'lucide-react';
 import type { ID, Project, Report, ReportTemplate } from '../../types';
+import { sortTemplatesByDisplayName } from '../../utils/templates';
 import { BackLink } from '../BackLink';
 import { EntityListCard } from '../EntityListCard';
 
@@ -12,6 +13,7 @@ export function ReportsPage({
   onSelectReport,
   onDeleteReport,
   onAddProject,
+  onOpenEditor,
 }: {
   projects: Project[];
   reports: Report[];
@@ -20,8 +22,10 @@ export function ReportsPage({
   onSelectReport?: (r: Report) => void;
   onDeleteReport?: (id: ID) => void | Promise<void>;
   onAddProject?: () => void;
+  onOpenEditor: () => void;
 }) {
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
+  const sortedTemplates = useMemo(() => sortTemplatesByDisplayName(templates), [templates]);
 
   if (selectedTemplate) {
     // Show projects for selected template
@@ -131,15 +135,20 @@ export function ReportsPage({
 
   return (
     <div className="card">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">Reports</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Reports</h2>
+        <button type="button" onClick={onOpenEditor} className="button-base">
+          Reports Editor
+        </button>
+      </div>
 
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Create New Report</h3>
-        {templates.length === 0 ? (
+        {sortedTemplates.length === 0 ? (
           <p className="text-gray-600">No report templates available.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
+            {sortedTemplates.map((template) => (
               <button
                 key={template.id}
                 onClick={() => setSelectedTemplate(template)}

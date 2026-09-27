@@ -33,6 +33,15 @@ export interface ReportTemplate {
   updatedAt: Date;
 }
 
+export interface ExportTemplate {
+  id: ID;
+  templateId: string;
+  name: string;
+  displayName: string;
+  filePath: string;
+  format: 'xlsx';
+}
+
 export interface ReportEntry {
   id: ID;
   reportId: ID;

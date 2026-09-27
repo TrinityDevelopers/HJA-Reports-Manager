@@ -4,6 +4,7 @@ import ProjectsList from './components/ProjectsList';
 import { DatabasePage } from './components/pages/DatabasePage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ReportsPage } from './components/pages/ReportsPage';
+import { ReportsEditorPage } from './components/pages/ReportsEditorPage';
 import { ReportDetailPage } from './components/pages/ReportDetailPage';
 import { LabRequestsPage } from './components/pages/LabRequestsPage';
 import { LabRequestDetailPage } from './components/pages/LabRequestDetailPage';
@@ -286,7 +287,7 @@ export default function HJAReportsManager() {
               <NavButton
                 icon={<FileText />}
                 label="Reports"
-                active={currentPage === PAGES.REPORTS}
+                active={currentPage === PAGES.REPORTS || currentPage === PAGES.REPORTS_EDITOR}
                 onClick={() => setCurrentPage(PAGES.REPORTS)}
               />
               <NavButton
@@ -312,12 +313,15 @@ export default function HJAReportsManager() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main
+        className={`${currentPage === PAGES.REPORTS_EDITOR ? 'max-w-360' : 'max-w-7xl'} mx-auto px-4 py-8`}
+      >
         {currentPage === PAGES.REPORTS && !selectedReport && (
           <ReportsPage
             projects={projects}
             reports={reports}
             templates={templates}
+            onOpenEditor={() => setCurrentPage(PAGES.REPORTS_EDITOR)}
             onSelectProject={async (project, template) => {
               // Create a new empty report directly
               const newReport: Partial<Report> = {
@@ -373,6 +377,9 @@ export default function HJAReportsManager() {
               setShowAddProject(true);
             }}
           />
+        )}
+        {currentPage === PAGES.REPORTS_EDITOR && (
+          <ReportsEditorPage templates={templates} onBack={() => setCurrentPage(PAGES.REPORTS)} />
         )}
         {currentPage === PAGES.REPORTS && selectedReport && (
           <ReportDetailPage

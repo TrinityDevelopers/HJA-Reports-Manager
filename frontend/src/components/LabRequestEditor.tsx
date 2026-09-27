@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type {
   ID,
@@ -11,7 +11,11 @@ import type {
 import { InputField, DepthInput } from './ui';
 import { toISODateOnly, parseDateLike } from '../utils/dateAndNormalize.ts';
 import { formatDepthValue } from '../utils/depth';
-import { formatSampleTests, templateAbbreviation } from '../utils/templates';
+import {
+  formatSampleTests,
+  sortTemplatesByDisplayName,
+  templateAbbreviation,
+} from '../utils/templates';
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
@@ -566,12 +570,15 @@ function TestSelectorModal({
   const [selected, setSelected] = useState<Set<ID>>(new Set(initialSelectedIds));
   const [otherChecked, setOtherChecked] = useState(initialOtherNotes.length > 0);
   const [otherText, setOtherText] = useState(initialOtherNotes);
+  const sortedTemplates = useMemo(() => sortTemplatesByDisplayName(templates), [templates]);
 
-  const useTwoColumns = templates.length > TEST_SELECTOR_ONE_COLUMN_MAX;
-  const columnSplit = useTwoColumns ? Math.ceil(templates.length / 2) : templates.length;
+  const useTwoColumns = sortedTemplates.length > TEST_SELECTOR_ONE_COLUMN_MAX;
+  const columnSplit = useTwoColumns
+    ? Math.ceil(sortedTemplates.length / 2)
+    : sortedTemplates.length;
   const templateColumns = useTwoColumns
-    ? [templates.slice(0, columnSplit), templates.slice(columnSplit)]
-    : [templates];
+    ? [sortedTemplates.slice(0, columnSplit), sortedTemplates.slice(columnSplit)]
+    : [sortedTemplates];
 
   const toggle = (templateId: ID) => {
     setSelected((prev) => {
@@ -626,7 +633,7 @@ function TestSelectorModal({
           </button>
         </div>
         <div className="overflow-y-auto px-6 py-4">
-          {templates.length === 0 ? (
+          {sortedTemplates.length === 0 ? (
             <p className="text-gray-500 text-sm">No tests available.</p>
           ) : (
             <div className={useTwoColumns ? 'grid grid-cols-2 gap-x-6' : ''}>

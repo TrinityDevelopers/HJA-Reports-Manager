@@ -1,6 +1,7 @@
 export const PAGES = {
   LAB_REQUESTS: 'labRequests',
   REPORTS: 'reports',
+  REPORTS_EDITOR: 'reportsEditor',
   PROJECTS: 'projects',
   DATABASE: 'database',
   SETTINGS: 'settings',

@@ -122,6 +122,84 @@ describe('ExportOrchestrationService', () => {
     });
   });
 
+  describe('fillReportXlsxPages', () => {
+    const perSampleSchema = {
+      templates: ['atterberg-limit'],
+      labRequest: {
+        mode: 'per-sample',
+        map: { boring: 'boringNumber', sample: 'sampleNumber' },
+      },
+    };
+
+    const atterbergTemplate: ExportTemplate = {
+      id: 'uuid-al',
+      templateId: 'atterberg-limit',
+      name: 'atterberg_limit',
+      displayName: 'Atterberg Limits',
+      filePath: 'atterberg_limit.xlsx',
+      format: 'xlsx',
+      maxEntries: 5,
+      fieldMapping: {
+        entry_liquidLimit_trial_col: '17@E-H,17@J',
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    function perSampleReport(entryCount: number): Report {
+      return {
+        id: 'report-al',
+        projectId: 'proj-1',
+        templateId: 'tpl-al',
+        dateOfTest: '2024-01-01',
+        template: {
+          id: 'tpl-al',
+          name: 'atterberg-limit',
+          displayName: 'Atterberg Limits',
+          fullName: 'Atterberg Limits',
+          schema: perSampleSchema,
+          version: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        entries: Array.from({ length: entryCount }, (_, i) => ({
+          entryOrder: i + 1,
+          sectionId: 'liquidLimit',
+          data: { trial: i + 1 },
+        })),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as unknown as Report;
+    }
+
+    it('fills one template copy per overflow page for a per-sample report', async () => {
+      const overflowReport = perSampleReport(6);
+      const paths = await orchestration.fillReportXlsxPages(
+        overflowReport,
+        atterbergTemplate,
+        'atterberg-limit',
+      );
+
+      expect(exportService.exportReport).toHaveBeenCalledTimes(2);
+      expect(paths).toHaveLength(2);
+      expect(exportService.exportReport.mock.calls[0][0].entries).toHaveLength(5);
+      expect(exportService.exportReport.mock.calls[1][0].entries).toHaveLength(1);
+    });
+
+    it('fills a single page when a per-sample report is at maxEntries', async () => {
+      const atLimit = perSampleReport(5);
+      const paths = await orchestration.fillReportXlsxPages(
+        atLimit,
+        atterbergTemplate,
+        'atterberg-limit',
+      );
+
+      expect(exportService.exportReport).toHaveBeenCalledTimes(1);
+      expect(paths).toHaveLength(1);
+      expect(exportService.exportReport.mock.calls[0][0]).toBe(atLimit);
+    });
+  });
+
   describe('exportMergedPdf', () => {
     it('converts leading paths before report jobs and merges PDFs in order', async () => {
       const cache = await orchestration.preloadExportTemplateCache();

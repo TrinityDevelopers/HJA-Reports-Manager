@@ -57,6 +57,19 @@ export const apiClient = {
 
   // Exports
   exports: {
+    getTemplates: () => request('/export/templates'),
+    getTemplateWorkbook: async (templateId: string) => {
+      const url = `${API_BASE_URL}/export/templates/${encodeURIComponent(templateId)}/file`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(error.error || error.message || 'Failed to load template workbook');
+      }
+      const buffer = await response.arrayBuffer();
+      const disposition = response.headers.get('Content-Disposition');
+      const match = disposition?.match(/filename="([^"]+)"/);
+      return { buffer, fileName: match?.[1] ?? `${templateId}.xlsx` };
+    },
     downloadReport: (
       reportId: string,
       format: 'xlsx' | 'pdf' = 'xlsx',

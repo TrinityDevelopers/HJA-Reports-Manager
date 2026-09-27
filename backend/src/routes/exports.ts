@@ -28,6 +28,29 @@ router.get('/templates', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/templates/:templateId/file', async (req: Request, res: Response) => {
+  try {
+    const { buffer, fileName } = await exportService.readTemplateWorkbook(req.params.templateId);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    res.send(buffer);
+  } catch (error) {
+    const message = (error as Error).message;
+    if (
+      message.startsWith('Export template not found') ||
+      message.startsWith('Export template file not found') ||
+      message === 'Invalid template path'
+    ) {
+      res.status(404).json({ error: message });
+      return;
+    }
+    res.status(500).json({ error: message });
+  }
+});
+
 router.get('/list', async (req: Request, res: Response) => {
   try {
     const files = await exportService.getTemplateList();
