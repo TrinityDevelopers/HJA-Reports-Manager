@@ -10,6 +10,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [relaxXlsxAxisMinimumsPlugin(), react(), tailwindcss()],
+  worker: {
+    // xlsx-worker.js dynamically imports @dukelib/sheets-wasm. The default
+    // IIFE worker format cannot code-split, so production builds fail.
+    format: 'es',
+    plugins: () => [relaxXlsxAxisMinimumsPlugin()],
+  },
   optimizeDeps: {
     // The viewer starts xlsx-worker.js via `new Worker(new URL(...))`. Vite's
     // dep optimizer rewrites that URL into `.vite/deps` without emitting the
