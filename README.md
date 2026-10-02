@@ -279,7 +279,9 @@ Tests cover export pipeline (cell mapping, PDF merge, LibreOffice pool), lab-req
 │   └── data/                         # Schemas, template defs, XLSX files
 │
 ├── packages/shared/                  # @hja/shared (export filenames, template IDs)
+├── scripts/windows/                  # Windows service, IIS, and deploy scripts
 ├── RAILWAY.md                        # Railway deployment
+├── WINDOWS.md                        # Windows Server production
 └── FRONTEND_INTEGRATION.md           # Frontend API integration
 ```
 
@@ -390,6 +392,10 @@ The backend image waits for MySQL, runs `migration:run:prod`, syncs tables on st
 
 More detail: [Backend README — Production Deployment](./backend/README.md#-production-deployment).
 
+### Windows Server (native)
+
+Production on the HJA Windows server runs MySQL, the API, and LibreOffice directly on Windows so PDF export uses Windows LibreOffice. IIS serves the static UI. A self-hosted GitHub Actions runner redeploys when a GitHub Release is published. Full instructions: **[WINDOWS.md](./WINDOWS.md)**.
+
 ---
 
 ## 🔑 Key Features
@@ -407,6 +413,7 @@ More detail: [Backend README — Production Deployment](./backend/README.md#-pro
 ## 📚 Additional Documentation
 
 - **[RAILWAY.md](./RAILWAY.md)** - Railway deployment (monorepo root directories, env vars)
+- **[WINDOWS.md](./WINDOWS.md)** - Windows Server production (LibreOffice, IIS, release deploy)
 - **[Backend README](./backend/README.md)** - API docs, entity schemas, service details
 - **[Backend Data Configuration](./backend/data/README.md)** - Schema definitions, template setup
 - **[Frontend Integration](./FRONTEND_INTEGRATION.md)** - React hooks, API client, form utilities

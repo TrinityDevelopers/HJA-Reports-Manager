@@ -1,0 +1,25 @@
+name: Deploy Windows
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows, hja-reports]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        shell: powershell
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          HJA_INSTALL_DIR: ${{ vars.HJA_INSTALL_DIR }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:VITE_API_URL)) {
+            Write-Error "Set the VITE_API_URL repository variable to the browser-reachable API URL ending in /api."
+            exit 1
+          }
+          & "$env:GITHUB_WORKSPACE\scripts\windows\deploy.ps1" -SourceDir $env:GITHUB_WORKSPACE -ViteApiUrl $env:VITE_API_URL
