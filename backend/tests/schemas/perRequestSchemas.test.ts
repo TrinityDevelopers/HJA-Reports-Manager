@@ -5,9 +5,10 @@ import { parseLabRequestRule, readLabRequestRuleForExport } from '@hja/shared';
 
 const SCHEMAS_DIR = path.join(process.cwd(), 'data', 'schemas');
 
-const TABLE_PER_REQUEST = ['dry-unit-weights', 'percent-passing-200', 'moisture-contents'];
+const TABLE_PER_REQUEST = ['percent-passing-200', 'moisture-contents'];
 
 const DENSE_PER_REQUEST = [
+  'dry-unit-weights',
   'ph-test',
   'unconfined-compression-rock',
   'unconfined-compression-rock-me',

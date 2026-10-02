@@ -1,34 +1,72 @@
 {
   "name": "dry-unit-weights",
   "displayName": "Dry Unit Weights",
-  "fullName": "Summary of Dry Unit Weights (ASTM D 7263)",
+  "fullName": "Dry Unit Weight (ASTM D 7263 Method B)",
   "abbreviation": "DUW",
   "description": "Dry unit weight test data sheet",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "templates": ["dry-unit-weights"],
   "labRequest": {
     "mode": "per-request",
+    "packBoringSpacers": false,
     "map": {
       "boring": "boringNumber",
+      "sample": "sampleNumber",
       "depth": "depth",
       "material": "materialDescription"
     }
   },
   "sections": [
     {
+      "type": "header",
+      "title": "Equipment",
+      "fields": [
+        {
+          "id": "caliperNumber",
+          "label": "Caliper No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "scaleNumber",
+          "label": "Scale No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "ovenNumber",
+          "label": "Oven No.",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
       "type": "entry",
-      "title": "Entries",
+      "title": "Samples",
       "fields": [
         {
           "id": "boringNumber",
-          "label": "Boring Number",
+          "label": "Boring No.",
           "type": "text",
           "required": false
         },
         {
           "id": "depth",
-          "label": "Depth (ft.)",
+          "label": "Depth",
           "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleNumber",
+          "label": "Sample No.",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "sampleDate",
+          "label": "Sample Date",
+          "type": "date",
           "required": false
         },
         {
@@ -38,38 +76,80 @@
           "required": false
         },
         {
-          "id": "sampleHeight",
-          "label": "Sample Height (in.)",
+          "id": "heightH1",
+          "label": "Height h1 (in.)",
           "type": "number",
           "required": false
         },
         {
-          "id": "sampleDiameter",
-          "label": "Sample Diameter (in.)",
+          "id": "heightH2",
+          "label": "Height h2 (in.)",
           "type": "number",
           "required": false
         },
         {
-          "id": "wetWeightSample",
-          "label": "Wet Weight Sample",
+          "id": "heightH3",
+          "label": "Height h3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "heightAvg",
+          "label": "Height avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD1",
+          "label": "Diameter d1 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD2",
+          "label": "Diameter d2 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterD3",
+          "label": "Diameter d3 (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "diameterAvg",
+          "label": "Diameter avg (in.)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "weightOfSample",
+          "label": "Weight of Sample (gm)",
           "type": "number",
           "required": false
         },
         {
           "id": "wetWeightTare",
-          "label": "Wet Weight + Tare",
+          "label": "Wet Weight + Tare (gm)",
           "type": "number",
           "required": false
         },
         {
           "id": "dryWeightTare",
-          "label": "Dry Weight + Tare",
+          "label": "Dry Weight + Tare (gm)",
           "type": "number",
           "required": false
         },
         {
+          "id": "tarePanNumber",
+          "label": "Tare Pan No.",
+          "type": "text",
+          "required": false
+        },
+        {
           "id": "tareWeight",
-          "label": "Tare Weight",
+          "label": "Tare Weight (gm)",
           "type": "number",
           "required": false
         }
@@ -86,8 +166,8 @@
           "required": false
         },
         {
-          "id": "reducedBy",
-          "label": "Reduced By",
+          "id": "checkedBy",
+          "label": "Checked By",
           "type": "nameAndDate",
           "required": false
         }
