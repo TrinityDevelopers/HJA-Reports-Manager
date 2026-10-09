@@ -1,0 +1,176 @@
+import { parseEntryMappingKey } from '../exports/mappingKeys';
+
+type SchemaSection = {
+  type?: string;
+  id?: string;
+  fields?: Array<{ id?: string }>;
+};
+
+export type SchemaJson = {
+  name?: string;
+  templates?: string[];
+  templateVariant?: string;
+  sections?: SchemaSection[];
+  headerFields?: Array<{ id?: string }>;
+  entryFields?: Array<{ id?: string }>;
+};
+
+export type TemplateValidationIssue = {
+  kind:
+    | 'missing-template-def'
+    | 'missing-xlsx'
+    | 'unknown-mapping-key'
+    | 'invalid-variants'
+    | 'missing-template-variant'
+    | 'unknown-template-variant';
+  message: string;
+};
+
+export type SchemaFieldIds = {
+  header: Set<string>;
+  entry: Set<string>;
+  entryBySection: Map<string, Set<string>>;
+};
+
+export function collectSchemaFieldIds(schema: SchemaJson): SchemaFieldIds {
+  const header = new Set<string>();
+  const entry = new Set<string>();
+  const entryBySection = new Map<string, Set<string>>();
+
+  const addHeader = (fieldId: string | undefined) => {
+    if (fieldId?.trim()) header.add(fieldId.trim());
+  };
+
+  const addEntry = (fieldId: string | undefined, sectionId?: string) => {
+    if (!fieldId?.trim()) return;
+    const id = fieldId.trim();
+    entry.add(id);
+    if (sectionId?.trim()) {
+      const key = sectionId.trim();
+      const sectionFields = entryBySection.get(key) ?? new Set<string>();
+      sectionFields.add(id);
+      entryBySection.set(key, sectionFields);
+    }
+  };
+
+  for (const section of schema.sections ?? []) {
+    const fields = section.fields ?? [];
+    if (section.type === 'header') {
+      for (const field of fields) addHeader(field.id);
+    } else if (section.type === 'entry') {
+      const sectionId = section.id?.trim();
+      for (const field of fields) addEntry(field.id, sectionId);
+    }
+  }
+
+  for (const field of schema.headerFields ?? []) addHeader(field.id);
+  for (const field of schema.entryFields ?? []) addEntry(field.id);
+
+  return { header, entry, entryBySection };
+}
+
+export function validateFieldMappingKey(key: string, fieldIds: SchemaFieldIds): string | null {
+  if (key.startsWith('header_')) {
+    const headerMatch = key.match(/^header_([^[]+)(?:\[(name|date)\])?$/);
+    if (!headerMatch) {
+      return `Invalid header mapping key "${key}"`;
+    }
+    const fieldId = headerMatch[1];
+    if (!fieldIds.header.has(fieldId)) {
+      return `Header field "${fieldId}" from mapping key "${key}" is not in schema`;
+    }
+    return null;
+  }
+
+  const parsed = parseEntryMappingKey(key);
+  if (!parsed) {
+    return `Unrecognized mapping key "${key}"`;
+  }
+
+  if (parsed.sectionId) {
+    const sectionFields = fieldIds.entryBySection.get(parsed.sectionId);
+    if (!sectionFields?.has(parsed.fieldId) && !fieldIds.entry.has(parsed.fieldId)) {
+      return `Entry field "${parsed.fieldId}" (section "${parsed.sectionId}") from mapping key "${key}" is not in schema`;
+    }
+    return null;
+  }
+
+  if (!fieldIds.entry.has(parsed.fieldId)) {
+    return `Entry field "${parsed.fieldId}" from mapping key "${key}" is not in schema`;
+  }
+
+  return null;
+}
+
+/**
+ * Validates the shape of template_def.variants.
+ * Returns issue messages (empty when valid or when variants is absent).
+ */
+export function validateVariantsShape(
+  variants: unknown,
+  templateId: string,
+): TemplateValidationIssue[] {
+  if (variants === undefined || variants === null) {
+    return [];
+  }
+
+  if (typeof variants !== 'object' || Array.isArray(variants)) {
+    return [
+      {
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants must be an object mapping variant ids to cell maps`,
+      },
+    ];
+  }
+
+  const entries = Object.entries(variants as Record<string, unknown>);
+  if (entries.length === 0) {
+    return [
+      {
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants must not be empty`,
+      },
+    ];
+  }
+
+  const issues: TemplateValidationIssue[] = [];
+  for (const [variantId, cellMap] of entries) {
+    if (!variantId.trim()) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants has an empty variant id`,
+      });
+      continue;
+    }
+    if (typeof cellMap !== 'object' || cellMap === null || Array.isArray(cellMap)) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants["${variantId}"] must be an object of cell → text`,
+      });
+      continue;
+    }
+    const cells = Object.entries(cellMap as Record<string, unknown>);
+    if (cells.length === 0) {
+      issues.push({
+        kind: 'invalid-variants',
+        message: `Template def "${templateId}": variants["${variantId}"] must not be empty`,
+      });
+      continue;
+    }
+    for (const [address, value] of cells) {
+      if (!address.trim()) {
+        issues.push({
+          kind: 'invalid-variants',
+          message: `Template def "${templateId}": variants["${variantId}"] has an empty cell address`,
+        });
+      }
+      if (typeof value !== 'string') {
+        issues.push({
+          kind: 'invalid-variants',
+          message: `Template def "${templateId}": variants["${variantId}"]["${address}"] must be a string`,
+        });
+      }
+    }
+  }
+  return issues;
+}

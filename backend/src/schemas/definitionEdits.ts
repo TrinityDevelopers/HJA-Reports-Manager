@@ -3,7 +3,7 @@ import {
   collectSchemaFieldIds,
   validateFieldMappingKey,
   validateVariantsShape,
-} from '../../scripts/validateTemplates';
+} from './templateValidation';
 
 export class DefinitionPersistenceError extends Error {
   readonly status: number;
