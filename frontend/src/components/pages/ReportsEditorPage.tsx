@@ -1,46 +1,39 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import {
-  XlsxViewer,
-  XlsxViewerProvider,
-  useXlsxViewer,
-  useXlsxViewerZoom,
-} from '@extend-ai/react-xlsx';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSchemaExportTemplateIds } from '@hja/shared';
 import { apiClient } from '../../api/client';
 import type { ExportTemplate, ReportTemplate } from '../../types';
 import { sortTemplatesByDisplayName } from '../../utils/templates';
+import { mappingToA1Ranges } from '../../utils/mappingRanges';
 import { initXlsxWasm } from '../../xlsx/wasm';
 import { BackLink } from '../BackLink';
+import { BindingsPanel } from '../reportsEditor/BindingsPanel';
+import {
+  bindingRowsToUpdate,
+  buildBindingRows,
+  type BindingRow,
+} from '../reportsEditor/bindingRows';
+import {
+  readEditableSections,
+  schemaEditPayload,
+  type EditableSection,
+} from '../reportsEditor/schemaDraft';
+import { SchemaFieldsSection } from '../reportsEditor/SchemaFieldsSection';
+import { TemplatePreview } from '../reportsEditor/TemplatePreview';
 
 initXlsxWasm();
 
-const PREVIEW_ZOOM_PERCENT = 100;
-
-function StartAtFullZoom({ workbook }: { workbook: ArrayBuffer }) {
-  const { setZoomScale } = useXlsxViewerZoom();
-  const { activeSheet, isLoading } = useXlsxViewer();
-  const applied = useRef<{ workbook: ArrayBuffer; sheets: Set<number> } | null>(null);
-
-  useLayoutEffect(() => {
-    if (isLoading || !activeSheet) return;
-    if (applied.current?.workbook !== workbook) {
-      applied.current = { workbook, sheets: new Set() };
-    }
-    const sheetIndex = activeSheet.workbookSheetIndex;
-    if (applied.current.sheets.has(sheetIndex)) return;
-    applied.current.sheets.add(sheetIndex);
-    setZoomScale(PREVIEW_ZOOM_PERCENT);
-  }, [activeSheet, isLoading, setZoomScale, workbook]);
-
-  return null;
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function ReportsEditorPage({
   templates,
   onBack,
+  onSchemaUpdated,
 }: {
   templates: ReportTemplate[];
   onBack: () => void;
+  onSchemaUpdated: (template: ReportTemplate) => void;
 }) {
   const [exportTemplates, setExportTemplates] = useState<ExportTemplate[]>([]);
   const [selectedReportTypeId, setSelectedReportTypeId] = useState('');
@@ -49,46 +42,73 @@ export function ReportsEditorPage({
   const [fileName, setFileName] = useState<string | undefined>();
   const [settledTemplateId, setSettledTemplateId] = useState<string | null>(null);
   const [failure, setFailure] = useState<{ templateId: string; message: string } | null>(null);
-  const [uploadInputKey, setUploadInputKey] = useState(0);
+  const [schemaSections, setSchemaSections] = useState<EditableSection[]>([]);
+  const [schemaSaving, setSchemaSaving] = useState(false);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
+  const [bindingRows, setBindingRows] = useState<BindingRow[]>([]);
+  const [selectedBindingId, setSelectedBindingId] = useState<string | null>(null);
+  const [bindingSaving, setBindingSaving] = useState(false);
+  const [bindingError, setBindingError] = useState<string | null>(null);
+  const [highlightFailed, setHighlightFailed] = useState(false);
+
+  const refreshExportTemplates = useCallback(async () => {
+    const data = (await apiClient.exports.getTemplates()) as ExportTemplate[];
+    setExportTemplates(data);
+    return data;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    apiClient.exports
-      .getTemplates()
-      .then((data) => {
-        if (!cancelled) {
-          setExportTemplates(data as ExportTemplate[]);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load export templates:', err);
-      });
+    refreshExportTemplates().catch((error) => {
+      if (!cancelled) console.error('Failed to load export templates:', error);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshExportTemplates]);
 
   const sortedTemplates = useMemo(() => sortTemplatesByDisplayName(templates), [templates]);
-
-  const selectedReportType = templates.find((t) => t.id === selectedReportTypeId) ?? null;
+  const selectedReportType =
+    templates.find((template) => template.id === selectedReportTypeId) ?? null;
 
   const workbookOptions = useMemo(() => {
     if (!selectedReportType) return [];
-    // schema.templates can repeat an id (same workbook, multiple export pages).
     const ids = [
       ...new Set(getSchemaExportTemplateIds(selectedReportType.schema, selectedReportType.name)),
     ];
     return ids.map((id) => {
-      const match = exportTemplates.find((et) => et.templateId === id);
-      return {
-        templateId: id,
-        label: match?.displayName ?? id,
-      };
+      const match = exportTemplates.find((template) => template.templateId === id);
+      return { templateId: id, label: match?.displayName ?? id };
     });
   }, [selectedReportType, exportTemplates]);
 
+  const selectedExportTemplate =
+    exportTemplates.find((template) => template.templateId === selectedExportTemplateId) ?? null;
+
   const loading = selectedExportTemplateId !== '' && settledTemplateId !== selectedExportTemplateId;
-  const error = failure?.templateId === selectedExportTemplateId ? failure.message : null;
+  const workbookError = failure?.templateId === selectedExportTemplateId ? failure.message : null;
+
+  const schemaKey = selectedReportType?.id ?? '';
+  const [loadedSchemaKey, setLoadedSchemaKey] = useState<string | null>(null);
+  if (schemaKey !== loadedSchemaKey) {
+    setLoadedSchemaKey(schemaKey);
+    setSchemaError(null);
+    setSchemaSections(selectedReportType ? readEditableSections(selectedReportType.schema) : []);
+  }
+
+  const bindingKey = `${schemaKey}:${selectedExportTemplate?.templateId ?? ''}:${String(selectedExportTemplate?.updatedAt ?? '')}`;
+  const [loadedBindingKey, setLoadedBindingKey] = useState<string | null>(null);
+  if (bindingKey !== loadedBindingKey) {
+    setLoadedBindingKey(bindingKey);
+    setBindingError(null);
+    setHighlightFailed(false);
+    setSelectedBindingId(null);
+    setBindingRows(
+      selectedReportType && selectedExportTemplate
+        ? buildBindingRows(selectedReportType.schema, selectedExportTemplate)
+        : [],
+    );
+  }
 
   useEffect(() => {
     if (!selectedExportTemplateId) return;
@@ -103,15 +123,12 @@ export function ReportsEditorPage({
         setSettledTemplateId(templateId);
         setFailure(null);
       })
-      .catch((err) => {
+      .catch((error) => {
         if (cancelled) return;
         setFile(undefined);
         setFileName(undefined);
         setSettledTemplateId(templateId);
-        setFailure({
-          templateId,
-          message: err instanceof Error ? err.message : 'Failed to load workbook.',
-        });
+        setFailure({ templateId, message: errorMessage(error, 'Failed to load workbook.') });
       });
     return () => {
       cancelled = true;
@@ -120,7 +137,6 @@ export function ReportsEditorPage({
 
   const handleSelectReportType = (id: string) => {
     setSelectedReportTypeId(id);
-    setUploadInputKey((key) => key + 1);
     if (!id) {
       setSelectedExportTemplateId('');
       setSettledTemplateId(null);
@@ -129,38 +145,97 @@ export function ReportsEditorPage({
       setFileName(undefined);
       return;
     }
-    const reportType = templates.find((t) => t.id === id);
+    const reportType = templates.find((template) => template.id === id);
     if (!reportType) return;
     const ids = getSchemaExportTemplateIds(reportType.schema, reportType.name);
     setSelectedExportTemplateId(ids[0] ?? '');
   };
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const nextFile = event.target.files?.[0];
-    if (!nextFile) return;
-    setSelectedReportTypeId('');
-    setSelectedExportTemplateId('');
-    setSettledTemplateId(null);
-    setFailure(null);
-    setFile(await nextFile.arrayBuffer());
-    setFileName(nextFile.name);
+  const sharedWith = useMemo(() => {
+    if (!selectedExportTemplateId || !selectedReportType) return [];
+    return templates
+      .filter((template) => template.id !== selectedReportType.id)
+      .filter((template) =>
+        getSchemaExportTemplateIds(template.schema, template.name).includes(
+          selectedExportTemplateId,
+        ),
+      )
+      .map((template) => template.displayName);
+  }, [selectedExportTemplateId, selectedReportType, templates]);
+
+  const selectedBinding = bindingRows.find((row) => row.rowId === selectedBindingId) ?? null;
+  const highlightRanges = useMemo(() => {
+    if (!selectedBinding) return null;
+    return mappingToA1Ranges(
+      selectedBinding.address,
+      selectedBinding.columnLayout || selectedBinding.address.includes('@'),
+    );
+  }, [selectedBinding]);
+
+  const handleHighlightResult = useCallback((ok: boolean | null) => {
+    setHighlightFailed(ok === false);
+  }, []);
+
+  const saveSchema = async () => {
+    if (!selectedReportType) return;
+    setSchemaSaving(true);
+    setSchemaError(null);
+    try {
+      const updated = (await apiClient.templates.update(selectedReportType.id, {
+        schema: schemaEditPayload(selectedReportType.schema, schemaSections),
+      })) as ReportTemplate;
+      onSchemaUpdated(updated);
+      await refreshExportTemplates();
+    } catch (error) {
+      setSchemaError(errorMessage(error, 'Failed to save schema.'));
+    } finally {
+      setSchemaSaving(false);
+    }
   };
+
+  const saveBindings = async () => {
+    if (!selectedExportTemplate) return;
+    setBindingSaving(true);
+    setBindingError(null);
+    try {
+      const updated = (await apiClient.exports.updateTemplate(
+        selectedExportTemplate.templateId,
+        bindingRowsToUpdate(bindingRows),
+      )) as ExportTemplate;
+      setExportTemplates((current) =>
+        current.map((template) =>
+          template.templateId === updated.templateId ? updated : template,
+        ),
+      );
+    } catch (error) {
+      setBindingError(errorMessage(error, 'Failed to save bindings.'));
+    } finally {
+      setBindingSaving(false);
+    }
+  };
+
+  const highlightErrorRowId =
+    selectedBinding &&
+    (highlightRanges === null || highlightFailed) &&
+    selectedBinding.address.trim()
+      ? selectedBinding.rowId
+      : null;
 
   return (
     <div className="card">
       <BackLink label="Back to Reports" onClick={onBack} />
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">Reports Editor</h2>
+      <h2 className="mb-6 text-3xl font-bold text-gray-800">Reports Editor</h2>
 
-      <div className="flex flex-wrap items-end gap-4 mb-6">
+      <div className="mb-6 flex flex-wrap items-end gap-4">
         <div className="min-w-64 flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="report-type">
+          <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="report-type">
             Report type
           </label>
           <select
             id="report-type"
             className="select"
             value={selectedReportTypeId}
-            onChange={(e) => handleSelectReportType(e.target.value)}
+            onChange={(event) => handleSelectReportType(event.target.value)}
           >
             <option value="">Select a report type</option>
             {sortedTemplates.map((template) => (
@@ -170,55 +245,86 @@ export function ReportsEditorPage({
             ))}
           </select>
         </div>
-
-        {workbookOptions.length > 1 && (
-          <div className="min-w-64 flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="workbook">
-              Workbook
-            </label>
-            <select
-              key={selectedReportTypeId}
-              id="workbook"
-              className="select"
-              value={selectedExportTemplateId}
-              onChange={(e) => setSelectedExportTemplateId(e.target.value)}
-            >
-              {workbookOptions.map((option) => (
-                <option key={option.templateId} value={option.templateId}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <label className="button-secondary cursor-pointer">
-          Upload template
-          <input
-            key={uploadInputKey}
-            type="file"
-            accept=".xlsx,.xlsm"
-            className="sr-only"
-            onChange={handleUpload}
-          />
-        </label>
       </div>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {selectedReportType && (
+        <SchemaFieldsSection
+          key={selectedReportType.id}
+          sections={schemaSections}
+          saving={schemaSaving}
+          error={schemaError}
+          onChange={setSchemaSections}
+          onSave={saveSchema}
+        />
+      )}
 
-      {loading && <p className="text-gray-600 mb-4">Loading workbook…</p>}
-
-      {file ? (
-        <XlsxViewerProvider file={file} fileName={fileName}>
-          <StartAtFullZoom workbook={file} />
-          <XlsxViewer height="70vh" showDefaultToolbar />
-        </XlsxViewerProvider>
-      ) : (
-        !loading && (
-          <div className="border-2 border-dashed rounded-lg py-16 text-center text-gray-500">
-            Select a report type or upload an XLSX template to preview it.
+      {selectedExportTemplate && (
+        <section>
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h3 className="mb-1 text-xl font-semibold text-gray-800">Template</h3>
+              <p className="subtext">
+                Select a binding to highlight its cells in {selectedExportTemplate.displayName}.
+              </p>
+            </div>
+            {workbookOptions.length > 1 && (
+              <div className="min-w-72 flex-1">
+                <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="workbook">
+                  Workbook
+                </label>
+                <select
+                  key={selectedReportTypeId}
+                  id="workbook"
+                  className="select"
+                  value={selectedExportTemplateId}
+                  onChange={(event) => setSelectedExportTemplateId(event.target.value)}
+                >
+                  {workbookOptions.map((option) => (
+                    <option key={option.templateId} value={option.templateId}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-        )
+          {workbookError && <p className="mb-4 text-red-600">{workbookError}</p>}
+          {loading && <p className="mb-4 text-gray-600">Loading workbook…</p>}
+          <div className="grid items-start gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
+            <BindingsPanel
+              template={selectedExportTemplate}
+              rows={bindingRows}
+              selectedRowId={selectedBindingId}
+              sharedWith={sharedWith}
+              saving={bindingSaving}
+              error={bindingError}
+              highlightErrorRowId={highlightErrorRowId}
+              onSelect={setSelectedBindingId}
+              onChange={setBindingRows}
+              onSave={saveBindings}
+            />
+            {file ? (
+              <TemplatePreview
+                file={file}
+                fileName={fileName}
+                ranges={highlightRanges}
+                onHighlightResult={handleHighlightResult}
+              />
+            ) : (
+              !loading && (
+                <div className="rounded-lg border-2 border-dashed py-16 text-center text-gray-500">
+                  The workbook for this template could not be previewed.
+                </div>
+              )
+            )}
+          </div>
+        </section>
+      )}
+
+      {!selectedReportType && (
+        <div className="rounded-lg border-2 border-dashed py-16 text-center text-gray-500">
+          Select a report type to edit its schema and template bindings.
+        </div>
       )}
     </div>
   );

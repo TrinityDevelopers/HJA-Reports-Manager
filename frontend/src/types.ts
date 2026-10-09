@@ -40,6 +40,20 @@ export interface ExportTemplate {
   displayName: string;
   filePath: string;
   format: 'xlsx';
+  fieldMapping?: Record<string, string>;
+  standardFields?: Record<string, string>;
+  variants?: Record<string, Record<string, string>>;
+  maxEntries?: number | null;
+  rowsPerEntry?: number | null;
+  colsPerEntry?: number | null;
+  entryLayout?: 'row' | 'column' | null;
+  dynamicEntryRows?: {
+    enabled?: boolean;
+    topRow: number;
+    middleRow: number;
+    bottomRow: number;
+  } | null;
+  updatedAt?: string | Date;
 }
 
 export interface ReportEntry {

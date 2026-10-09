@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite';
 
 /**
- * `@extend-ai/react-xlsx` (0.16.6) floors column widths at 30px while parsing
+ * `@extend-ai/react-xlsx` (0.17.2) floors column widths at 30px while parsing
  * and 40px while painting, and floors row heights at 16px. HJA templates use
  * narrower columns and shorter rows, so those floors stretch the sheet.
  * One pixel still rejects zero and negative sizes.

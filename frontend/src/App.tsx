@@ -52,7 +52,11 @@ export default function HJAReportsManager() {
     setItems: setProjects,
   } = useCRUD<Project>([]);
   const { items: reports, update: updateReport, setItems: setReports } = useCRUD<Report>([]);
-  const { items: templates, setItems: setTemplates } = useCRUD<ReportTemplate>([]);
+  const {
+    items: templates,
+    update: updateTemplate,
+    setItems: setTemplates,
+  } = useCRUD<ReportTemplate>([]);
   const { items: labRequests, setItems: setLabRequests } = useCRUD<LabRequest>([]);
 
   // Load and persist data with localStorage
@@ -379,7 +383,11 @@ export default function HJAReportsManager() {
           />
         )}
         {currentPage === PAGES.REPORTS_EDITOR && (
-          <ReportsEditorPage templates={templates} onBack={() => setCurrentPage(PAGES.REPORTS)} />
+          <ReportsEditorPage
+            templates={templates}
+            onBack={() => setCurrentPage(PAGES.REPORTS)}
+            onSchemaUpdated={(template) => updateTemplate(template.id, template)}
+          />
         )}
         {currentPage === PAGES.REPORTS && selectedReport && (
           <ReportDetailPage

@@ -12,6 +12,7 @@ import {
   reportExportAllBaseName,
   reportExportBaseName,
 } from '@hja/shared';
+import { DefinitionPersistenceError } from '../schemas/definitionEdits';
 
 const router: Router = express.Router();
 const exportService = new ExportService();
@@ -25,6 +26,24 @@ router.get('/templates', async (req: Request, res: Response) => {
     res.json(templates);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+router.put('/templates/:templateId', async (req: Request, res: Response) => {
+  try {
+    const template = await exportService.updateTemplateBindings(req.params.templateId, req.body);
+    res.json(template);
+  } catch (error) {
+    const message = (error as Error).message;
+    if (error instanceof DefinitionPersistenceError) {
+      res.status(error.status).json({ error: message });
+      return;
+    }
+    if (message.startsWith('Export template not found')) {
+      res.status(404).json({ error: message });
+      return;
+    }
+    res.status(400).json({ error: message });
   }
 });
 

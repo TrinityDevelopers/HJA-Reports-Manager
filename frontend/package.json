@@ -9,7 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@extend-ai/react-xlsx": "^0.16.6",
+    "@extend-ai/react-xlsx": "^0.17.2",
     "@hja/shared": "file:../packages/shared",
     "@tailwindcss/vite": "^4.1.17",
     "lucide-react": "^0.555.0",

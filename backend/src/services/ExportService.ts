@@ -54,6 +54,8 @@ export type ExportReportOptions = {
 };
 
 import { applyTemplateDefToEntity, templateDefToCreatePayload } from '../schemas/templateDefMapper';
+import { persistExportTemplateBindings } from '../schemas/definitionPersistence';
+import type { BindingUpdate } from '../schemas/definitionEdits';
 
 const DEFAULT_CLOUDMERSIVE_CONCURRENCY = 4;
 
@@ -92,6 +94,22 @@ export class ExportService {
 
   async listExportTemplates(): Promise<ExportTemplate[]> {
     return await this.exportTemplateRepository.find();
+  }
+
+  async saveExportTemplate(template: ExportTemplate): Promise<ExportTemplate> {
+    return await this.exportTemplateRepository.save(template);
+  }
+
+  async updateTemplateBindings(templateId: string, update: BindingUpdate): Promise<ExportTemplate> {
+    const template = await this.findExportTemplate(templateId);
+    if (!template) {
+      throw new Error(`Export template not found: ${templateId}`);
+    }
+    return persistExportTemplateBindings({
+      template,
+      update,
+      saveExportTemplate: (row) => this.saveExportTemplate(row),
+    });
   }
 
   async readTemplateWorkbook(templateId: string): Promise<{ buffer: Buffer; fileName: string }> {

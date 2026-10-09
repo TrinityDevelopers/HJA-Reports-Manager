@@ -53,11 +53,18 @@ export const apiClient = {
   templates: {
     getAll: () => request('/templates'),
     getById: (id: string) => request(`/templates/${id}`),
+    update: (id: string, data: unknown) =>
+      request(`/templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   },
 
   // Exports
   exports: {
     getTemplates: () => request('/export/templates'),
+    updateTemplate: (templateId: string, data: unknown) =>
+      request(`/export/templates/${encodeURIComponent(templateId)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     getTemplateWorkbook: async (templateId: string) => {
       const url = `${API_BASE_URL}/export/templates/${encodeURIComponent(templateId)}/file`;
       const response = await fetch(url);

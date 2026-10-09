@@ -1,5 +1,6 @@
 import express, { Router, Request, Response } from 'express';
 import { TemplateService } from '../services/TemplateService';
+import { DefinitionPersistenceError } from '../schemas/definitionEdits';
 
 const router: Router = express.Router();
 const templateService = new TemplateService();
@@ -37,6 +38,20 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.put('/:id', async (req: Request, res: Response) => {
   try {
+    const schema = req.body?.schema;
+    if (schema && typeof schema === 'object' && !Array.isArray(schema)) {
+      const template = await templateService.updateSchemaDefinition(
+        req.params.id,
+        schema as Record<string, unknown>,
+      );
+      if (!template) {
+        res.status(404).json({ error: 'Template not found' });
+        return;
+      }
+      res.json(template);
+      return;
+    }
+
     const template = await templateService.update(req.params.id, req.body);
     if (!template) {
       res.status(404).json({ error: 'Template not found' });
@@ -44,7 +59,8 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
     res.json(template);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    const status = error instanceof DefinitionPersistenceError ? error.status : 400;
+    res.status(status).json({ error: (error as Error).message });
   }
 });
 

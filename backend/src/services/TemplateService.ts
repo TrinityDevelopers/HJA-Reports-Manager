@@ -5,7 +5,10 @@ import { LabRequest } from '../entities/LabRequest';
 import { AppDataSource } from '../database/connection';
 import { REPORT_SCHEMAS } from '../schemas/reportSchemas';
 import { BaseCrudService } from './BaseCrudService';
+import path from 'path';
 import { seedFromDefinitions } from '../utils/seedFromDefinitions';
+import { persistSchemaDefinition } from '../schemas/definitionPersistence';
+import { ExportService } from './ExportService';
 
 const REMOVED_TEMPLATE_MIGRATIONS: Record<string, string> = {
   'absorption-pressure-swell-balancing': 'absorption-pressure-swell',
@@ -30,6 +33,25 @@ export class TemplateService extends BaseCrudService<ReportTemplate> {
 
   async update(id: string, data: Partial<ReportTemplate>): Promise<ReportTemplate | null> {
     return (await super.update(id, data)) ?? null;
+  }
+
+  async updateSchemaDefinition(
+    id: string,
+    editedSchema: Record<string, unknown>,
+  ): Promise<ReportTemplate | null> {
+    const template = await this.findById(id);
+    if (!template) return null;
+
+    const exportService = new ExportService();
+    return persistSchemaDefinition({
+      template,
+      editedSchema,
+      schemasDir: path.join(process.cwd(), 'data', 'schemas'),
+      templateDefsDir: path.join(process.cwd(), 'data', 'template_defs'),
+      saveTemplate: async (next) => this.repository.save(next),
+      loadExportTemplate: (templateId) => exportService.findExportTemplate(templateId),
+      saveExportTemplate: (row) => exportService.saveExportTemplate(row),
+    });
   }
 
   async seedDefaultTemplates(): Promise<void> {
