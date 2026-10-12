@@ -444,19 +444,48 @@ export default function HJAReportsManager() {
           <ProjectEditor
             editingProject={editingProject}
             onSave={(project: Project) => {
-              if (editingProject) {
+              if (!editingProject) {
+                addProject(project);
+                return;
+              }
+
+              const projectId = editingProject.id;
+              const payload = {
+                projectName: project.projectName,
+                projectNumber: project.projectNumber,
+                description: project.description,
+                streetAddress: project.streetAddress,
+                city: project.city,
+                state: project.state,
+                ...(Array.isArray(project.locations) ? { locations: project.locations } : {}),
+              };
+
+              void (async () => {
                 try {
-                  apiClient.projects.update(editingProject.id, project).catch(() => {
-                    console.error('Failed to update project on backend');
-                  });
-                  updateProject(editingProject.id, project);
+                  const updated = (await apiClient.projects.update(projectId, payload)) as Project;
+                  const savedProject = { ...updated };
+                  delete savedProject.reports;
+                  updateProject(projectId, savedProject);
+                  setLabRequests((prev) =>
+                    prev.map((labRequest) =>
+                      labRequest.projectId === projectId
+                        ? { ...labRequest, project: savedProject }
+                        : labRequest,
+                    ),
+                  );
+                  setReports((prev) =>
+                    prev.map((report) =>
+                      report.projectId === projectId
+                        ? { ...report, project: savedProject }
+                        : report,
+                    ),
+                  );
                   setEditingProject(null);
                 } catch (error) {
                   console.error('Failed to save project:', error);
+                  alert('Failed to save project');
                 }
-              } else {
-                addProject(project);
-              }
+              })();
             }}
             onCancel={() => {
               setShowAddProject(false);
